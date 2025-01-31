@@ -1,0 +1,11 @@
+Dar acesso de leitura ao AKV para o FunctionAPP
+az role assignment create \
+    --assignee 2431be9c-1adf-4582-bf57-c83ecfe4273b \
+    --role "Key Vault Secrets User" \
+    --scope $(az keyvault show --name akvcjprd001 --query id -o tsv)
+
+Dar acesso de envio para a SPN (precisa do object ID)
+az role assignment create \
+  --assignee ddf53a93-0b01-4ee5-9e64-a919449286b8 \
+  --role "Azure Event Hubs Data Sender" \
+  --scope "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
