@@ -8,6 +8,7 @@ STORAGE_ACCOUNT="stacjprd001"
 EVENTHUB_NAMESPACE_FULLY="evhnscjprd001.servicebus.windows.net"
 EVENTHUB_NAMESPACE="evhnscjprd001"
 EVENTHUB_NAME="evh_neg_prod"
+EVENTHUB_NAME_SCHEMA="evh_schema_prod"
 FUNCTION_APP="funccjprd001"
 PLAN_NAME="aspcjprd001"
 KEY_VAULT="akvcjprd001"
@@ -21,8 +22,9 @@ az group create --name $RESOURCE_GROUP --location $LOCATION
 az storage account create --name $STORAGE_ACCOUNT --resource-group $RESOURCE_GROUP --location $LOCATION --sku Standard_LRS --kind StorageV2 --hns true
 
 # Criação do Namespace e Event Hub com o SKU Basic
-az eventhubs namespace create --resource-group $RESOURCE_GROUP --name $EVENTHUB_NAMESPACE --location $LOCATION --sku Basic
+az eventhubs namespace create --resource-group $RESOURCE_GROUP --name $EVENTHUB_NAMESPACE --location $LOCATION --sku Standard
 az eventhubs eventhub create --resource-group $RESOURCE_GROUP --namespace-name $EVENTHUB_NAMESPACE --name $EVENTHUB_NAME --cleanup-policy Delete --retention-time-in-hours 1 --partition-count 1
+az eventhubs eventhub create --resource-group $RESOURCE_GROUP --namespace-name $EVENTHUB_NAMESPACE --name $EVENTHUB_NAME_SCHEMA --cleanup-policy Delete --retention-time-in-hours 1 --partition-count 1
 
 # Criação do Plano de Serviço de Aplicativo
 az appservice plan create --name $PLAN_NAME --resource-group $RESOURCE_GROUP --sku B1 --is-linux

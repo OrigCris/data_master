@@ -16,7 +16,7 @@ def func_negocios(myTimer: func.TimerRequest) -> None:
     # URL do seu Key Vault
     KEY_VAULT_URL = "https://akvcjprd001.vault.azure.net"
 
-    # Criar a credencial com o SPN
+    # Criar a credencial com o managed identity do functionapp
     credential = DefaultAzureCredential()
 
     # Criar cliente para o Key Vault com as credenciais
@@ -47,7 +47,7 @@ def func_negocios(myTimer: func.TimerRequest) -> None:
     producer_client = EventHubProducerClient(
         fully_qualified_namespace=eventhub_namespace,
         eventhub_name=eventhub_name,
-        credential=spn_credential  # Usar a credencial do SPN para autenticar
+        credential=spn_credential
     )
 
     # Dados fictícios a serem enviados
