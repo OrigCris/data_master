@@ -1,9 +1,0 @@
-{
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "",
-    "FUNCTIONS_WORKER_RUNTIME": "python",
-    "EVENTHUB_NAME":"evh_neg_prod",
-    "EVENTHUB_NAMESPACE_FULLY":"evhnscjprd001.servicebus.windows.net"
-  }
-}

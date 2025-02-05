@@ -7,12 +7,15 @@ LOCATION="brazilsouth"
 STORAGE_ACCOUNT="stacjprd001"
 EVENTHUB_NAMESPACE_FULLY="evhnscjprd001.servicebus.windows.net"
 EVENTHUB_NAMESPACE="evhnscjprd001"
-EVENTHUB_NAME="evh_neg_prod"
-EVENTHUB_NAME_SCHEMA="evh_schema_prod"
+EVENTHUB_NAME_USER="evh_user_random"
+EVENTHUB_NAME_USER_SCHEMA="evh_user_random_schema"
 FUNCTION_APP="funccjprd001"
 PLAN_NAME="aspcjprd001"
 KEY_VAULT="akvcjprd001"
 SERVICE_PRINCIPAL_NAME="spn_func_send"
+SCHEMAREGISTRY_FQDN="evhnscjprd001.servicebus.windows.net"
+SCHEMA_GROUP="SchemaFunctions"
+SCHEMA_NAME="UserRandom"
 ACCOUNT_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv)
 
 # Criação do Resource Group
@@ -23,8 +26,8 @@ az storage account create --name $STORAGE_ACCOUNT --resource-group $RESOURCE_GRO
 
 # Criação do Namespace e Event Hub com o SKU Basic
 az eventhubs namespace create --resource-group $RESOURCE_GROUP --name $EVENTHUB_NAMESPACE --location $LOCATION --sku Standard
-az eventhubs eventhub create --resource-group $RESOURCE_GROUP --namespace-name $EVENTHUB_NAMESPACE --name $EVENTHUB_NAME --cleanup-policy Delete --retention-time-in-hours 1 --partition-count 1
-az eventhubs eventhub create --resource-group $RESOURCE_GROUP --namespace-name $EVENTHUB_NAMESPACE --name $EVENTHUB_NAME_SCHEMA --cleanup-policy Delete --retention-time-in-hours 1 --partition-count 1
+az eventhubs eventhub create --resource-group $RESOURCE_GROUP --namespace-name $EVENTHUB_NAMESPACE --name $EVENTHUB_NAME_USER --cleanup-policy Delete --retention-time-in-hours 1 --partition-count 1
+az eventhubs eventhub create --resource-group $RESOURCE_GROUP --namespace-name $EVENTHUB_NAMESPACE --name $EVENTHUB_NAME_USER_SCHEMA --cleanup-policy Delete --retention-time-in-hours 1 --partition-count 1
 
 # Criação do Plano de Serviço de Aplicativo
 az appservice plan create --name $PLAN_NAME --resource-group $RESOURCE_GROUP --sku B1 --is-linux
@@ -68,6 +71,10 @@ az role assignment create \
 # Configurar Variáveis de Ambiente na Function App (não para usar diretamente)
 az functionapp config appsettings set --name $FUNCTION_APP --resource-group $RESOURCE_GROUP --settings \
     EVENTHUB_NAMESPACE_FULLY=$EVENTHUB_NAMESPACE_FULLY \
-    EVENTHUB_NAME=$EVENTHUB_NAME
+    EVENTHUB_NAME_USER=$EVENTHUB_NAME_USER \
+    EVENTHUB_NAME_USER_SCHEMA=$EVENTHUB_NAME_USER_SCHEMA \
+    SCHEMAREGISTRY_FQDN=$SCHEMAREGISTRY_FQDN \
+    SCHEMA_GROUP=$SCHEMA_GROUP \
+    SCHEMA_NAME=$SCHEMA_NAME
 
 echo "Todos os recursos foram criados e configurados com sucesso!"

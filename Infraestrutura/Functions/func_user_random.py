@@ -1,5 +1,4 @@
-import logging
-import os
+import logging, json, os, requests
 import azure.functions as func
 from azure.identity import DefaultAzureCredential, ClientSecretCredential
 from azure.keyvault.secrets import SecretClient
@@ -50,11 +49,19 @@ def func_negocios(myTimer: func.TimerRequest) -> None:
         credential=spn_credential
     )
 
-    # Dados fictícios a serem enviados
-    data = {
-        "message": "Dado fictício enviado pelo Azure Function!",
-        "timestamp": "2025-01-30T00:00:00Z"
-    }
+    # API de usuários fictícios
+    api_users = 'https://random-data-api.com/api/v2/users'
+    response = requests.get(url=api_users)
+
+    if response.status_code != 200:
+        logging.error(f"Erro ao buscar dados da API: {response.status_code}")
+        return
+
+    try:
+        data = json.loads(response.content)
+    except json.JSONDecodeError:
+        logging.error("Erro ao decodificar JSON da API")
+        return
 
     # Criar um evento e enviar para o Event Hub
     event_data_batch = producer_client.create_batch()

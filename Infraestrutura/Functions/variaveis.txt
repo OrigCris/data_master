@@ -1,0 +1,13 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "EVENTHUB_NAMESPACE_FULLY":"evhnscjprd001.servicebus.windows.net",
+    "EVENTHUB_NAME_USER":"evh_user_random",
+    "EVENTHUB_NAME_USER_SCHEMA":"evh_user_random_schema",
+    "SCHEMAREGISTRY_FQDN":"evhnscjprd001.servicebus.windows.net",
+    "SCHEMA_GROUP":"SchemaFunctions",
+    "SCHEMA_NAME":"UserRandom"
+  }
+}
