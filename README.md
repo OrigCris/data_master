@@ -18,7 +18,7 @@ Esse case foi desenvolvido com o intuito de proporcionar um entendimento claro e
 
 ## III. Explicação de como foi desenvolvido
 ### 1. Configuração da Infraestrutura
-Para iniciar o processo, executamos o script script.sh disponível no repositório do Git. Este script é responsável por criar todas as infraestruturas necessárias para o projeto, incluindo recursos no Azure como EventHub, Azure Functions e Databricks.
+Para iniciar o processo, executamos o [script.sh](Infraestrutura/script.sh) disponível no repositório do Git. Este script é responsável por criar todas as infraestruturas necessárias para o projeto, incluindo recursos no Azure como EventHub, Azure Functions e Databricks.
 
 ### 2. Registro do Schema no EventHub
 Em seguida, configuramos o schema registry do EventHub utilizando o arquivo user_schema.avsc. Este arquivo define a estrutura dos dados que serão enviados para o EventHub e pode ser encontrado no repositório do Git. A configuração do schema registry assegura que os dados enviados estejam em conformidade com o formato esperado.
