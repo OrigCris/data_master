@@ -6,3 +6,6 @@ azure-functions
 azure-identity
 azure-keyvault-secrets
 azure-eventhub
+avro-python3
+azure-schemaregistry
+azure-schemaregistry-avroserializer
