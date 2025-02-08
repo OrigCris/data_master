@@ -1,0 +1,38 @@
+{
+    "num_workers": 0,
+    "cluster_name": "cristiano alves's Cluster",
+    "spark_version": "13.3.x-scala2.12",
+    "spark_conf": {
+        "spark.hadoop.fs.azure.account.oauth2.client.endpoint.stacjprd001.dfs.core.windows.net": "https://login.microsoftonline.com/93ab60f2-2efd-4e33-9010-c2d7bfe15fb7/oauth2/token",
+        "spark.hadoop.fs.azure.account.oauth.provider.type.stacjprd001.dfs.core.windows.net": "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
+        "spark.hadoop.fs.azure.account.oauth2.client.secret.stacjprd001.dfs.core.windows.net": "{{secrets/data-master-akv/ServicePrincipalDTBSecret}}",
+        "spark.hadoop.fs.azure.account.oauth2.client.id.stacjprd001.dfs.core.windows.net": "{{secrets/data-master-akv/ServicePrincipalDTBAppId}}",
+        "spark.hadoop.fs.azure.account.auth.type.stacjprd001.dfs.core.windows.net": "OAuth",
+        "spark.master": "local[*, 4]",
+        "spark.databricks.cluster.profile": "singleNode"
+    },
+    "azure_attributes": {
+        "first_on_demand": 1,
+        "availability": "ON_DEMAND_AZURE",
+        "spot_bid_max_price": -1
+    },
+    "node_type_id": "Standard_DS3_v2",
+    "driver_node_type_id": "Standard_DS3_v2",
+    "ssh_public_keys": [],
+    "custom_tags": {
+        "ResourceClass": "SingleNode"
+    },
+    "spark_env_vars": {
+        "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+    },
+    "autotermination_minutes": 10,
+    "enable_elastic_disk": true,
+    "init_scripts": [],
+    "single_user_name": "cristianosjunior2012@hotmail.com",
+    "enable_local_disk_encryption": false,
+    "data_security_mode": "SINGLE_USER",
+    "runtime_engine": "STANDARD",
+    "effective_spark_version": "13.3.x-scala2.12",
+    "assigned_principal": "user:cristianosjunior2012@hotmail.com",
+    "cluster_id": "0208-184440-loe4i8dl"
+}

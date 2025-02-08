@@ -1,0 +1,181 @@
+import pyspark.sql.functions as F
+from pyspark.sql.types import *
+from pyspark.sql.avro.functions import from_avro
+
+eh_namespace = 'evhnscjprd001'
+eventhub_name = "evh_user_random_schema"
+
+eh_conf = {
+   'eventhubs.connectionString': sc._jvm.org.apache.spark.eventhubs.EventHubsUtils.encrypt(f"{connection_string};EntityPath={eventhub_name}")
+}
+
+df = (spark.readStream
+    .format("eventhubs")
+    .options(**eh_conf)
+    .load())
+df.printSchema()
+
+avro_schema = """
+{
+    "type": "record",
+    "name": "UserRandom",
+    "fields": [
+        {
+            "name": "id",
+            "type": "int"
+        },
+        {
+            "name": "uid",
+            "type": "string"
+        },
+        {
+            "name": "password",
+            "type": "string"
+        },
+        {
+            "name": "first_name",
+            "type": "string"
+        },
+        {
+            "name": "last_name",
+            "type": "string"
+        },
+        {
+            "name": "username",
+            "type": "string"
+        },
+        {
+            "name": "email",
+            "type": "string"
+        },
+        {
+            "name": "avatar",
+            "type": "string"
+        },
+        {
+            "name": "gender",
+            "type": "string"
+        },
+        {
+            "name": "phone_number",
+            "type": "string"
+        },
+        {
+            "name": "social_insurance_number",
+            "type": "string"
+        },
+        {
+            "name": "date_of_birth",
+            "type": "string"
+        },
+        {
+            "name": "employment",
+            "type": {
+                "type": "record",
+                "name": "Employment",
+                "fields": [
+                    {
+                        "name": "title",
+                        "type": "string"
+                    },
+                    {
+                        "name": "key_skill",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "address",
+            "type": {
+                "type": "record",
+                "name": "Address",
+                "fields": [
+                    {
+                        "name": "city",
+                        "type": "string"
+                    },
+                    {
+                        "name": "street_name",
+                        "type": "string"
+                    },
+                    {
+                        "name": "street_address",
+                        "type": "string"
+                    },
+                    {
+                        "name": "zip_code",
+                        "type": "string"
+                    },
+                    {
+                        "name": "state",
+                        "type": "string"
+                    },
+                    {
+                        "name": "country",
+                        "type": "string"
+                    },
+                    {
+                        "name": "coordinates",
+                        "type": {
+                            "type": "record",
+                            "name": "Coordinates",
+                            "fields": [
+                                {
+                                    "name": "lat",
+                                    "type": "float"
+                                },
+                                {
+                                    "name": "lng",
+                                    "type": "float"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "credit_card",
+            "type": {
+                "type": "record",
+                "name": "CreditCard",
+                "fields": [
+                    {
+                        "name": "cc_number",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "subscription",
+            "type": {
+                "type": "record",
+                "name": "Subscription",
+                "fields": [
+                    {
+                        "name": "plan",
+                        "type": "string"
+                    },
+                    {
+                        "name": "status",
+                        "type": "string"
+                    },
+                    {
+                        "name": "payment_method",
+                        "type": "string"
+                    },
+                    {
+                        "name": "term",
+                        "type": "string"
+                    }
+                ]
+            }
+        }
+    ]
+}
+"""
+
+df.select(from_avro(F.col("body"), avro_schema).alias("data")).select("data.*") \
+    .display()
