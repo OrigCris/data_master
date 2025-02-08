@@ -21,10 +21,10 @@ Esse case foi desenvolvido com o intuito de proporcionar um entendimento claro e
 Para iniciar o processo, executamos o [script.sh](Infraestrutura/script.sh) disponível no repositório do Git. Este script é responsável por criar todas as infraestruturas necessárias para o projeto, incluindo recursos no Azure como EventHub, Azure Functions e Databricks.
 
 ### 2. Registro do Schema no EventHub
-Em seguida, configuramos o schema registry do EventHub utilizando o arquivo user_schema.avsc. Este arquivo define a estrutura dos dados que serão enviados para o EventHub e pode ser encontrado no repositório do Git. A configuração do schema registry assegura que os dados enviados estejam em conformidade com o formato esperado.
+Em seguida, configuramos o schema registry do EventHub utilizando o arquivo [user_schema.avsc](Infraestrutura/EventHub/user_schema.avsc). Este arquivo define a estrutura dos dados que serão enviados para o EventHub e pode ser encontrado no repositório do Git. A configuração do schema registry assegura que os dados enviados estejam em conformidade com o formato esperado.
 
 ### 3. Implementação da Função no Azure Functions
-Para a implementação da função no Azure Functions, utilizamos o arquivo func_user.py, disponível no repositório do Git. Este arquivo contém o código em Python necessário para processar os dados e enviá-los para o EventHub. A função é implantada no Azure Functions, onde é executada em resposta a eventos, processando e transmitindo os dados de forma eficiente.
+Para a implementação da função no Azure Functions, utilizamos o arquivo [func_user.py](Infraestrutura/Functions/func_user.py), disponível no repositório do Git. Este arquivo contém o código em Python necessário para processar os dados e enviá-los para o EventHub. A função é implantada no Azure Functions, onde é executada em resposta a eventos, processando e transmitindo os dados de forma eficiente.
 
 ### 4. Envio de Dados utilizando SPN
 A função Python implementada no Azure Functions utiliza uma Service Principal Name (SPN) para autenticação segura e envio dos dados ao EventHub. A SPN garante que a comunicação entre os serviços seja segura e confiável.
