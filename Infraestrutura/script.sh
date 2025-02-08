@@ -2,23 +2,29 @@
 
 # Defina as variáveis
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-RESOURCE_GROUP="rsgcjprd001"
+ACCOUNT_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv)
 LOCATION="brazilsouth"
+
+RESOURCE_GROUP="rsgcjprd001"
+
 STORAGE_ACCOUNT="stacjprd001"
 CONTAINER="cont-dt-mst"
+
 EVENTHUB_NAMESPACE_FULLY="evhnscjprd001.servicebus.windows.net"
 EVENTHUB_NAMESPACE="evhnscjprd001"
 EVENTHUB_NAME_USER="evh_user_random"
 EVENTHUB_NAME_USER_SCHEMA="evh_user_random_schema"
+
 FUNCTION_APP="funccjprd001"
 PLAN_NAME="aspcjprd001"
+
 KEY_VAULT="akvcjprd001"
 SPN_PRODUCER="spn_func_send"
-SPN_CONSUMER="spn_dtb_consumer"
+
 SCHEMAREGISTRY_FQDN="evhnscjprd001.servicebus.windows.net"
 SCHEMA_GROUP="SchemaFunctions"
 SCHEMA_NAME="UserRandom"
-ACCOUNT_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv)
+
 DATABRICKS_WORKSPACE="dbwcjprd001"
 DATABRICKS_PLAN="Premium"
 
@@ -62,11 +68,7 @@ az functionapp create \
 az keyvault create --name $KEY_VAULT --resource-group $RESOURCE_GROUP --location $LOCATION
 
 # Databricks Workspace
-<<<<<<< HEAD
 az config set extension.use_dynamic_install=yes_without_prompt
-=======
-az config set extension.dynamic_install_allow_preview=true
->>>>>>> 9ea5707088287a928ab9cd500e114c0ec6219ef9
 az databricks workspace create --name $DATABRICKS_WORKSPACE \
     --resource-group $RESOURCE_GROUP \
     --location $LOCATION \
@@ -90,18 +92,9 @@ SP_APP_ID=$(echo $SP_DETAILS | jq -r '.appId')
 SP_SECRET=$(echo $SP_DETAILS | jq -r '.password')
 TENANT_ID=$(echo $SP_DETAILS | jq -r '.tenant')
 
-DTB_SP_DETAILS=$(az ad sp create-for-rbac --name $SPN_CONSUMER --role "Contributor" --scopes /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP)
-DTB_SP_APP_ID=$(echo $DTB_SP_DETAILS | jq -r '.appId')
-DTB_SP_SECRET=$(echo $DTB_SP_DETAILS | jq -r '.password')
-DTB_TENANT_ID=$(echo $DTB_SP_DETAILS | jq -r '.tenant')
-
 az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalAppId" --value $SP_APP_ID
 az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalSecret" --value $SP_SECRET
 az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalTenantId" --value $TENANT_ID
-
-az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalDTBAppId" --value $DTB_SP_APP_ID
-az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalDTBSecret" --value $DTB_SP_SECRET
-az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalDTBTenantId" --value $DTB_TENANT_ID
 
 # Atribuir Permissões ao Service Principal para Acessar o Key Vault
 az role assignment create \
