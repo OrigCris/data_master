@@ -1,4 +1,7 @@
 /Az_func
+<<<<<<< HEAD
 /Infraestrutura/config_cluster.txt
 /Infraestrutura/Databricks/notebook_get_data.txt
+=======
+>>>>>>> 9ea5707088287a928ab9cd500e114c0ec6219ef9
 .vscode
