@@ -26,6 +26,7 @@ DATABRICKS_PLAN="Premium"
 
 # Resource Group
 az group create --name $RESOURCE_GROUP --location $LOCATION
+az group create --name $RESOURCE_GROUP_DTB --location $LOCATION
 
 # Storage Account com suporte a ADLS Gen2
 az storage account create --name $STORAGE_ACCOUNT --resource-group $RESOURCE_GROUP --location $LOCATION --sku Standard_LRS --kind StorageV2 --hns true
@@ -61,7 +62,11 @@ az functionapp create \
 az keyvault create --name $KEY_VAULT --resource-group $RESOURCE_GROUP --location $LOCATION
 
 # Databricks Workspace
+<<<<<<< HEAD
 az config set extension.use_dynamic_install=yes_without_prompt
+=======
+az config set extension.dynamic_install_allow_preview=true
+>>>>>>> 9ea5707088287a928ab9cd500e114c0ec6219ef9
 az databricks workspace create --name $DATABRICKS_WORKSPACE \
     --resource-group $RESOURCE_GROUP \
     --location $LOCATION \
