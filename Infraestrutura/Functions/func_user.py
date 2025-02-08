@@ -8,12 +8,9 @@ from azure.keyvault.secrets import SecretClient
 from azure.eventhub import EventHubProducerClient, EventData
 from azure.schemaregistry import SchemaRegistryClient
 from azure.schemaregistry.serializer.avroserializer import AvroSerializer
-<<<<<<< HEAD
 import avro.schema
 import avro.io
 import io
-=======
->>>>>>> 9ea5707088287a928ab9cd500e114c0ec6219ef9
 
 app = func.FunctionApp()
 
@@ -71,11 +68,7 @@ def send_serializable_data(data_from_api, eventhub_namespace, eventhub_name, spn
 
     # Obter o esquema Avro registrado no Schema Registry
     try:
-<<<<<<< HEAD
         schema_definition = schema_registry_client.get_schema(schema_id='e4bf3d8bab084e9b9daf2a0d63a91f12').definition
-=======
-        schema_definition = schema_registry_client.get_schema(schema_id='e5bb5b1830834f12b14b8a2d4f1e3d9c').definition
->>>>>>> 9ea5707088287a928ab9cd500e114c0ec6219ef9
         logging.info(schema_definition)
     except Exception as e:
         logging.error(f"Erro ao recuperar o esquema Avro do Schema Registry: {e}")
@@ -84,7 +77,6 @@ def send_serializable_data(data_from_api, eventhub_namespace, eventhub_name, spn
     # Criar um batch de eventos
     event_data_batch = producer_client.create_batch()
 
-<<<<<<< HEAD
     schema = avro.schema.Parse(schema_definition)
 
     bytes_writer = io.BytesIO()
@@ -100,13 +92,6 @@ def send_serializable_data(data_from_api, eventhub_namespace, eventhub_name, spn
     #     event_data_batch.add(EventData(serialized_data))
     # except Exception as e:
     #     logging.error(f"Erro ao serializar os dados: {e}")
-=======
-    try:
-        serialized_data = avro_serializer.serialize(data_from_api, schema=schema_definition)
-        event_data_batch.add(EventData(serialized_data))
-    except Exception as e:
-        logging.error(f"Erro ao serializar os dados: {e}")
->>>>>>> 9ea5707088287a928ab9cd500e114c0ec6219ef9
 
     # Enviar os dados para o Event Hub
     try:
@@ -119,11 +104,7 @@ def send_serializable_data(data_from_api, eventhub_namespace, eventhub_name, spn
     producer_client.close()
     schema_registry_client.close()
 
-<<<<<<< HEAD
 @app.timer_trigger(schedule="0 */2 * * * *", arg_name="myTimer", run_on_startup=False, use_monitor=False)
-=======
-@app.timer_trigger(schedule="0 */5 * * * *", arg_name="myTimer", run_on_startup=False, use_monitor=False)
->>>>>>> 9ea5707088287a928ab9cd500e114c0ec6219ef9
 def func_negocios(myTimer: func.TimerRequest) -> None:
     if myTimer.past_due:
         logging.info('The timer is past due!')
