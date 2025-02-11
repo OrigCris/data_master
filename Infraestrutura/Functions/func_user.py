@@ -52,7 +52,7 @@ def send_raw_data(data_from_api, eventhub_namespace, eventhub_name, spn_credenti
     
     producer_client.close()
 
-def send_serializable_data(data_from_api, eventhub_namespace, eventhub_name, spn_credential, schemaregistry_fqdn, schema_group):
+def send_serializable_data(data_from_api, eventhub_namespace, eventhub_name, spn_credential, schemaregistry_fqdn, schema_group, schema_id):
     producer_client = connect_eventhub(eventhub_namespace, eventhub_name, spn_credential)
     event_data_batch = producer_client.create_batch()
     
@@ -61,15 +61,9 @@ def send_serializable_data(data_from_api, eventhub_namespace, eventhub_name, spn
         credential=spn_credential
     )
 
-    avro_serializer = AvroSerializer(
-        client=schema_registry_client,
-        group_name=schema_group
-    )
-
     # Obter o esquema Avro registrado no Schema Registry
     try:
-        schema_definition = schema_registry_client.get_schema(schema_id='e4bf3d8bab084e9b9daf2a0d63a91f12').definition
-        logging.info(schema_definition)
+        schema_definition = schema_registry_client.get_schema(schema_id=schema_id).definition
     except Exception as e:
         logging.error(f"Erro ao recuperar o esquema Avro do Schema Registry: {e}")
         return
@@ -87,13 +81,6 @@ def send_serializable_data(data_from_api, eventhub_namespace, eventhub_name, spn
 
     event_data_batch.add(EventData(serialized_data))
 
-    # try:
-    #     serialized_data = avro_serializer.serialize(data_from_api, schema=schema_definition)
-    #     event_data_batch.add(EventData(serialized_data))
-    # except Exception as e:
-    #     logging.error(f"Erro ao serializar os dados: {e}")
-
-    # Enviar os dados para o Event Hub
     try:
         producer_client.send_batch(event_data_batch)
         logging.info("Mensagem enviada para o Event Hub com Avro Schema!")
@@ -105,7 +92,7 @@ def send_serializable_data(data_from_api, eventhub_namespace, eventhub_name, spn
     schema_registry_client.close()
 
 @app.timer_trigger(schedule="0 */2 * * * *", arg_name="myTimer", run_on_startup=False, use_monitor=False)
-def func_negocios(myTimer: func.TimerRequest) -> None:
+def func_user(myTimer: func.TimerRequest) -> None:
     if myTimer.past_due:
         logging.info('The timer is past due!')
 
@@ -137,6 +124,7 @@ def func_negocios(myTimer: func.TimerRequest) -> None:
     schemaregistry_fqdn = os.getenv('SCHEMAREGISTRY_FQDN')
     schema_group = os.getenv('SCHEMA_GROUP')
     schema_name = os.getenv('SCHEMA_NAME')
+    schema_id = os.getenv('SCHEMA_USER_ID')
     
     if not eventhub_namespace or not eventhub_name_user or not eventhub_name_user_schema or not schemaregistry_fqdn or not schema_group or not schema_name:
         logging.error('Variáveis de ambiente do Event Hub ou Schema Registry não configuradas corretamente.')
@@ -145,4 +133,4 @@ def func_negocios(myTimer: func.TimerRequest) -> None:
     data_from_api = get_data_from_api()
 
     send_raw_data(data_from_api, eventhub_namespace, eventhub_name_user, spn_credential)
-    send_serializable_data(data_from_api, eventhub_namespace, eventhub_name_user_schema, spn_credential, schemaregistry_fqdn, schema_group)
+    send_serializable_data(data_from_api, eventhub_namespace, eventhub_name_user_schema, spn_credential, schemaregistry_fqdn, schema_group, schema_id)
