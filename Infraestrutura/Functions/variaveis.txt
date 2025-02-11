@@ -8,6 +8,7 @@
     "EVENTHUB_NAME_USER_SCHEMA":"evh_user_random_schema",
     "SCHEMAREGISTRY_FQDN":"evhnscjprd001.servicebus.windows.net",
     "SCHEMA_GROUP":"SchemaFunctions",
-    "SCHEMA_NAME":"UserRandom"
+    "SCHEMA_NAME":"UserRandom",
+    "SCHEMA_USER_ID":"ID_DO_SCHEMA"
   }
 }

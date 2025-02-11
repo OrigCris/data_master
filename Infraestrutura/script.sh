@@ -20,6 +20,7 @@ PLAN_NAME="aspcjprd001"
 
 KEY_VAULT="akvcjprd001"
 SPN_PRODUCER="spn_func_send"
+SPN_CONSUMER="spn_dtb_consumer"
 
 SCHEMAREGISTRY_FQDN="evhnscjprd001.servicebus.windows.net"
 SCHEMA_GROUP="SchemaFunctions"
@@ -32,7 +33,6 @@ DATABRICKS_PLAN="Premium"
 
 # Resource Group
 az group create --name $RESOURCE_GROUP --location $LOCATION
-az group create --name $RESOURCE_GROUP_DTB --location $LOCATION
 
 # Storage Account com suporte a ADLS Gen2
 az storage account create --name $STORAGE_ACCOUNT --resource-group $RESOURCE_GROUP --location $LOCATION --sku Standard_LRS --kind StorageV2 --hns true
@@ -47,6 +47,13 @@ az storage fs directory create --account-name $STORAGE_ACCOUNT --file-system $CO
 az eventhubs namespace create --resource-group $RESOURCE_GROUP --name $EVENTHUB_NAMESPACE --location $LOCATION --sku Standard
 az eventhubs eventhub create --resource-group $RESOURCE_GROUP --namespace-name $EVENTHUB_NAMESPACE --name $EVENTHUB_NAME_USER --cleanup-policy Delete --retention-time-in-hours 1 --partition-count 1
 az eventhubs eventhub create --resource-group $RESOURCE_GROUP --namespace-name $EVENTHUB_NAMESPACE --name $EVENTHUB_NAME_USER_SCHEMA --cleanup-policy Delete --retention-time-in-hours 1 --partition-count 1
+
+az eventhubs namespace schema-registry create \
+  --resource-group $RESOURCE_GROUP \
+  --namespace-name $EVENTHUB_NAMESPACE \
+  --name $SCHEMA_GROUP \
+  --schema-compatibility Forward \
+  --schema-type Avro
 
 # Criação do Plano de Serviço de Aplicativo
 az appservice plan create --name $PLAN_NAME --resource-group $RESOURCE_GROUP --sku B1 --is-linux
@@ -92,9 +99,18 @@ SP_APP_ID=$(echo $SP_DETAILS | jq -r '.appId')
 SP_SECRET=$(echo $SP_DETAILS | jq -r '.password')
 TENANT_ID=$(echo $SP_DETAILS | jq -r '.tenant')
 
+DTB_SP_DETAILS=$(az ad sp create-for-rbac --name $SPN_CONSUMER --role "Contributor" --scopes /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP)
+DTB_SP_APP_ID=$(echo $DTB_SP_DETAILS | jq -r '.appId')
+DTB_SP_SECRET=$(echo $DTB_SP_DETAILS | jq -r '.password')
+DTB_TENANT_ID=$(echo $DTB_SP_DETAILS | jq -r '.tenant')
+
 az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalAppId" --value $SP_APP_ID
 az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalSecret" --value $SP_SECRET
 az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalTenantId" --value $TENANT_ID
+
+az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalDTBAppId" --value $DTB_SP_APP_ID
+az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalDTBSecret" --value $DTB_SP_SECRET
+az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalDTBTenantId" --value $DTB_TENANT_ID
 
 # Atribuir Permissões ao Service Principal para Acessar o Key Vault
 az role assignment create \
