@@ -67,7 +67,7 @@ Passos para executar o script:
 
 Feito isso já podemos ver os recursos criados dentro do *resource group*
 
-### 2. Registro do Schema no EventHub
+### 2. Criar o Schema no EventHub
 Passos para a criação do *schema* dentro do *schema group*:
   1. Dentro do recurso do Event Hub, procure por Schema Registry.
   2. No Schema Registry, você verá um Schema Group criado. Clique para acessá-lo.
@@ -84,7 +84,7 @@ Passos para configurar a variável de ambiente:
 
 Salve as alterações.
 
-### 4. Implementação da Função no Azure Functions
+### 4. Realizando o deploy da Função no Azure Functions
 Passos para a implementação:
   1. Faça o upload do arquivo func_user.py para o Azure Functions.
   2. Certifique-se de que a variável de ambiente SCHEMA_USER_ID está configurada corretamente, conforme descrito acima.
