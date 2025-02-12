@@ -130,6 +130,16 @@ az role assignment create \
     --role "Key Vault Secrets User" \
     --scope $(az keyvault show --name $KEY_VAULT --query id -o tsv)
 
+az role assignment create \
+  --role "Key Vault Secrets User" \
+  --assignee $(az ad sp list --display-name "AzureDatabricks" --query "[].{Id:id}" --output tsv) \
+  --scope $(az keyvault show --name $KEY_VAULT --query id -o tsv)
+
+az role assignment create \
+    --role "Storage Blob Data Contributor" \
+    --assignee $DTB_SP_APP_ID \
+    --scope $(az keyvault show --name $KEY_VAULT --query id -o tsv)
+
 ################################################### VARIAVEIS DE AMBIENTE ####################################################
 
 # Configurar Variáveis de Ambiente na Function App (não para usar diretamente)
