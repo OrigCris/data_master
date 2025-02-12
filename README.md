@@ -73,6 +73,10 @@ Passos para a criação do *schema* dentro do *schema group*:
   2. No Schema Registry, você verá um Schema Group criado. Clique para acessá-lo.
   3. Clique na opção `+ Schema` depois coloque o nome e importe o arquivo `user_schema.avsc` mencionado acima.
 
+  ![alt text](image.png)
+  ![alt text](image-1.png)
+  ![alt text](image-2.png)
+
 Após criar o schema, copie o **ID** do schema gerado. Este ID será utilizado na configuração da função no Azure Functions.
 
 ### 3. Configuração da Variável de Ambiente no Azure Functions
@@ -81,6 +85,8 @@ Passos para configurar a variável de ambiente:
   1. Acesse o recurso do Azure Functions no portal do Azure.
   2. Vá para Configurações e clique em Configurações da aplicação.
   3. Adicione uma nova configuração de aplicação com o nome SCHEMA_USER_ID e cole o ID do schema copiado anteriormente como valor.
+
+![alt text](image-3.png)
 
 Salve as alterações.
 
