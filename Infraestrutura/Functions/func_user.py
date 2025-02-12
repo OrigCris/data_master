@@ -7,7 +7,6 @@ from azure.identity import DefaultAzureCredential, ClientSecretCredential
 from azure.keyvault.secrets import SecretClient
 from azure.eventhub import EventHubProducerClient, EventData
 from azure.schemaregistry import SchemaRegistryClient
-from azure.schemaregistry.serializer.avroserializer import AvroSerializer
 import avro.schema
 import avro.io
 import io
