@@ -18,17 +18,26 @@ Esse case foi desenvolvido com o intuito de proporcionar um entendimento claro e
 
 ## III. Explicação de como foi desenvolvido
 ### 1. Configuração da Infraestrutura
-Para iniciar o processo, executamos o [script.sh](Infraestrutura/script.sh) disponível no repositório do Git. Este script é responsável por criar todas as infraestruturas necessárias para o projeto, incluindo recursos no Azure como EventHub, Azure Functions e Databricks.
+Para iniciar o processo, executamos o [script.sh](Infraestrutura/script.sh) disponível no repositório do Git. Este script é responsável por criar todas as infraestruturas necessárias para o projeto, incluindo recursos no Azure como EventHub, Azure Functions e Databricks.<br><br>
+Passos para executar o script:
+  1. Faça o upload do arquivo para o Cloud Shell.
+  2. Conceda permissão de execução ao script com o comando: `chmod +x script.sh`
+  3. Execute o script, passando o caminho onde ele se encontra: `./script.sh`
 
-Como executa-lo:
 <p align="center">
-  <img src="Imagens\cloud_shell_import.png" alt="Import script.sh" width="1100">
+  <img src="Imagens\cloud_shell_import.png" alt="Import script.sh" width="500px">
   <br>
   <em>Figura 1: Importar o arquivo SCRIPT.SH para criar recursos e permissões </em>
 </p>
 
+Feito isso já podemos ver os recursos criados dentro do *resource group*
+
 ### 2. Registro do Schema no EventHub
-Em seguida, configuramos o schema registry do EventHub utilizando o arquivo [user_schema.avsc](Infraestrutura/EventHub/user_schema.avsc). Este arquivo define a estrutura dos dados que serão enviados para o EventHub e pode ser encontrado no repositório do Git. A configuração do schema registry assegura que os dados enviados estejam em conformidade com o formato esperado.
+Em seguida, configuramos o schema registry do EventHub utilizando o arquivo [user_schema.avsc](Infraestrutura/EventHub/user_schema.avsc). Este arquivo define a estrutura dos dados que serão enviados para o EventHub e pode ser encontrado no repositório do Git. A configuração do schema registry assegura que os dados enviados estejam em conformidade com o formato esperado.<br><br>
+Passos para a criação do *schema* dentro do *schema group*:
+  1. Dentro do recurso do Event Hub, procure por Schema Registry.
+  2. No Schema Registry, você verá um Schema Group criado. Clique para acessá-lo.
+  3. Clique na opção `+ Schema` depois coloque o nome e importe o arquivo `user_schema.avsc` mencionado acima.
 
 ### 3. Implementação da Função no Azure Functions
 Para a implementação da função no Azure Functions, utilizamos o arquivo [func_user.py](Infraestrutura/Functions/func_user.py), disponível no repositório do Git. Este arquivo contém o código em Python necessário para processar os dados e enviá-los para o EventHub. A função é implantada no Azure Functions, onde é executada em resposta a eventos, processando e transmitindo os dados de forma eficiente.
