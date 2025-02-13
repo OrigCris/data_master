@@ -101,3 +101,8 @@ Passos para a implementação:
   4. Importe os notebooks disponíveis no GIT e coloque-os para rodar.
 
 Obs: Em todos os passos e configurações, não esquecer de trocar os nomes das variáveis de acordo com a sua configuração.
+
+
+<img src="Imagens\monitoramento_1.png" alt="Opção de criar um novo schema" width="600px"/> 
+<img src="Imagens\monitoramento_2.png" alt="Opção de criar um novo schema" width="600px"/> 
+<img src="Imagens\monitoramento_3.png" alt="Opção de criar um novo schema" width="600px"/> 
