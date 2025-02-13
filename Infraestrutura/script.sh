@@ -140,6 +140,17 @@ az role assignment create \
     --assignee $DTB_SP_APP_ID \
     --scope $(az keyvault show --name $KEY_VAULT --query id -o tsv)
 
+# Obter o Connection String do Event Hub
+EVENTHUB_CONNECTION_STRING=$(az eventhubs namespace authorization-rule keys list \
+    --resource-group $RESOURCE_GROUP \
+    --namespace-name $EVENTHUB_NAMESPACE \
+    --name RootManageSharedAccessKey \
+    --query primaryConnectionString \
+    --output tsv)
+
+# Armazenar o Connection String no Key Vault
+az keyvault secret set --vault-name $KEY_VAULT --name "EventhubConnectionString" --value $EVENTHUB_CONNECTION_STRING
+
 ################################################### VARIAVEIS DE AMBIENTE ####################################################
 
 # Configurar Variáveis de Ambiente na Function App (não para usar diretamente)

@@ -1,0 +1,889 @@
+{
+  "properties": {
+    "lenses": [
+      {
+        "order": 0,
+        "parts": [
+          {
+            "position": {
+              "x": 0,
+              "y": 0,
+              "colSpan": 14,
+              "rowSpan": 1
+            },
+            "metadata": {
+              "inputs": [],
+              "type": "Extension/HubsExtension/PartType/MarkdownPart",
+              "settings": {
+                "content": {
+                  "content": "",
+                  "title": "Eventhub",
+                  "subtitle": "Autentição e Mensagens",
+                  "markdownSource": 1,
+                  "markdownUri": ""
+                }
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 14,
+              "y": 0,
+              "colSpan": 2,
+              "rowSpan": 1
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "id",
+                  "value": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
+                }
+              ],
+              "type": "Extension/Microsoft_Azure_EventHub/PartType/NamespaceOverviewPart"
+            }
+          },
+          {
+            "position": {
+              "x": 0,
+              "y": 1,
+              "colSpan": 7,
+              "rowSpan": 4
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "options",
+                  "isOptional": true
+                },
+                {
+                  "name": "sharedTimeRange",
+                  "isOptional": true
+                }
+              ],
+              "type": "Extension/HubsExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [
+                        {
+                          "resourceMetadata": {
+                            "id": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
+                          },
+                          "name": "IncomingRequests",
+                          "aggregationType": 1,
+                          "namespace": "microsoft.eventhub/namespaces",
+                          "metricVisualization": {
+                            "displayName": "Incoming Requests",
+                            "resourceDisplayName": "evhnscjprd001"
+                          }
+                        }
+                      ],
+                      "title": "Requests",
+                      "titleKind": 2,
+                      "visualization": {
+                        "chartType": 2,
+                        "legendVisualization": {
+                          "isVisible": true,
+                          "position": 2,
+                          "hideHoverCard": false,
+                          "hideLabelNames": true
+                        },
+                        "axisVisualization": {
+                          "x": {
+                            "isVisible": true,
+                            "axisType": 2
+                          },
+                          "y": {
+                            "isVisible": true,
+                            "axisType": 1
+                          }
+                        },
+                        "disablePinning": true
+                      }
+                    }
+                  }
+                }
+              },
+              "filters": {
+                "EntityName": {
+                  "model": {
+                    "operator": "equals",
+                    "values": [
+                      "evh_user_random",
+                      "evh_user_random_schema"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 7,
+              "y": 1,
+              "colSpan": 7,
+              "rowSpan": 2
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "options",
+                  "isOptional": true
+                },
+                {
+                  "name": "sharedTimeRange",
+                  "isOptional": true
+                }
+              ],
+              "type": "Extension/HubsExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [
+                        {
+                          "resourceMetadata": {
+                            "id": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
+                          },
+                          "name": "IncomingMessages",
+                          "aggregationType": 1,
+                          "namespace": "microsoft.eventhub/namespaces",
+                          "metricVisualization": {
+                            "displayName": "Incoming Messages",
+                            "resourceDisplayName": "evhnscjprd001"
+                          }
+                        }
+                      ],
+                      "title": "Mensagens enviadas",
+                      "titleKind": 2,
+                      "visualization": {
+                        "chartType": 2,
+                        "legendVisualization": {
+                          "isVisible": true,
+                          "position": 2,
+                          "hideHoverCard": false,
+                          "hideLabelNames": true
+                        },
+                        "axisVisualization": {
+                          "x": {
+                            "isVisible": true,
+                            "axisType": 2
+                          },
+                          "y": {
+                            "isVisible": true,
+                            "axisType": 1
+                          }
+                        },
+                        "disablePinning": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 14,
+              "y": 1,
+              "colSpan": 2,
+              "rowSpan": 1
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "id",
+                  "value": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.Databricks/workspaces/dbwcjprd001"
+                }
+              ],
+              "type": "Extension/Microsoft_Azure_Databricks/PartType/DatabricksPart",
+              "asset": {
+                "idInputName": "id",
+                "type": "Workspace"
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 14,
+              "y": 2,
+              "colSpan": 2,
+              "rowSpan": 2
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "id",
+                  "value": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.Storage/storageAccounts/stacjprd001",
+                  "isOptional": true
+                },
+                {
+                  "name": "resourceId",
+                  "isOptional": true
+                },
+                {
+                  "name": "menuid",
+                  "isOptional": true
+                }
+              ],
+              "type": "Extension/HubsExtension/PartType/ResourcePart",
+              "asset": {
+                "idInputName": "id"
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 7,
+              "y": 3,
+              "colSpan": 7,
+              "rowSpan": 2
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "options",
+                  "isOptional": true
+                },
+                {
+                  "name": "sharedTimeRange",
+                  "isOptional": true
+                }
+              ],
+              "type": "Extension/HubsExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [
+                        {
+                          "resourceMetadata": {
+                            "id": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
+                          },
+                          "name": "OutgoingMessages",
+                          "aggregationType": 1,
+                          "namespace": "microsoft.eventhub/namespaces",
+                          "metricVisualization": {
+                            "displayName": "Outgoing Messages",
+                            "resourceDisplayName": "evhnscjprd001"
+                          }
+                        }
+                      ],
+                      "title": "Mensagens lidas",
+                      "titleKind": 2,
+                      "visualization": {
+                        "chartType": 2,
+                        "legendVisualization": {
+                          "isVisible": true,
+                          "position": 2,
+                          "hideHoverCard": false,
+                          "hideLabelNames": true
+                        },
+                        "axisVisualization": {
+                          "x": {
+                            "isVisible": true,
+                            "axisType": 2
+                          },
+                          "y": {
+                            "isVisible": true,
+                            "axisType": 1
+                          }
+                        },
+                        "disablePinning": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 14,
+              "y": 4,
+              "colSpan": 2,
+              "rowSpan": 1
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "id",
+                  "value": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.KeyVault/vaults/akvcjprd001"
+                }
+              ],
+              "type": "Extension/Microsoft_Azure_KeyVault/PartType/VaultPart",
+              "asset": {
+                "idInputName": "id",
+                "type": "KeyVault"
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 0,
+              "y": 5,
+              "colSpan": 7,
+              "rowSpan": 4
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "options",
+                  "isOptional": true
+                },
+                {
+                  "name": "sharedTimeRange",
+                  "isOptional": true
+                }
+              ],
+              "type": "Extension/HubsExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [
+                        {
+                          "resourceMetadata": {
+                            "id": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
+                          },
+                          "name": "IncomingBytes",
+                          "aggregationType": 1,
+                          "namespace": "microsoft.eventhub/namespaces",
+                          "metricVisualization": {
+                            "displayName": "Incoming Bytes.",
+                            "resourceDisplayName": "evhnscjprd001"
+                          }
+                        }
+                      ],
+                      "title": "Sum Incoming Bytes. for evhnscjprd001 where EntityName = 'evh_user_random'",
+                      "titleKind": 1,
+                      "visualization": {
+                        "chartType": 2,
+                        "legendVisualization": {
+                          "isVisible": true,
+                          "position": 2,
+                          "hideHoverCard": false,
+                          "hideLabelNames": true
+                        },
+                        "axisVisualization": {
+                          "x": {
+                            "isVisible": true,
+                            "axisType": 2
+                          },
+                          "y": {
+                            "isVisible": true,
+                            "axisType": 1
+                          }
+                        },
+                        "disablePinning": true
+                      }
+                    }
+                  }
+                }
+              },
+              "filters": {
+                "EntityName": {
+                  "model": {
+                    "operator": "equals",
+                    "values": [
+                      "evh_user_random"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 7,
+              "y": 5,
+              "colSpan": 7,
+              "rowSpan": 4
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "options",
+                  "isOptional": true
+                },
+                {
+                  "name": "sharedTimeRange",
+                  "isOptional": true
+                }
+              ],
+              "type": "Extension/HubsExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [
+                        {
+                          "resourceMetadata": {
+                            "id": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
+                          },
+                          "name": "IncomingBytes",
+                          "aggregationType": 1,
+                          "namespace": "microsoft.eventhub/namespaces",
+                          "metricVisualization": {
+                            "displayName": "Incoming Bytes.",
+                            "resourceDisplayName": "evhnscjprd001"
+                          }
+                        }
+                      ],
+                      "title": "Sum Incoming Bytes. for evhnscjprd001 where EntityName = 'evh_user_random_schema'",
+                      "titleKind": 1,
+                      "visualization": {
+                        "chartType": 2,
+                        "legendVisualization": {
+                          "isVisible": true,
+                          "position": 2,
+                          "hideHoverCard": false,
+                          "hideLabelNames": true
+                        },
+                        "axisVisualization": {
+                          "x": {
+                            "isVisible": true,
+                            "axisType": 2
+                          },
+                          "y": {
+                            "isVisible": true,
+                            "axisType": 1
+                          }
+                        },
+                        "disablePinning": true
+                      },
+                      "filterCollection": {
+                        "filters": [
+                          {
+                            "key": "EntityName",
+                            "operator": 0,
+                            "values": [
+                              "evh_user_random_schema"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "filters": {
+                "EntityName": {
+                  "model": {
+                    "operator": "equals",
+                    "values": [
+                      "evh_user_random_schema"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 14,
+              "y": 5,
+              "colSpan": 2,
+              "rowSpan": 4
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "resourceGroup",
+                  "isOptional": true
+                },
+                {
+                  "name": "id",
+                  "value": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001",
+                  "isOptional": true
+                }
+              ],
+              "type": "Extension/HubsExtension/PartType/ResourceGroupMapPinnedPart",
+              "deepLink": "#@cristianoalves.onmicrosoft.com/resource/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/overview"
+            }
+          },
+          {
+            "position": {
+              "x": 0,
+              "y": 9,
+              "colSpan": 6,
+              "rowSpan": 4
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "options",
+                  "isOptional": true
+                },
+                {
+                  "name": "sharedTimeRange",
+                  "isOptional": true
+                }
+              ],
+              "type": "Extension/HubsExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [],
+                      "title": "Metrics chart",
+                      "titleKind": 1,
+                      "visualization": {
+                        "disablePinning": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 6,
+              "y": 9,
+              "colSpan": 6,
+              "rowSpan": 4
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "options",
+                  "isOptional": true
+                },
+                {
+                  "name": "sharedTimeRange",
+                  "isOptional": true
+                }
+              ],
+              "type": "Extension/HubsExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [],
+                      "title": "Metrics chart",
+                      "titleKind": 1,
+                      "visualization": {
+                        "disablePinning": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 0,
+              "y": 13,
+              "colSpan": 16,
+              "rowSpan": 1
+            },
+            "metadata": {
+              "inputs": [],
+              "type": "Extension/HubsExtension/PartType/MarkdownPart",
+              "settings": {
+                "content": {
+                  "content": "",
+                  "title": "Storage Account",
+                  "subtitle": "Leitura e persistëncia de dados",
+                  "markdownSource": 1,
+                  "markdownUri": ""
+                }
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 0,
+              "y": 14,
+              "colSpan": 16,
+              "rowSpan": 3
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "options",
+                  "isOptional": true
+                },
+                {
+                  "name": "sharedTimeRange",
+                  "isOptional": true
+                }
+              ],
+              "type": "Extension/HubsExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [
+                        {
+                          "resourceMetadata": {
+                            "id": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.Storage/storageAccounts/stacjprd001/blobservices/default"
+                          },
+                          "name": "Transactions",
+                          "aggregationType": 1,
+                          "namespace": "microsoft.storage/storageaccounts/blobservices",
+                          "metricVisualization": {
+                            "displayName": "Transactions",
+                            "resourceDisplayName": "blob"
+                          }
+                        }
+                      ],
+                      "title": "Transações realizadas",
+                      "titleKind": 2,
+                      "visualization": {
+                        "chartType": 2,
+                        "legendVisualization": {
+                          "isVisible": true,
+                          "position": 2,
+                          "hideHoverCard": false,
+                          "hideLabelNames": true
+                        },
+                        "axisVisualization": {
+                          "x": {
+                            "isVisible": true,
+                            "axisType": 2
+                          },
+                          "y": {
+                            "isVisible": true,
+                            "axisType": 1
+                          }
+                        },
+                        "disablePinning": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 0,
+              "y": 17,
+              "colSpan": 16,
+              "rowSpan": 1
+            },
+            "metadata": {
+              "inputs": [],
+              "type": "Extension/HubsExtension/PartType/MarkdownPart",
+              "settings": {
+                "content": {
+                  "content": "",
+                  "title": "Databricks",
+                  "subtitle": "Utilização de recurso",
+                  "markdownSource": 1,
+                  "markdownUri": ""
+                }
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 0,
+              "y": 18,
+              "colSpan": 8,
+              "rowSpan": 5
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "options",
+                  "isOptional": true
+                },
+                {
+                  "name": "sharedTimeRange",
+                  "isOptional": true
+                }
+              ],
+              "type": "Extension/HubsExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [
+                        {
+                          "resourceMetadata": {
+                            "region": "brazilsouth",
+                            "resourceType": "microsoft.compute/virtualmachines",
+                            "subscription": {
+                              "subscriptionId": "aa6ae7e7-9ce6-4420-b25e-08f234e5d25e",
+                              "displayName": "Visual Studio Enterprise Subscription",
+                              "uniqueDisplayName": "Visual Studio Enterprise Subscription"
+                            }
+                          },
+                          "name": "Available Memory Bytes",
+                          "aggregationType": 4,
+                          "namespace": "microsoft.compute/virtualmachines",
+                          "metricVisualization": {
+                            "displayName": "Available Memory Bytes (Preview)",
+                            "resourceDisplayName": "Visual Studio Enterprise Subscription"
+                          }
+                        }
+                      ],
+                      "title": "Memória disponível",
+                      "titleKind": 2,
+                      "visualization": {
+                        "chartType": 2,
+                        "legendVisualization": {
+                          "isVisible": true,
+                          "position": 2,
+                          "hideHoverCard": false,
+                          "hideLabelNames": true
+                        },
+                        "axisVisualization": {
+                          "x": {
+                            "isVisible": true,
+                            "axisType": 2
+                          },
+                          "y": {
+                            "isVisible": true,
+                            "axisType": 1
+                          }
+                        },
+                        "disablePinning": true
+                      },
+                      "grouping": {
+                        "dimension": "Microsoft.ResourceId",
+                        "sort": 2,
+                        "top": 10
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "position": {
+              "x": 8,
+              "y": 18,
+              "colSpan": 8,
+              "rowSpan": 5
+            },
+            "metadata": {
+              "inputs": [
+                {
+                  "name": "options",
+                  "isOptional": true
+                },
+                {
+                  "name": "sharedTimeRange",
+                  "isOptional": true
+                }
+              ],
+              "type": "Extension/HubsExtension/PartType/MonitorChartPart",
+              "settings": {
+                "content": {
+                  "options": {
+                    "chart": {
+                      "metrics": [
+                        {
+                          "resourceMetadata": {
+                            "region": "brazilsouth",
+                            "resourceType": "microsoft.compute/virtualmachines",
+                            "subscription": {
+                              "subscriptionId": "aa6ae7e7-9ce6-4420-b25e-08f234e5d25e",
+                              "displayName": "Visual Studio Enterprise Subscription",
+                              "uniqueDisplayName": "Visual Studio Enterprise Subscription"
+                            }
+                          },
+                          "name": "Percentage CPU",
+                          "aggregationType": 4,
+                          "namespace": "microsoft.compute/virtualmachines",
+                          "metricVisualization": {
+                            "displayName": "Percentage CPU",
+                            "resourceDisplayName": "Visual Studio Enterprise Subscription"
+                          }
+                        }
+                      ],
+                      "title": "Média Percentage CPU para undefined in undefined region  por ResourceId",
+                      "titleKind": 1,
+                      "visualization": {
+                        "chartType": 2,
+                        "legendVisualization": {
+                          "isVisible": true,
+                          "position": 2,
+                          "hideHoverCard": false,
+                          "hideLabelNames": true
+                        },
+                        "axisVisualization": {
+                          "x": {
+                            "isVisible": true,
+                            "axisType": 2
+                          },
+                          "y": {
+                            "isVisible": true,
+                            "axisType": 1
+                          }
+                        },
+                        "disablePinning": true
+                      },
+                      "grouping": {
+                        "dimension": "Microsoft.ResourceId",
+                        "sort": 2,
+                        "top": 10
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "model": {
+        "timeRange": {
+          "value": {
+            "relative": {
+              "duration": 24,
+              "timeUnit": 1
+            }
+          },
+          "type": "MsPortalFx.Composition.Configuration.ValueTypes.TimeRange"
+        },
+        "filterLocale": {
+          "value": "en-us"
+        },
+        "filters": {
+          "value": {
+            "MsPortalFx_TimeRange": {
+              "model": {
+                "format": "local",
+                "granularity": "auto",
+                "relative": "1h"
+              },
+              "displayCache": {
+                "name": "Hora Local",
+                "value": "Última hora"
+              },
+              "filteredPartIds": [
+                "StartboardPart-MonitorChartPart-021b3ee9-a9a3-4bfd-8564-77a527dbf57b",
+                "StartboardPart-MonitorChartPart-021b3ee9-a9a3-4bfd-8564-77a527dbf581",
+                "StartboardPart-MonitorChartPart-021b3ee9-a9a3-4bfd-8564-77a527dbf583",
+                "StartboardPart-MonitorChartPart-021b3ee9-a9a3-4bfd-8564-77a527dbf5e9",
+                "StartboardPart-MonitorChartPart-021b3ee9-a9a3-4bfd-8564-77a527dbf57d",
+                "StartboardPart-MonitorChartPart-021b3ee9-a9a3-4bfd-8564-77a527dbf58b",
+                "StartboardPart-MonitorChartPart-021b3ee9-a9a3-4bfd-8564-77a527dbf58d",
+                "StartboardPart-MonitorChartPart-021b3ee9-a9a3-4bfd-8564-77a527dbf842",
+                "StartboardPart-MonitorChartPart-021b3ee9-a9a3-4bfd-8564-77a527dbf9c1",
+                "StartboardPart-MonitorChartPart-021b3ee9-a9a3-4bfd-8564-77a527dbf9cd"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "name": "Monitor Case",
+  "type": "Microsoft.Portal/dashboards",
+  "location": "INSERT LOCATION",
+  "tags": {
+    "hidden-title": "Monitor Case"
+  },
+  "apiVersion": "2022-12-01-preview"
+}
