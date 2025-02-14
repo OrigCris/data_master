@@ -99,7 +99,7 @@ Passos para a implementação:
 
 ### 5. Preparando o ambiente do Databricks
   1. Primeiro precisamos de uma `scope`, que será necessário para que possamos realizar nossos acessos (<a href="https://learn.microsoft.com/en-us/azure/databricks/security/secrets/">Como criar o secret scope</a>).
-  2. Já com o `scope` criado podemos criar o nosso cluster, o arquivo json irá apoiar nisso, [func_user.py](Databricks/cluster_json). (Não esqueça de substituir os dados da SPN)
+  2. Já com o `scope` criado podemos criar o nosso cluster, o arquivo json irá apoiar nisso, [cluster_json](Databricks/cluster.json). (Não esqueça de substituir os dados da SPN)
   3. Adicione a biblioteca maven para conectar ao EventHub: em **"bibliotecas"**, clique em **"instalar novo"**, selecione `maven` e procure por `com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.22`
   4. Importe os notebooks disponíveis no GIT e coloque-os para rodar.
 
