@@ -24,6 +24,13 @@ O objetivo principal deste projeto é ilustrar como integrar e utilizar o Azure 
 Esse case foi desenvolvido com o intuito de proporcionar um entendimento claro e prático de como essas ferramentas podem ser usadas em conjunto para resolver problemas reais de processamento de dados, além de demonstrar a flexibilidade e a robustez da plataforma Azure.
 
 ## III. Arquitetura de solução e Arquitetura técnica
+### Arquitetura Solução
+Com esta arquitetura visamos mostrar de forma simples e direta como será o pipeline de dados deste projeto. A solução envolve coletar dados de uma API e processá-los para obter insights valiosos, no caso, usamos dados fícticios para exemplificar isso. Começamos coletando os dados e enviando-os para um sistema de armazenamento temporário. Em seguida, os dados são processados e transformados, garantindo que sejam limpos e estruturados. Por fim, podemos usar ferramentas de BI para gerar valores em cima dos dados.
+Essa arquitetura visa ilustrar uma pipeline de dados completa, desde a sua captura, transformação e armazenamento dos dados.
+<p align="center">
+  <img src="Imagens\arquitetura_solucao.png" alt="Arquitetura de solução" width="1000px"/>
+</p>
+
 ### Arquitetura Técnica
 <p align="center">
   <img src="Imagens\arquitetura_tecnica.png" alt="Arquitetura técnica" width="1000px"/>
@@ -161,9 +168,9 @@ Utilizamos o Azure Monitor para acompanhar as seguintes métricas:
   2. Média de Uso de CPU (%): Média do uso de CPU nos clusters.
 
 <p align="center">
-  <img src="Imagens\monitoramento_1.jpeg" alt="Opção de criar um novo schema" width="900px"/> 
-  <img src="Imagens\monitoramento_2.jpeg" alt="Opção de criar um novo schema" width="900px"/>
-  <img src="Imagens\monitoramento_3.jpeg" alt="Opção de criar um novo schema" width="900px"/>
+  <img src="Imagens\monitoramento_1.jpeg" alt="Monitoramento 1" width="900px"/> 
+  <img src="Imagens\monitoramento_2.jpeg" alt="Monitoramento 2" width="900px"/>
+  <img src="Imagens\monitoramento_3.jpeg" alt="Monitoramento 3" width="900px"/>
 </p>
 
 A implementação do monitoramento com o Azure Monitor é essencial para assegurar a operação adequada de todos os recursos da solução. Isso permite que a equipe de desenvolvimento se concentre em melhorar continuamente a aplicação, sabendo que qualquer problema será rapidamente detectado e resolvido.
