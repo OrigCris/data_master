@@ -102,7 +102,46 @@ Passos para a implementação:
 
 Obs: Em todos os passos e configurações, não esquecer de trocar os nomes das variáveis de acordo com a sua configuração.
 
+## V. Monitoramento com Azure Monitor
+### 1. Introdução
+Neste case, usamos o Azure Monitor para garantir a observabilidade e o monitoramento contínuo dos diversos recursos da nossa solução. O monitoramento é essencial para garantir a eficiência, disponibilidade e desempenho das aplicações, ajudando a identificar e resolver problemas rapidamente.
 
-<img src="Imagens\monitoramento_1.png" alt="Opção de criar um novo schema" width="600px"/> 
-<img src="Imagens\monitoramento_2.png" alt="Opção de criar um novo schema" width="600px"/> 
-<img src="Imagens\monitoramento_3.png" alt="Opção de criar um novo schema" width="600px"/> 
+### 2. Objetivos do Monitoramento
+O monitoramento visa:
+- Detectar Problemas Proativamente: Identificar problemas antes que impactem os usuários.
+- Otimização de Desempenho: Analisar métricas para otimizar a execução dos serviços.
+- Garantia de SLA: Assegurar que os níveis de serviço acordados (SLA) sejam cumpridos.
+- Segurança e Conformidade: Monitorar logs para garantir conformidade com as políticas de segurança.
+
+### 3. Recursos Monitorados
+Utilizamos o Azure Monitor para acompanhar as seguintes métricas:
+
+#### Eventhub:
+  1. Requests: Número de requisições processadas.
+  2. Mensagens Enviadas: Total de mensagens enviadas.
+  3. Mensagens Lidas: Total de mensagens lidas.
+  4. Total de Bytes de Entrada: Comparação entre tópicos com e sem Schema Registry.
+
+#### Function App:
+  1. Número de Execuções: Quantas vezes as funções foram executadas.
+  2. Memory Working Set: Uso de memória das funções.
+    
+#### Storage Account:
+  1. Transações Realizadas: Total de transações.
+
+#### Databricks:
+  1. Memória Disponível: Quantidade de memória disponível nos clusters.
+  2. Média de Uso de CPU (%): Média do uso de CPU nos clusters.
+
+<p align="center">
+  <img src="Imagens\monitoramento_1.jpeg" alt="Opção de criar um novo schema" width="900px"/> 
+  <img src="Imagens\monitoramento_2.jpeg" alt="Opção de criar um novo schema" width="900px"/> 
+  <img src="Imagens\monitoramento_3.jpeg" alt="Opção de criar um novo schema" width="900px"/>
+</p>
+
+A implementação do monitoramento com o Azure Monitor é essencial para assegurar a operação adequada de todos os recursos da solução. Isso permite que a equipe de desenvolvimento se concentre em melhorar continuamente a aplicação, sabendo que qualquer problema será rapidamente detectado e resolvido.
+
+O dashboard oferece informações cruciais para identificar possíveis problemas na ingestão de dados ou gargalos na pipeline. Para resolver esses problemas (troubleshooting), basta clicar no recurso à direita do painel, o que permite uma análise detalhada das métricas e logs correspondentes.
+
+Para as métricas do Spark, é fundamental acessar também as métricas e logs do cluster. Isso ajuda a identificar a causa raiz de qualquer problema potencial.
+## VI. Melhorias e Considerações Finais
