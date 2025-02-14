@@ -15,11 +15,11 @@ Foram configuradas duas instâncias no EventHub:
 ## II. Objetivo
 O objetivo principal deste projeto é ilustrar como integrar e utilizar o Azure Functions, Event Hub e Databricks para criar uma solução eficiente de processamento e análise de dados. 
 <br>A partir desta demonstração, pretende-se mostrar:
-<li>Como o Azure Functions pode ser utilizado para consumir dados de APIs externas de forma segura.
-<li>A eficiência do Event Hub como ponto central de ingestão de dados em tempo real.
-<li>O uso do Databricks para processar dados com Spark Streaming, otimizando a ingestão de dados com a opção de trigger once.
-<li>O fluxo de dados desde a camada Bronze até a camada Gold, incluindo ingestão bruta, tratamento e normalização, e agregação de informações.
-<li>A comparação entre o uso e não uso do Schema Registry no EventHub, evidenciando como ele otimiza o recurso.
+  - Como o Azure Functions pode ser utilizado para consumir dados de APIs externas de forma segura.
+  - A eficiência do Event Hub como ponto central de ingestão de dados em tempo real.
+  - O uso do Databricks para processar dados com Spark Streaming, otimizando a ingestão de dados com a opção de trigger once.
+  - O fluxo de dados desde a camada Bronze até a camada Gold, incluindo ingestão bruta, tratamento e normalização, e agregação de informações.
+  - A comparação entre o uso e não uso do Schema Registry no EventHub, evidenciando como ele otimiza o recurso.
 
 Esse case foi desenvolvido com o intuito de proporcionar um entendimento claro e prático de como essas ferramentas podem ser usadas em conjunto para resolver problemas reais de processamento de dados, além de demonstrar a flexibilidade e a robustez da plataforma Azure.
 
@@ -144,4 +144,13 @@ A implementação do monitoramento com o Azure Monitor é essencial para assegur
 O dashboard oferece informações cruciais para identificar possíveis problemas na ingestão de dados ou gargalos na pipeline. Para resolver esses problemas (troubleshooting), basta clicar no recurso à direita do painel, o que permite uma análise detalhada das métricas e logs correspondentes.
 
 Para as métricas do Spark, é fundamental acessar também as métricas e logs do cluster. Isso ajuda a identificar a causa raiz de qualquer problema potencial.
+
 ## VI. Melhorias e Considerações Finais
+
+Para melhorar a resiliência de nossa Function App, propomos a implementação de um sistema de filas. Em um ambiente de computação em nuvem, a disponibilidade e a resiliência são fatores cruciais para garantir que os dados sejam processados de maneira eficiente e confiável. As intermitências do EventHub podem representar um desafio significativo, pois podem resultar na perda de dados valiosos. Portanto, a solução proposta é a implementação de uma fila (Queue), como o Azure Queue Storage ou o Azure Service Bus Queue, para armazenar temporariamente os dados recebidos do EventHub durante essas intermitências.
+
+A implementação de uma fila oferece vários benefícios. Primeiro, ela melhora a resiliência do sistema, garantindo que nenhum dado seja perdido, mesmo quando o EventHub enfrenta intermitências. Os dados armazenados na fila podem ser processados pela Function App assim que a conexão com o EventHub for restabelecida. Além disso, essa abordagem permite que o sistema lide de forma mais eficiente com picos de carga, escalando conforme necessário para garantir a continuidade do processamento de dados.
+
+Essa abordagem não apenas melhora a resiliência e a escalabilidade do sistema, mas também oferece uma camada adicional de redundância, fundamental para sistemas críticos.
+
+Em conclusão, investir em mecanismos de resiliência, como a implementação de um sistema de filas, é vital para garantir a disponibilidade contínua dos dados. Sugerimos a realização de testes de carga e falha para validar a eficácia dessa implementação e identificar possíveis melhorias adicionais.
