@@ -23,7 +23,11 @@ O objetivo principal deste projeto é ilustrar como integrar e utilizar o Azure 
 
 Esse case foi desenvolvido com o intuito de proporcionar um entendimento claro e prático de como essas ferramentas podem ser usadas em conjunto para resolver problemas reais de processamento de dados, além de demonstrar a flexibilidade e a robustez da plataforma Azure.
 
-## III. Explicação de como foi desenvolvido
+## IV. Arquitetura de solução e Arquitetura técnica
+
+<img src="Imagens\arquitetura_tecnica.png" alt="Opção de criar um novo schema" width="900px"/>
+
+## IV. Explicação de como foi desenvolvido
 ### 1. Configuração da Infraestrutura
 Para iniciar o processo, executamos o [script.sh](Infraestrutura/script.sh) disponível no repositório do Git. Este script é responsável por criar todas as infraestruturas necessárias para o projeto, incluindo recursos no Azure como EventHub, Azure Functions e Databricks.
 
@@ -51,7 +55,7 @@ Em seguida, os dados são processados em lote (batch) utilizando Spark. Durante 
 #### Camada Gold
 Finalmente, os dados são transformados e agregados na camada Gold. Esta camada contém dados altamente estruturados e otimizados para análise de negócios e geração de relatórios. A camada Gold oferece a melhor qualidade de dados, pronta para consumo por ferramentas de BI e análises avançadas.
 
-## IV. Passo a passo para a implementação
+## V. Passo a passo para a implementação
 
 ### 1. Criando todos os recursos
 Passos para executar o script:
@@ -102,7 +106,7 @@ Passos para a implementação:
 
 Obs: Em todos os passos e configurações, não esquecer de trocar os nomes das variáveis de acordo com a sua configuração.
 
-## V. Monitoramento com Azure Monitor
+## VI. Monitoramento com Azure Monitor
 ### 1. Introdução
 Neste case, usamos o Azure Monitor para garantir a observabilidade e o monitoramento contínuo dos diversos recursos da nossa solução. O monitoramento é essencial para garantir a eficiência, disponibilidade e desempenho das aplicações, ajudando a identificar e resolver problemas rapidamente.
 
@@ -135,7 +139,7 @@ Utilizamos o Azure Monitor para acompanhar as seguintes métricas:
 
 <p align="center">
   <img src="Imagens\monitoramento_1.jpeg" alt="Opção de criar um novo schema" width="900px"/> 
-  <img src="Imagens\monitoramento_2.jpeg" alt="Opção de criar um novo schema" width="900px"/> 
+  <img src="Imagens\monitoramento_2.jpeg" alt="Opção de criar um novo schema" width="900px"/>
   <img src="Imagens\monitoramento_3.jpeg" alt="Opção de criar um novo schema" width="900px"/>
 </p>
 
@@ -145,7 +149,7 @@ O dashboard oferece informações cruciais para identificar possíveis problemas
 
 Para as métricas do Spark, é fundamental acessar também as métricas e logs do cluster. Isso ajuda a identificar a causa raiz de qualquer problema potencial.
 
-## VI. Melhorias e Considerações Finais
+## VII. Melhorias e Considerações Finais
 
 Para melhorar a resiliência de nossa Function App, propomos a implementação de um sistema de filas. Em um ambiente de computação em nuvem, a disponibilidade e a resiliência são fatores cruciais para garantir que os dados sejam processados de maneira eficiente e confiável. As intermitências do EventHub podem representar um desafio significativo, pois podem resultar na perda de dados valiosos. Portanto, a solução proposta é a implementação de uma fila (Queue), como o Azure Queue Storage ou o Azure Service Bus Queue, para armazenar temporariamente os dados recebidos do EventHub durante essas intermitências.
 
