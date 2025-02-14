@@ -1,7 +1,7 @@
 # Azure Data Pipeline Demonstration
 
 ## I. Resumo
-Este projeto visa demonstrar a criação de uma pipeline completa de processamento de dados utilizando diversas ferramentas da Microsoft Azure. Inicialmente, o **Azure Functions** é configurado para consumir dados de uma API externa, utilizando uma **Service Principal Name (SPN)** para autenticação segura. Esses dados são enviados para o **Event Hub**, que atua como um hub central para ingestão de dados em tempo real. Posteriormente, o **Databricks** é utilizado para processar esses dados com **Spark Streaming**, configurado com a opção de **trigger once** para realizar a ingestão apenas quando novos dados estão disponíveis, economizando recursos computacionais.
+Este projeto visa demonstrar a criação de uma pipeline completa de processamento de dados utilizando diversas ferramentas da Microsoft Azure. Inicialmente, o **Azure Functions** é configurado para consumir informações de uma API externa, utilizando uma **Service Principal Name (SPN)** para autenticação segura. Os dados coletados são enviados para o **Event Hub**, que atua como um hub central para ingestão de dados em tempo real. Posteriormente, o **Databricks** é utilizado para processar as informações com **Spark Streaming**, configurado com a opção de **trigger once** para realizar a ingestão apenas quando novos dados estão disponíveis, economizando recursos computacionais.
 
 No Databricks, os dados são armazenados na camada Bronze para ingestão bruta, passam por um processo de tratamento e normalização na camada Silver e, finalmente, são agregados na camada Gold. A camada Gold é utilizada para consolidar informações importantes que podem ser visualizadas em ferramentas de Business Intelligence (BI).
 
