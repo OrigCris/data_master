@@ -24,9 +24,33 @@ O objetivo principal deste projeto é ilustrar como integrar e utilizar o Azure 
 Esse case foi desenvolvido com o intuito de proporcionar um entendimento claro e prático de como essas ferramentas podem ser usadas em conjunto para resolver problemas reais de processamento de dados, além de demonstrar a flexibilidade e a robustez da plataforma Azure.
 
 ## III. Arquitetura de solução e Arquitetura técnica
+### Arquitetura Técnica
 <p align="center">
   <img src="Imagens\arquitetura_tecnica.png" alt="Arquitetura técnica" width="1000px"/>
 </p>
+
+#### 1. Azure Functions
+  &nbsp;&nbsp;**Coleta de Dados**: As Azure Functions coletam dados de uma API específica.<br/>
+  &nbsp;&nbsp;**Envio de Dados**: Depois, esses dados são enviados para o EventHub usando uma Service Principal (SPN), garantindo segurança na autenticação e autorização.<br/>
+  &nbsp;&nbsp;**Motivo da Escolha**: Escolhemos Azure Functions pela capacidade de escalar automaticamente e pela facilidade de execução de códigos sem precisar gerenciar infraestrutura. Além disso, são ideais para tarefas baseadas em eventos, como coletar dados de APIs.
+  
+#### 2. EventHub
+  &nbsp;&nbsp;**Buffer de Dados**: O EventHub serve como um buffer para os dados coletados, garantindo que sejam recebidos e armazenados temporariamente antes de serem processados.<br/>
+  &nbsp;&nbsp;**Motivo da Escolha**: O EventHub é ótimo para ingerir grandes volumes de dados em tempo real, com alta disponibilidade e baixa latência, perfeito para cenários de streaming de dados.
+
+#### 3. Databricks
+  &nbsp;&nbsp;**Busca de Dados**: O Databricks busca os dados no EventHub.<br/>
+  &nbsp;&nbsp;**Processamento e Transformação**:
+  - Bronze: Utiliza Spark Streaming para ingerir dados brutos em tempo real.
+  - Silver: Faz a limpeza e transformação dos dados em batch.
+  - Gold: Armazena os dados refinados e prontos para análises, também em batch.
+
+  &nbsp;&nbsp;**Escrita de Dados**: Os dados processados são escritos no Storage Account usando SPN para segurança.<br/>
+  &nbsp;&nbsp;**Motivo da Escolha**: Escolhemos o Databricks por sua capacidade poderosa de processamento de dados, integração com Apache Spark e facilidade de uso com notebooks colaborativos. Ele permite processamento em tempo real e em batch, atendendo diversas necessidades.
+
+#### 4. Storage Account
+&nbsp;&nbsp;**Armazenamento de Dados**: O Storage Account guarda os dados em diferentes estágios (bronze, silver, gold), gerenciando os dados de forma eficiente e segura.<br/>
+&nbsp;&nbsp;**Motivo da Escolha**: Escolhemos o Azure Storage Account por sua alta durabilidade, escalabilidade e segurança para armazenar grandes volumes de dados. Ele é econômico e acessível para diferentes usos.<br/>
 
 ## IV. Explicação de como foi desenvolvido
 ### 1. Configuração da Infraestrutura
