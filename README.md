@@ -32,8 +32,9 @@ Essa arquitetura visa ilustrar uma pipeline de dados completa, desde a sua captu
 </p>
 
 ### Arquitetura Técnica
-
-
+<p align="center">
+  <img src="Imagens\arquitetura_tecnica.png" alt="Arquitetura técnica" width="1000px"/>
+</p>
 #### 1. Azure Functions
   &nbsp;&nbsp;**Coleta de Dados**: As Azure Functions coletam dados de uma API específica.<br/>
   &nbsp;&nbsp;**Envio de Dados**: Depois, esses dados são enviados para o EventHub usando uma Service Principal (SPN), garantindo segurança na autenticação e autorização.<br/>
