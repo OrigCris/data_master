@@ -3,90 +3,55 @@
     "name": "UserRandom",
     "fields": [
         {
-            "name": "id",
-            "type": "int"
-        },
-        {
-            "name": "uid",
-            "type": "string"
-        },
-        {
-            "name": "password",
-            "type": "string"
-        },
-        {
-            "name": "first_name",
-            "type": "string"
-        },
-        {
-            "name": "last_name",
-            "type": "string"
-        },
-        {
-            "name": "username",
-            "type": "string"
-        },
-        {
-            "name": "email",
-            "type": "string"
-        },
-        {
-            "name": "avatar",
-            "type": "string"
-        },
-        {
             "name": "gender",
             "type": "string"
         },
         {
-            "name": "phone_number",
-            "type": "string"
-        },
-        {
-            "name": "social_insurance_number",
-            "type": "string"
-        },
-        {
-            "name": "date_of_birth",
-            "type": "string"
-        },
-        {
-            "name": "employment",
+            "name": "name",
             "type": {
                 "type": "record",
-                "name": "Employment",
+                "name": "Name",
                 "fields": [
                     {
                         "name": "title",
                         "type": "string"
                     },
                     {
-                        "name": "key_skill",
+                        "name": "first",
+                        "type": "string"
+                    },
+                    {
+                        "name": "last",
                         "type": "string"
                     }
                 ]
             }
         },
         {
-            "name": "address",
+            "name": "location",
             "type": {
                 "type": "record",
-                "name": "Address",
+                "name": "Location",
                 "fields": [
                     {
+                        "name": "street",
+                        "type": {
+                            "type": "record",
+                            "name": "Street",
+                            "fields": [
+                                {
+                                    "name": "number",
+                                    "type": "int"
+                                },
+                                {
+                                    "name": "name",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    {
                         "name": "city",
-                        "type": "string"
-                    },
-                    {
-                        "name": "street_name",
-                        "type": "string"
-                    },
-                    {
-                        "name": "street_address",
-                        "type": "string"
-                    },
-                    {
-                        "name": "zip_code",
                         "type": "string"
                     },
                     {
@@ -98,18 +63,39 @@
                         "type": "string"
                     },
                     {
+                        "name": "postcode",
+                        "type": "int"
+                    },
+                    {
                         "name": "coordinates",
                         "type": {
                             "type": "record",
                             "name": "Coordinates",
                             "fields": [
                                 {
-                                    "name": "lat",
-                                    "type": "float"
+                                    "name": "latitude",
+                                    "type": "string"
                                 },
                                 {
-                                    "name": "lng",
-                                    "type": "float"
+                                    "name": "longitude",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "timezone",
+                        "type": {
+                            "type": "record",
+                            "name": "Timezone",
+                            "fields": [
+                                {
+                                    "name": "offset",
+                                    "type": "string"
+                                },
+                                {
+                                    "name": "description",
+                                    "type": "string"
                                 }
                             ]
                         }
@@ -118,42 +104,129 @@
             }
         },
         {
-            "name": "credit_card",
+            "name": "email",
+            "type": "string"
+        },
+        {
+            "name": "login",
             "type": {
                 "type": "record",
-                "name": "CreditCard",
+                "name": "Login",
                 "fields": [
                     {
-                        "name": "cc_number",
+                        "name": "uuid",
+                        "type": "string"
+                    },
+                    {
+                        "name": "username",
+                        "type": "string"
+                    },
+                    {
+                        "name": "password",
+                        "type": "string"
+                    },
+                    {
+                        "name": "salt",
+                        "type": "string"
+                    },
+                    {
+                        "name": "md5",
+                        "type": "string"
+                    },
+                    {
+                        "name": "sha1",
+                        "type": "string"
+                    },
+                    {
+                        "name": "sha256",
                         "type": "string"
                     }
                 ]
             }
         },
         {
-            "name": "subscription",
+            "name": "dob",
             "type": {
                 "type": "record",
-                "name": "Subscription",
+                "name": "DateOfBirth",
                 "fields": [
                     {
-                        "name": "plan",
+                        "name": "date",
                         "type": "string"
                     },
                     {
-                        "name": "status",
+                        "name": "age",
+                        "type": "int"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "registered",
+            "type": {
+                "type": "record",
+                "name": "Registered",
+                "fields": [
+                    {
+                        "name": "date",
                         "type": "string"
                     },
                     {
-                        "name": "payment_method",
+                        "name": "age",
+                        "type": "int"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "phone",
+            "type": "string"
+        },
+        {
+            "name": "cell",
+            "type": "string"
+        },
+        {
+            "name": "id",
+            "type": {
+                "type": "record",
+                "name": "ID",
+                "fields": [
+                    {
+                        "name": "name",
                         "type": "string"
                     },
                     {
-                        "name": "term",
+                        "name": "value",
                         "type": "string"
                     }
                 ]
             }
+        },
+        {
+            "name": "picture",
+            "type": {
+                "type": "record",
+                "name": "Picture",
+                "fields": [
+                    {
+                        "name": "large",
+                        "type": "string"
+                    },
+                    {
+                        "name": "medium",
+                        "type": "string"
+                    },
+                    {
+                        "name": "thumbnail",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "nat",
+            "type": "string"
         }
     ]
 }

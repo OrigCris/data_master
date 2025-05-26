@@ -8,7 +8,7 @@ LOCATION="brazilsouth"
 RESOURCE_GROUP="rsgcjprd001"
 
 STORAGE_ACCOUNT="stacjprd001"
-CONTAINER="cont-dt-mst"
+CONTAINER="contcjprd001"
 
 EVENTHUB_NAMESPACE_FULLY="evhnscjprd001.servicebus.windows.net"
 EVENTHUB_NAMESPACE="evhnscjprd001"
@@ -18,7 +18,7 @@ EVENTHUB_NAME_USER_SCHEMA="evh_user_random_schema"
 FUNCTION_APP="funccjprd001"
 PLAN_NAME="aspcjprd001"
 
-KEY_VAULT="akvcjprd001"
+KEY_VAULT="akvcjprd002"
 SPN_PRODUCER="spn_func_send"
 SPN_CONSUMER="spn_dtb_consumer"
 
@@ -138,7 +138,7 @@ az role assignment create \
 az role assignment create \
     --role "Storage Blob Data Contributor" \
     --assignee $DTB_SP_APP_ID \
-    --scope $(az keyvault show --name $KEY_VAULT --query id -o tsv)
+    --scope $(az storage account show --name $STORAGE_ACCOUNT --query id -o tsv)
 
 # Obter o Connection String do Event Hub
 EVENTHUB_CONNECTION_STRING=$(az eventhubs namespace authorization-rule keys list \
