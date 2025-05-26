@@ -15,7 +15,7 @@ app = func.FunctionApp()
 
 def get_data_from_api():
     # API de usuários fictícios
-    api_users = 'https://random-data-api.com/api/v2/users'
+    api_users = 'https://randomuser.me/api/?results=1'
     response = requests.get(url=api_users)
 
     if response.status_code != 200:
@@ -24,6 +24,7 @@ def get_data_from_api():
 
     try:
         data = response.json()
+        data = data["results"][0]
     except json.JSONDecodeError:
         logging.error("Erro ao decodificar JSON da API")
         return None
@@ -96,7 +97,7 @@ def func_user(myTimer: func.TimerRequest) -> None:
         logging.info('The timer is past due!')
 
     # URL do seu Key Vault
-    KEY_VAULT_URL = "https://akvcjprd001.vault.azure.net"
+    KEY_VAULT_URL = "https://akvcjprd002.vault.azure.net"
 
     # Criar a credencial com o managed identity do Function App
     credential = DefaultAzureCredential()
