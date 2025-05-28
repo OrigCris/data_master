@@ -36,7 +36,7 @@
               "inputs": [
                 {
                   "name": "id",
-                  "value": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
+                  "value": "/subscriptions/c7e870a3-a90d-48b3-be2f-638e99bede56/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
                 }
               ],
               "type": "Extension/Microsoft_Azure_EventHub/PartType/NamespaceOverviewPart"
@@ -68,7 +68,7 @@
                       "metrics": [
                         {
                           "resourceMetadata": {
-                            "id": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
+                            "id": "/subscriptions/c7e870a3-a90d-48b3-be2f-638e99bede56/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
                           },
                           "name": "IncomingRequests",
                           "aggregationType": 1,
@@ -144,7 +144,7 @@
                       "metrics": [
                         {
                           "resourceMetadata": {
-                            "id": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
+                            "id": "/subscriptions/c7e870a3-a90d-48b3-be2f-638e99bede56/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
                           },
                           "name": "IncomingMessages",
                           "aggregationType": 1,
@@ -194,7 +194,7 @@
               "inputs": [
                 {
                   "name": "id",
-                  "value": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.Databricks/workspaces/dbwcjprd001"
+                  "value": "/subscriptions/c7e870a3-a90d-48b3-be2f-638e99bede56/resourceGroups/rsgcjprd001/providers/Microsoft.Databricks/workspaces/dbwcjprd001"
                 }
               ],
               "type": "Extension/Microsoft_Azure_Databricks/PartType/DatabricksPart",
@@ -215,7 +215,7 @@
               "inputs": [
                 {
                   "name": "id",
-                  "value": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.Storage/storageAccounts/stacjprd001",
+                  "value": "/subscriptions/c7e870a3-a90d-48b3-be2f-638e99bede56/resourceGroups/rsgcjprd001/providers/Microsoft.Storage/storageAccounts/stacjprd001",
                   "isOptional": true
                 },
                 {
@@ -259,7 +259,7 @@
                       "metrics": [
                         {
                           "resourceMetadata": {
-                            "id": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
+                            "id": "/subscriptions/c7e870a3-a90d-48b3-be2f-638e99bede56/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
                           },
                           "name": "OutgoingMessages",
                           "aggregationType": 1,
@@ -309,7 +309,7 @@
               "inputs": [
                 {
                   "name": "id",
-                  "value": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.KeyVault/vaults/akvcjprd001"
+                  "value": "/subscriptions/c7e870a3-a90d-48b3-be2f-638e99bede56/resourceGroups/rsgcjprd001/providers/Microsoft.KeyVault/vaults/akvcjprd002"
                 }
               ],
               "type": "Extension/Microsoft_Azure_KeyVault/PartType/VaultPart",
@@ -345,7 +345,7 @@
                       "metrics": [
                         {
                           "resourceMetadata": {
-                            "id": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
+                            "id": "/subscriptions/c7e870a3-a90d-48b3-be2f-638e99bede56/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
                           },
                           "name": "IncomingBytes",
                           "aggregationType": 1,
@@ -420,7 +420,7 @@
                       "metrics": [
                         {
                           "resourceMetadata": {
-                            "id": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
+                            "id": "/subscriptions/c7e870a3-a90d-48b3-be2f-638e99bede56/resourceGroups/rsgcjprd001/providers/Microsoft.EventHub/namespaces/evhnscjprd001"
                           },
                           "name": "IncomingBytes",
                           "aggregationType": 1,
@@ -484,12 +484,12 @@
                 },
                 {
                   "name": "id",
-                  "value": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001",
+                  "value": "/subscriptions/c7e870a3-a90d-48b3-be2f-638e99bede56/resourceGroups/rsgcjprd001",
                   "isOptional": true
                 }
               ],
               "type": "Extension/HubsExtension/PartType/ResourceGroupMapPinnedPart",
-              "deepLink": "#@cristianoalves.onmicrosoft.com/resource/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/overview"
+              "deepLink": "#@cristianoalves.onmicrosoft.com/resource/subscriptions/c7e870a3-a90d-48b3-be2f-638e99bede56/resourceGroups/rsgcjprd001/overview"
             }
           },
           {
@@ -539,7 +539,7 @@
                       "metrics": [
                         {
                           "resourceMetadata": {
-                            "id": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.Web/sites/funccjprd001"
+                            "id": "/subscriptions/c7e870a3-a90d-48b3-be2f-638e99bede56/resourceGroups/rsgcjprd001/providers/Microsoft.Web/sites/funccjprd001"
                           },
                           "name": "FunctionExecutionCount",
                           "aggregationType": 1,
@@ -604,7 +604,7 @@
                       "metrics": [
                         {
                           "resourceMetadata": {
-                            "id": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.Web/sites/funccjprd001"
+                            "id": "/subscriptions/c7e870a3-a90d-48b3-be2f-638e99bede56/resourceGroups/rsgcjprd001/providers/Microsoft.Web/sites/funccjprd001"
                           },
                           "name": "MemoryWorkingSet",
                           "aggregationType": 4,
@@ -690,7 +690,7 @@
                       "metrics": [
                         {
                           "resourceMetadata": {
-                            "id": "/subscriptions/aa6ae7e7-9ce6-4420-b25e-08f234e5d25e/resourceGroups/rsgcjprd001/providers/Microsoft.Storage/storageAccounts/stacjprd001/blobservices/default"
+                            "id": "/subscriptions/c7e870a3-a90d-48b3-be2f-638e99bede56/resourceGroups/rsgcjprd001/providers/Microsoft.Storage/storageAccounts/stacjprd001/blobservices/default"
                           },
                           "name": "Transactions",
                           "aggregationType": 1,
@@ -779,7 +779,7 @@
                             "region": "brazilsouth",
                             "resourceType": "microsoft.compute/virtualmachines",
                             "subscription": {
-                              "subscriptionId": "aa6ae7e7-9ce6-4420-b25e-08f234e5d25e",
+                              "subscriptionId": "c7e870a3-a90d-48b3-be2f-638e99bede56",
                               "displayName": "Visual Studio Enterprise Subscription",
                               "uniqueDisplayName": "Visual Studio Enterprise Subscription"
                             }
@@ -855,7 +855,7 @@
                             "region": "brazilsouth",
                             "resourceType": "microsoft.compute/virtualmachines",
                             "subscription": {
-                              "subscriptionId": "aa6ae7e7-9ce6-4420-b25e-08f234e5d25e",
+                              "subscriptionId": "c7e870a3-a90d-48b3-be2f-638e99bede56",
                               "displayName": "Visual Studio Enterprise Subscription",
                               "uniqueDisplayName": "Visual Studio Enterprise Subscription"
                             }
