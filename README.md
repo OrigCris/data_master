@@ -55,19 +55,16 @@ Essa arquitetura visa ilustrar uma pipeline de dados completa, desde a sua captu
 ### 1. Configuração da Infraestrutura
 Para iniciar o processo, executamos o [script.sh](Infraestrutura/script.sh) disponível no repositório do Git. Este script é responsável por criar todas as infraestruturas necessárias para o projeto, incluindo recursos no Azure como EventHub, Azure Functions e Databricks.
 
-### 2. Registro do Schema no EventHub
-Em seguida, configuramos o schema registry do EventHub utilizando o arquivo [user_schema.avsc](Infraestrutura/EventHub/user_schema.avsc). Este arquivo define a estrutura dos dados que serão enviados para o EventHub e pode ser encontrado no repositório do Git. A configuração do schema registry assegura que os dados enviados estejam em conformidade com o formato esperado.
-
-### 3. Implementação da Função no Azure Functions
+### 2. Implementação da Função no Azure Functions
 Para a implementação da função no Azure Functions, utilizamos o arquivo [func_user.py](Infraestrutura/Functions/func_user.py), disponível no repositório do Git. Este arquivo contém o código em Python necessário para processar os dados e enviá-los para o EventHub. A função é implantada no Azure Functions, onde é executada em resposta a eventos, processando e transmitindo os dados de forma eficiente.
 
-### 4. Envio de Dados utilizando SPN
+### 3. Envio de Dados utilizando SPN
 A função Python implementada no Azure Functions utiliza uma Service Principal Name (SPN) para autenticação segura e envio dos dados ao EventHub. A SPN garante que a comunicação entre os serviços seja segura e confiável.
 
-### 5. Integração com Databricks
+### 4. Integração com Databricks
 No Databricks, utilizamos outra SPN para autenticação e busca dos dados enviados para o EventHub. Este processo é realizado utilizando o Spark Streaming, que consome os dados do EventHub em tempo real.
 
-### 6. Arquitetura Medallion no Databricks
+### 5. Arquitetura Medallion no Databricks
 A arquitetura Medallion é implementada no Databricks para organizar e processar os dados em camadas, visando melhorar a qualidade e a acessibilidade dos dados. Este processo é dividido em três camadas principais:
 
 #### Camada Bronze
@@ -93,34 +90,13 @@ Passos para executar o script:
 
 Feito isso já podemos ver os recursos criados dentro do *resource group*
 
-### 2. Criar o Schema no EventHub
-Passos para a criação do *schema* dentro do *schema group*:
-  1. Dentro do recurso do Event Hub, procure por Schema Registry.
-  2. No Schema Registry, você verá um Schema Group criado. Clique para acessá-lo.
-  3. Clique na opção `+ Schema` depois coloque o nome e importe o arquivo `user_schema.avsc`.
-  4. Após criar o schema, copie o **ID** do schema gerado. Este ID será utilizado na configuração da função no Azure Functions.
-
-<img src="Imagens\option_schema.png" alt="Opção de criar um novo schema" width="200px"/> ---->
-<img src="Imagens\create_schema.png" alt="Tela de criação de SCHEMA" width="200px"/> ---->
-<img src="Imagens\schema_id.png" alt="ID do schema criado" width="200px"/>
-
-### 3. Configuração da Variável de Ambiente no Azure Functions
-Para que a função no Azure Functions possa acessar o schema criado, é necessário configurar o ID do schema como uma variável de ambiente.<br>
-Passos para configurar a variável de ambiente:
-  1. Acesse o recurso do Azure Functions no portal do Azure.
-  2. Vá para Configurações e clique em **Variáveis de ambiente**.
-  3. Adicione uma nova variável com o nome SCHEMA_USER_ID e cole o ID do schema copiado anteriormente como valor.
-  4. Salve as alterações.
-
-<img src="Imagens\environment_function_app.png" alt="Opção de variávei de ambiente" width="200px"/>
-
-### 4. Realizando o deploy da Função no Azure Functions
+### 2. Realizando o deploy da Função no Azure Functions
 Passos para a implementação:
   1. Faça o deploy do arquivo func_user.py para o Azure Functions (<a href="https://learn.microsoft.com/en-us/azure/azure-functions/create-first-function-vs-code-python">Como fazer o deploy</a>).
   2. Certifique-se de que a variável de ambiente SCHEMA_USER_ID está configurada corretamente, conforme descrito acima.
   3. Acompanhe a execução da função para verificar se os dados estão sendo processados e enviados corretamente para o EventHub.
 
-### 5. Preparando o ambiente do Databricks
+### 3. Preparando o ambiente do Databricks
   1. Primeiro precisamos de uma `scope`, que será necessário para que possamos realizar nossos acessos (<a href="https://learn.microsoft.com/en-us/azure/databricks/security/secrets/">Como criar o secret scope</a>).
   2. Já com o `scope` criado podemos criar o nosso cluster, o arquivo json irá apoiar nisso, [cluster_json](Databricks/cluster.json). (Não esqueça de substituir os dados da SPN)
   3. Adicione a biblioteca maven para conectar ao EventHub: em **"bibliotecas"**, clique em **"instalar novo"**, selecione `maven` e procure por `com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.22`
