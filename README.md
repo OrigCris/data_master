@@ -93,8 +93,7 @@ Feito isso já podemos ver os recursos criados dentro do *resource group*
 ### 2. Realizando o deploy da Função no Azure Functions
 Passos para a implementação:
   1. Faça o deploy do arquivo func_user.py para o Azure Functions (<a href="https://learn.microsoft.com/en-us/azure/azure-functions/create-first-function-vs-code-python">Como fazer o deploy</a>).
-  2. Certifique-se de que a variável de ambiente SCHEMA_USER_ID está configurada corretamente, conforme descrito acima.
-  3. Acompanhe a execução da função para verificar se os dados estão sendo processados e enviados corretamente para o EventHub.
+  2. Acompanhe a execução da função para verificar se os dados estão sendo processados e enviados corretamente para o EventHub.
 
 ### 3. Preparando o ambiente do Databricks
   1. Primeiro precisamos de uma `scope`, que será necessário para que possamos realizar nossos acessos (<a href="https://learn.microsoft.com/en-us/azure/databricks/security/secrets/">Como criar o secret scope</a>).
@@ -122,7 +121,6 @@ Utilizamos o Azure Monitor para acompanhar as seguintes métricas:
   1. Requests: Número de requisições processadas.
   2. Mensagens Enviadas: Total de mensagens enviadas.
   3. Mensagens Lidas: Total de mensagens lidas.
-  4. Total de Bytes de Entrada: Comparação entre tópicos com e sem Schema Registry.
 
 #### Function App:
   1. Número de Execuções: Quantas vezes as funções foram executadas.
