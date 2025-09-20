@@ -1,0 +1,147 @@
+bundle:
+  name: bronze-callcenter-bundle
+
+workspace:
+  profile: prd
+  host: https://adb-3017212933203126.6.azuredatabricks.net/
+
+sync:
+  include:
+    - notebooks/**
+
+variables:
+  # gerais
+  CATALOG:         { default: prd }
+  SCHEMA:          { default: b_dm_callcenter }
+  TIMEZONE:        { default: America/Sao_Paulo }
+  SCHEDULE_CRON:   { default: "0 0 2 * * ?" }
+  QTD_CLIENTES:    { default: "10000" }
+  QTD_ASSIST:      { default: "1000" }
+
+  # streaming
+  STREAM_CRON: { default: "* */50 * * * ?" }
+  SECRET_SCOPE:    { default: data-master-akv }
+  SECRET_KEY:      { default: EventhubConnectionString }
+  CHECKPOINT_BASE: { default: "/Volumes/prd/b_dm_callcenter/checkpoints/bronze" }
+  STREAM_NOTEBOOK: { default: "${workspace.root_path}/files/notebooks/bronze_streaming" }
+  RUN_AS_USER: { default: "cristiano.tecnologia.data@hotmail.com" }
+
+resources:
+  jobs:
+    # ---------------------- JOB dimensões ----------------------
+    bronze-dimensions-job-callcenter:
+      name: "bronze-dimensions-job-callcenter"
+      schedule:
+        quartz_cron_expression: ${var.SCHEDULE_CRON}
+        timezone_id: ${var.TIMEZONE}
+        pause_status: UNPAUSED
+      job_clusters:
+        - job_cluster_key: cluster-job-dm-bronze
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            data_security_mode: USER_ISOLATION
+            node_type_id: Standard_D4ps_v6
+            num_workers: 1
+            autotermination_minutes: 20
+          
+      tasks:
+        - task_key: create_dim_clientes
+          description: Cria/atualiza a dimensão de clientes (Bronze)
+          job_cluster_key: cluster-job-dm-bronze
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/bronze_dim_clientes
+            base_parameters:
+              catalog: ${var.CATALOG}
+              schema: ${var.SCHEMA}
+              table: dim_clientes
+              qtd_clientes: ${var.QTD_CLIENTES}
+          libraries:
+            - pypi: { package: faker }
+          timeout_seconds: 0
+
+        - task_key: create_dim_assistentes
+          description: Cria/atualiza a dimensão de assistentes (Bronze)
+          job_cluster_key: cluster-job-dm-bronze
+          notebook_task:
+            notebook_path: ${workspace.root_path}/files/notebooks/bronze_dim_assistentes
+            base_parameters:
+              catalog: ${var.CATALOG}
+              schema: ${var.SCHEMA}
+              table: dim_assistentes
+              qtd_assistentes: ${var.QTD_ASSIST}
+          libraries:
+            - pypi: { package: faker }
+          timeout_seconds: 0
+
+    # ---------------------- JOB streaming ----------------------
+    bronze-streaming-eventhubs:
+      name: "bronze-streaming-eventhubs"
+      max_concurrent_runs: 3
+      schedule:
+        quartz_cron_expression: ${var.STREAM_CRON}
+        timezone_id: ${var.TIMEZONE}
+        pause_status: UNPAUSED
+      job_clusters:
+        - job_cluster_key: cluster-job-stream-bronze
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            data_security_mode: SINGLE_USER
+            single_user_name: ${var.RUN_AS_USER}
+            node_type_id: Standard_D4ps_v6
+            num_workers: 1
+            autotermination_minutes: 20
+
+      tasks:
+        - task_key: ingest_ura
+          description: "Event Hubs → Bronze: ura (trigger once)"
+          job_cluster_key: cluster-job-stream-bronze
+          notebook_task:
+            notebook_path: ${var.STREAM_NOTEBOOK}
+            base_parameters:
+              catalog:        ${var.CATALOG}
+              schema:         ${var.SCHEMA}
+              table_name:     "ura_once"
+              eventhub_name:  "evh_cj_tec_ura"
+              secret_scope:   ${var.SECRET_SCOPE}
+              secret_key:     ${var.SECRET_KEY}
+              checkpoint_base: ${var.CHECKPOINT_BASE}
+          libraries:
+            - maven: {coordinates: com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.22}
+          timeout_seconds: 0
+
+        - task_key: ingest_calls
+          description: "Event Hubs → Bronze: calls (trigger once)"
+          job_cluster_key: cluster-job-stream-bronze
+          notebook_task:
+            notebook_path: ${var.STREAM_NOTEBOOK}
+            base_parameters:
+              catalog:        ${var.CATALOG}
+              schema:         ${var.SCHEMA}
+              table_name:     "calls_once"
+              eventhub_name:  "evh_cj_tec_calls"
+              secret_scope:   ${var.SECRET_SCOPE}
+              secret_key:     ${var.SECRET_KEY}
+              checkpoint_base: ${var.CHECKPOINT_BASE}
+          libraries:
+            - maven: {coordinates: com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.22}
+          timeout_seconds: 0
+
+        - task_key: ingest_surveys
+          description: "Event Hubs → Bronze: surveys (trigger once)"
+          job_cluster_key: cluster-job-stream-bronze
+          notebook_task:
+            notebook_path: ${var.STREAM_NOTEBOOK}
+            base_parameters:
+              catalog:        ${var.CATALOG}
+              schema:         ${var.SCHEMA}
+              table_name:     "surveys_once"
+              eventhub_name:  "evh_cj_tec_surveys"
+              secret_scope:   ${var.SECRET_SCOPE}
+              secret_key:     ${var.SECRET_KEY}
+              checkpoint_base: ${var.CHECKPOINT_BASE}
+          libraries:
+            - maven: {coordinates: com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.22}
+          timeout_seconds: 0
+
+targets:
+  default: {}

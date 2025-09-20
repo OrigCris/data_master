@@ -1,0 +1,57 @@
+bundle:
+  name: silver-callcenter-bundle
+
+variables:
+  TIMEZONE:      { default: America/Sao_Paulo }
+  SCHEDULE_CRON: { default: "0 0 5 * * ?" }
+
+sync:
+  include:
+    - notebooks/**
+
+workspace:
+  host: https://adb-3017212933203126.6.azuredatabricks.net/
+
+targets:
+  prd:
+    default: true
+
+resources:
+  jobs:
+    silver-job:
+      name: "silver-job"
+      schedule:
+        quartz_cron_expression: ${var.SCHEDULE_CRON}
+        timezone_id: ${var.TIMEZONE}
+        pause_status: UNPAUSED
+
+      job_clusters:
+        - job_cluster_key: cluster-job-dm-silver
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            data_security_mode: USER_ISOLATION
+            node_type_id: Standard_D4ps_v6
+            num_workers: 1
+            autotermination_minutes: 20
+
+      tasks:
+        - task_key: create_ura_silver
+          description: Cria/atualiza os dados da tabela TABE_URA_ANLT (silver)
+          job_cluster_key: cluster-job-dm-silver
+          notebook_task:
+            notebook_path: ./notebooks/silver_ura.ipynb
+          timeout_seconds: 0
+
+        - task_key: create_calls_silver
+          description: Cria/atualiza os dados da tabela TABE_CALLS (silver)
+          job_cluster_key: cluster-job-dm-silver
+          notebook_task:
+            notebook_path: ./notebooks/silver_calls.ipynb
+          timeout_seconds: 0
+
+        - task_key: create_surveys_silver
+          description: Cria/atualiza os dados da tabela TABE_PESQ_URA (silver)
+          job_cluster_key: cluster-job-dm-silver
+          notebook_task:
+            notebook_path: ./notebooks/silver_pesq_ura.ipynb
+          timeout_seconds: 0
