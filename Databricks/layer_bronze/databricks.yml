@@ -19,7 +19,7 @@ variables:
   QTD_ASSIST:      { default: "1000" }
 
   # streaming
-  STREAM_CRON: { default: "* */50 * * * ?" }
+  STREAM_CRON: { default: "0 */30 * * * ?" }
   SECRET_SCOPE:    { default: data-master-akv }
   SECRET_KEY:      { default: EventhubConnectionString }
   CHECKPOINT_BASE: { default: "/Volumes/prd/b_dm_callcenter/checkpoints/bronze" }
