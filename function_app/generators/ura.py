@@ -24,7 +24,7 @@ def gerar_eventos_ura(min_chamadas: int = 8, max_chamadas: int = 30) -> list[dic
         eventos.append(
             {
                 "id_chamada": str(uuid.uuid4()),
-                "id_cliente": str(uuid.uuid4()),
+                "id_cliente": random.randint(1, 1000),
                 "data_hora_inicio": inicio.isoformat(),
                 "data_hora_fim": fim.isoformat(),
                 "autenticado": random.choices([True, False], weights=[85, 15])[0],
