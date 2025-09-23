@@ -1,5 +1,5 @@
 bundle:
-  name: bronze-callcenter-bundle
+  name: bronze-callcenter
 
 workspace:
   profile: prd
@@ -29,8 +29,8 @@ variables:
 resources:
   jobs:
     # ---------------------- JOB dimensões ----------------------
-    bronze-dimensions-job-callcenter:
-      name: "bronze-dimensions-job-callcenter"
+    bronze-dim:
+      name: "bronze-dim"
       schedule:
         quartz_cron_expression: ${var.SCHEDULE_CRON}
         timezone_id: ${var.TIMEZONE}
@@ -74,8 +74,8 @@ resources:
           timeout_seconds: 0
 
     # ---------------------- JOB streaming ----------------------
-    bronze-streaming-eventhubs:
-      name: "bronze-streaming-eventhubs"
+    bronze-streaming:
+      name: "bronze-streaming"
       max_concurrent_runs: 3
       schedule:
         quartz_cron_expression: ${var.STREAM_CRON}
