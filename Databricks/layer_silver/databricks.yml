@@ -1,5 +1,5 @@
 bundle:
-  name: silver-callcenter-bundle
+  name: silver-callcenter
 
 variables:
   TIMEZONE:      { default: America/Sao_Paulo }
