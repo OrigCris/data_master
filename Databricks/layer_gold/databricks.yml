@@ -1,0 +1,50 @@
+bundle:
+  name: gold-callcenter
+
+variables:
+  TIMEZONE:      { default: America/Sao_Paulo }
+  SCHEDULE_CRON: { default: "0 0 6 * * ?" }
+
+sync:
+  include:
+    - notebooks/**
+
+workspace:
+  host: https://adb-3017212933203126.6.azuredatabricks.net/
+
+targets:
+  prd:
+    default: true
+
+resources:
+  jobs:
+    silver-job:
+      name: "gold-job"
+      schedule:
+        quartz_cron_expression: ${var.SCHEDULE_CRON}
+        timezone_id: ${var.TIMEZONE}
+        pause_status: UNPAUSED
+
+      job_clusters:
+        - job_cluster_key: cluster-job-dm-gold
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            data_security_mode: USER_ISOLATION
+            node_type_id: Standard_D4ps_v6
+            num_workers: 1
+            autotermination_minutes: 20
+
+      tasks:
+        - task_key: create_visao_assistentes_gold
+          description: Cria/atualiza os dados da tabela visao_assistentes
+          job_cluster_key: cluster-job-dm-gold
+          notebook_task:
+            notebook_path: ./notebooks/visao_assistentes.ipynb
+          timeout_seconds: 0
+
+        - task_key: create_visao_ura_calls_gold
+          description: Cria/atualiza os dados da tabela visao_ura_calls
+          job_cluster_key: cluster-job-dm-gold
+          notebook_task:
+            notebook_path: ./notebooks/visao_ura_calls.ipynb
+          timeout_seconds: 0
