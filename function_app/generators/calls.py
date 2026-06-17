@@ -1,8 +1,10 @@
 from __future__ import annotations
-import uuid
+
 import random
+import uuid
+from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import Iterable
+
 from faker import Faker
 
 fake = Faker("pt_BR")

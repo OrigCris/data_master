@@ -1,10 +1,13 @@
 from __future__ import annotations
+
 import json
-from typing import Iterable, Sequence
-from azure.eventhub import EventHubProducerClient, EventData
+from collections.abc import Iterable, Sequence
+
+from azure.eventhub import EventData, EventHubProducerClient
 from azure.eventhub.exceptions import EventHubError
 from config.settings import settings
 from exceptions.domain_exceptions import EventBuildError, EventSendError
+
 
 def _producer(eventhub_name: str, credential) -> EventHubProducerClient:
     if not settings.event_hub_fqdn:
@@ -45,7 +48,7 @@ def send_events(eventhub_name: str, credential, items: Sequence[object]) -> int:
                 total_sent += len(batch)
         finally:
             producer.close()
-            
+
         return total_sent
 
     except EventHubError as exc:

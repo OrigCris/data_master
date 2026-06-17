@@ -1,12 +1,13 @@
 from __future__ import annotations
+
 import azure.functions as func
-from utils.logging_utils import get_logger
-from generators.ura import gerar_eventos_ura
-from generators.calls import gerar_fato_chamada_humana
-from generators.surveys import gerar_fato_pesquisa_satisfacao
-from services.eventhub_client import send_events
 from auth.credentials import get_spn_credential
 from config.settings import settings
+from generators.calls import gerar_fato_chamada_humana
+from generators.surveys import gerar_fato_pesquisa_satisfacao
+from generators.ura import gerar_eventos_ura
+from services.eventhub_client import send_events
+from utils.logging_utils import get_logger
 
 app = func.FunctionApp()
 logger = get_logger(__name__)

@@ -1,2 +1,13 @@
 /Az_func
 /Infraestrutura/config_cluster.txt
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+*.egg-info/
+
+# Bicep
+*.json.bicep
