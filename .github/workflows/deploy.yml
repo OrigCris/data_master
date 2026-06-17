@@ -1,0 +1,40 @@
+name: Deploy
+
+# Deploy controlado dos Databricks Asset Bundles para o target prd.
+# Disparado manualmente (workflow_dispatch) para evitar deploy acidental.
+on:
+  workflow_dispatch:
+    inputs:
+      layer:
+        description: Camada a publicar
+        required: true
+        default: all
+        type: choice
+        options: [all, layer_bronze, layer_silver, layer_gold]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: databricks bundle deploy
+    runs-on: ubuntu-latest
+    environment: prd
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        run: curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Deploy
+        run: |
+          set -euo pipefail
+          layers="${{ github.event.inputs.layer }}"
+          if [ "$layers" = "all" ]; then layers="layer_bronze layer_silver layer_gold"; fi
+          for layer in $layers; do
+            echo "== deploy $layer =="
+            (cd "Databricks/$layer" && databricks bundle deploy -t prd)
+          done

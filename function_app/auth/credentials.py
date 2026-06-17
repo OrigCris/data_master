@@ -1,8 +1,10 @@
 from __future__ import annotations
+
 from azure.identity import ClientSecretCredential
-from services.keyvault import get_secret
 from config.settings import settings
 from exceptions.domain_exceptions import KeyVaultSecretError
+from services.keyvault import get_secret
+
 
 def get_spn_credential() -> ClientSecretCredential:
     """Monta sempre a credencial do SPN a partir do Key Vault (MI para ler o KV)."""

@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    name: Lint & Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dev dependencies
+        run: pip install -r tests/requirements-dev.txt
+
+      - name: Ruff (lint)
+        run: ruff check function_app Databricks/lib cli
+
+      - name: Pytest (unit, sem cluster Spark)
+        run: pytest -q
+
+  validate-bundles:
+    name: Validate Databricks Asset Bundles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+          databricks version
+
+      - name: Validate bundles (bronze/silver/gold)
+        # DATABRICKS_HOST / DATABRICKS_TOKEN vêm de secrets do repositório.
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          for layer in layer_bronze layer_silver layer_gold; do
+            echo "== validate $layer =="
+            (cd "Databricks/$layer" && databricks bundle validate) || exit 1
+          done
+
+  validate-bicep:
+    name: Validate Bicep IaC
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bicep build (lint/transpile)
+        run: |
+          az bicep install
+          az bicep build --file infrastructure/bicep/main.bicep --stdout > /dev/null

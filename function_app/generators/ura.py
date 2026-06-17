@@ -1,7 +1,9 @@
 from __future__ import annotations
-import uuid
+
 import random
+import uuid
 from datetime import datetime, timedelta
+
 from faker import Faker
 
 fake = Faker("pt_BR")
