@@ -9,8 +9,7 @@ data de nascimento). Este módulo provê:
   que impõem o mascaramento *no catálogo* (não só no pipeline), liberando o dado
   em claro apenas para grupos privilegiados.
 
-A estratégia equivalente ao "Comprehend + Lake Formation" do mundo AWS aqui é
-**Unity Catalog column-level masking** + grupos do Entra ID.
+A estratégia adotada é **Unity Catalog column-level masking** + grupos do Entra ID.
 """
 from __future__ import annotations
 

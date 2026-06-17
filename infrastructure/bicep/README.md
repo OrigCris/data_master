@@ -1,21 +1,20 @@
 # Infraestrutura como Código — Bicep modular
 
-Provisionamento declarativo e idempotente do ambiente Azure do Data Master.
-Substitui o script imperativo [`create_resouce.sh`](../create_resouce.sh) (mantido
-apenas como *bootstrap* para a parte de Entra ID/segredos) por **módulos por
-domínio**, espelhando a ideia de "componentização por stacks" do case de referência.
+Provisionamento declarativo e idempotente do ambiente Azure do Data Master,
+organizado em **módulos por domínio**. O bootstrap de identidade/segredos
+(Entra ID) fica em [`create_resouce.sh`](../create_resouce.sh).
 
-## Mapa de módulos (≈ "stacks")
+## Mapa de módulos
 
-| Módulo | Recurso Azure | Equivalente AWS (case de referência) |
+| Módulo | Recurso Azure | Responsabilidade |
 |---|---|---|
-| `modules/storage.bicep` | ADLS Gen2 (HNS) + container | `storage.yml` (S3) |
-| `modules/eventhub.bicep` | Event Hubs Namespace + hubs | `streaming.yml` (Kinesis) |
-| `modules/keyvault.bicep` | Key Vault (RBAC) | `security.yml` (Secrets/KMS) |
-| `modules/functionapp.bicep` | Function App + Plan + MI | `functions.yml` (Lambda) |
-| `modules/databricks.bicep` | Workspace + Access Connector | `processing.yml` (EMR/Glue) |
-| `modules/monitoring.bicep` | Log Analytics + App Insights + Action Group | `observability.yml` |
-| `modules/roles.bicep` | Role assignments (least privilege) | `roles.yml` |
+| `modules/storage.bicep` | ADLS Gen2 (HNS) + container | Data lake (bronze/silver/gold) |
+| `modules/eventhub.bicep` | Event Hubs Namespace + hubs | Ingestão em tempo real |
+| `modules/keyvault.bicep` | Key Vault (RBAC) | Segredos do SPN e do Event Hubs |
+| `modules/functionapp.bicep` | Function App + Plan + MI | Produção de eventos |
+| `modules/databricks.bicep` | Workspace + Access Connector | Processamento + Unity Catalog |
+| `modules/monitoring.bicep` | Log Analytics + App Insights + Action Group | Observabilidade |
+| `modules/roles.bicep` | Role assignments (least privilege) | RBAC |
 
 ## Deploy
 

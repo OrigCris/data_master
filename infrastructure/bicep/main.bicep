@@ -1,9 +1,8 @@
 // =============================================================================
 // main.bicep — Orquestrador da infraestrutura do Data Master (Azure)
 //
-// Espelha a ideia de "componentização por stacks" do case de referência, porém
-// com Bicep modular e idempotente. Cada domínio é um módulo isolado em ./modules,
-// o que permite revisar, versionar e fazer `what-if` por componente.
+// Infraestrutura modular e idempotente: cada domínio é um módulo isolado em
+// ./modules, o que permite revisar, versionar e fazer `what-if` por componente.
 //
 // Escopo: Resource Group. Deploy:
 //   az deployment group create -g <rg> \

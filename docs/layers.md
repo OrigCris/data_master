@@ -36,11 +36,10 @@ Visões diárias (**D-1**) materializadas com `replaceWhere` por `DT_REFE` — c
 execução reescreve apenas a partição do dia, mantendo o histórico. Clustering por
 `(CD_PERI, DT_REFE, <chave>)` para *partition pruning* nos dashboards.
 
-## Por que Delta + Unity Catalog (e não Iceberg + Glue)?
+## Por que Delta + Unity Catalog?
 
-É o equivalente Azure ao Iceberg/Glue do case de referência: **Delta Lake** entrega
-ACID, time-travel e CDF nativos, e o **Unity Catalog** centraliza catálogo,
-governança e *lineage* — ver [Trade-offs](trade-offs.md).
+O **Delta Lake** entrega ACID, time-travel e CDF nativos, e o **Unity Catalog**
+centraliza catálogo, governança e *lineage* — ver [Trade-offs](trade-offs.md).
 
 ---
 

@@ -3,8 +3,7 @@
 - **Status**: Aceito
 - **Data**: 2025
 - **Contexto**: precisamos de um formato de tabela transacional e de um catálogo
-  governado para o data lake no Azure, equivalente ao Iceberg + Glue do case de
-  referência (AWS).
+  governado para o data lake no Azure.
 
 ## Decisão
 Adotar **arquitetura Medallion** (bronze/silver/gold) com **Delta Lake** como

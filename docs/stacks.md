@@ -1,8 +1,8 @@
 # 05. Componentização da Arquitetura
 
-Espelhando a ideia de "stacks" do case de referência, a infraestrutura é dividida
-em **módulos Bicep** por domínio, em [`infrastructure/bicep/modules`](../infrastructure/bicep/modules).
-Cada módulo é revisável e aplicável com `what-if` isoladamente.
+A infraestrutura é dividida em **módulos Bicep** por domínio, em
+[`infrastructure/bicep/modules`](../infrastructure/bicep/modules). Cada módulo é
+revisável e aplicável com `what-if` isoladamente.
 
 ## Mapa de componentes
 
