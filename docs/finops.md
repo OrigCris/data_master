@@ -1,8 +1,7 @@
 # 15. FinOps — Gestão de Custos
 
-Equivalente ao *Cost and Usage Report (CUR)* do case de referência, usando **Azure
-Cost Management**. O objetivo é tornar o custo **observável** e guiar decisões de
-arquitetura por custo/benefício.
+Gestão de custos com **Azure Cost Management**. O objetivo é tornar o custo
+**observável** e guiar decisões de arquitetura por custo/benefício.
 
 ## Onde o custo nasce
 

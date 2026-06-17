@@ -1,8 +1,7 @@
 # 14. Governança e Segurança de Dados
 
 A governança combina **controle de acesso**, **mascaramento de PII** e **identidade
-sem segredos**, usando recursos nativos do Azure/Unity Catalog — o equivalente ao
-Lake Formation + Comprehend do case de referência.
+sem segredos**, usando recursos nativos do Azure e do Unity Catalog.
 
 ## Identidade e segredos (sem credenciais no código)
 - **Managed Identity** da Function App lê o **Key Vault** (RBAC `Key Vault Secrets

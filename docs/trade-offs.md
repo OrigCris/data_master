@@ -27,10 +27,10 @@ Esta página registra as decisões mais relevantes, suas alternativas e os
 
 ## Plataforma
 
-### Delta + Unity Catalog (≈ Iceberg + Glue) ([ADR-0001](adrs/0001-medallion-delta-uc.md))
+### Delta + Unity Catalog ([ADR-0001](adrs/0001-medallion-delta-uc.md))
 - ACID, time-travel e CDF nativos; catálogo, governança e lineage centralizados.
 
-### Event Hubs (≈ Kinesis) ([ADR-0004](adrs/0004-eventhubs-vs-servicebus.md))
+### Event Hubs ([ADR-0004](adrs/0004-eventhubs-vs-servicebus.md))
 - **Event Hubs** (não Service Bus) por ser otimizado para *high-throughput
   ingestion* e integração nativa com o conector Spark.
 - A **retenção** é um parâmetro de SLA/custo (dimensionada por ambiente); o
