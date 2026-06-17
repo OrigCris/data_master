@@ -52,12 +52,14 @@ Esta página registra as decisões mais relevantes, suas alternativas e os
   ser confundida com erro. Trocar a faixa é um ajuste de uma linha em
   `visao_assistentes`.
 
-### Métrica de rechamada (`IN_RECH`) — limitação conhecida
-- A regra atual sinaliza rechamada quando o mesmo cliente liga novamente em ≤ 24h.
-- **Limitação**: a janela usa `lead` (próxima ligação) com diferença de tempo
-  assinada, o que pode **superestimar** o indicador. Está mapeado como dívida
-  técnica no [Roadmap](roadmap.md) (usar diferença absoluta / `lag` e validar com
-  teste sobre dado controlado).
+### Métrica de rechamada (`IN_RECH`)
+- **Definição**: uma chamada é **rechamada** quando o mesmo cliente teve uma chamada
+  **anterior** (de `ID_CHAM` distinto) há no máximo **24h** — marca-se a chamada de
+  retorno (ex.: ligou 12h e voltou às 16h → a das 16h é a rechamada).
+- **Cálculo**: janela por `ID_CLIE` ordenada por `DH_INIC`, com `lag` para a chamada
+  anterior e gap = `atual − anterior` (positivo) dentro de 24h.
+- **Escopo atual**: a janela considera as chamadas do próprio dia; retornos que cruzam
+  a meia-noite são um refinamento mapeado no [Roadmap](roadmap.md).
 
 ## Qualidade e operação
 - **Data Quality como gate**: expectativas críticas (chaves não nulas/únicas,

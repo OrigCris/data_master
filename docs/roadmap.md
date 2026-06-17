@@ -3,9 +3,9 @@
 Evoluções priorizadas.
 
 ## Curto prazo (dívidas técnicas)
-- [ ] **Revisar `IN_RECH`** (rechamada ≤24h): a janela com `lead` e diferença
-  assinada pode superestimar; usar diferença absoluta / `lag` e cobrir com teste
-  sobre dado controlado ([Trade-offs](trade-offs.md)).
+- [ ] **Rechamada cross-dia**: a janela de `IN_RECH` considera apenas as chamadas do
+  próprio dia (`odate`); para capturar retornos que cruzam a meia-noite (ex.: 23h →
+  01h), incluir as chamadas de D-1 na base da janela.
 - [ ] Garantir, na ingestão, que os atendimentos de uma mesma chamada cheguem no
   mesmo micro-batch (a janela de `IN_TRAF` na Silver assume isso).
 
