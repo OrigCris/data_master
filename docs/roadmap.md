@@ -1,14 +1,11 @@
 # 17. Roadmap Técnico e Melhorias Futuras
 
-Evoluções priorizadas, incluindo dívidas técnicas mapeadas na revisão de código.
+Evoluções priorizadas.
 
 ## Curto prazo (dívidas técnicas)
 - [ ] **Revisar `IN_RECH`** (rechamada ≤24h): a janela com `lead` e diferença
   assinada pode superestimar; usar diferença absoluta / `lag` e cobrir com teste
   sobre dado controlado ([Trade-offs](trade-offs.md)).
-- [ ] **Parametrizar Gold via widgets** (hoje `CATALOG`/tabelas/`odate` são
-  hardcoded) e passar `base_parameters` no bundle.
-- [ ] Corrigir o *resource key* `silver-job` no bundle Gold (copy-paste).
 - [ ] Garantir, na ingestão, que os atendimentos de uma mesma chamada cheguem no
   mesmo micro-batch (a janela de `IN_TRAF` na Silver assume isso).
 
