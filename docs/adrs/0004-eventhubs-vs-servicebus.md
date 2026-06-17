@@ -16,7 +16,6 @@ Spark `azure-eventhubs-spark`.
 
 ## Consequências
 - (+) Alto throughput, integração nativa com Spark, simples de provisionar.
-- (−) Retenção curta no plano enxuto (1h) → risco de perda se o consumo falhar por
-  muito tempo. Mitigação (buffer com Service Bus) no [Roadmap](../roadmap.md).
+- A **retenção** é dimensionada por ambiente (SLA × custo) e configurável no IaC.
 
 Relacionado: [Ingestão](../ingestion.md).

@@ -9,9 +9,7 @@ Evoluções priorizadas.
 - [ ] Garantir, na ingestão, que os atendimentos de uma mesma chamada cheguem no
   mesmo micro-batch (a janela de `IN_TRAF` na Silver assume isso).
 
-## Médio prazo (resiliência e orquestração)
-- [ ] **Fila de resiliência** (Service Bus) entre Function App e Event Hubs como
-  buffer contra intermitências (evita perda na retenção de 1h).
+## Médio prazo (orquestração)
 - [ ] **Orquestração por dependência** (job tasks com `depends_on` ou
   *file arrival trigger*) em vez de cascata por horário.
 - [ ] **DLQ** e reprocessamento automático de eventos malformados.
