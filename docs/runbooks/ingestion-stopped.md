@@ -29,5 +29,5 @@ Bronze sem novas linhas.
   ```bash
   dm run bronze-streaming -l layer_bronze
   ```
-- Se houve janela > 1h sem consumo, parte dos eventos pode ter expirado (retenção).
-  Avaliar buffer de resiliência ([Roadmap](../roadmap.md)).
+- Conferir se a interrupção não excedeu a **retenção** configurada do Event Hubs
+  (dimensionada por ambiente); reprocessar a partir do que ainda estiver retido.

@@ -96,8 +96,8 @@ Trade-offs e limitações conhecidas estão registrados com transparência em
 
 ## 9. Roadmap
 
-Curto prazo (dívidas técnicas), médio prazo (resiliência/orquestração por
-dependência) e longo prazo (Purview, SQL Serverless, tempo real). Detalhes em
+Curto prazo (dívidas técnicas), médio prazo (orquestração por dependência) e longo
+prazo (Purview, SQL Serverless, tempo real). Detalhes em
 [`docs/roadmap.md`](../docs/roadmap.md).
 
 ## 10. Conclusão

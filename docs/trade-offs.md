@@ -33,14 +33,8 @@ Esta página registra as decisões mais relevantes, suas alternativas e os
 ### Event Hubs (≈ Kinesis) ([ADR-0004](adrs/0004-eventhubs-vs-servicebus.md))
 - **Event Hubs** (não Service Bus) por ser otimizado para *high-throughput
   ingestion* e integração nativa com o conector Spark.
-- **Trade-off**: retenção curta (1h, plano enxuto) — adequada para demo, mas perda
-  de dados se o consumo falhar por mais de 1h. Mitigação no [Roadmap](roadmap.md)
-  (DLQ/fila de resiliência).
-
-### Function App em TimerTrigger (≈ produtor)
-- **Trade-off conhecido**: o produtor envia direto ao Event Hubs; uma intermitência
-  do hub pode perder eventos. A introdução de uma fila intermediária (Service Bus)
-  como buffer de resiliência está no [Roadmap](roadmap.md).
+- A **retenção** é um parâmetro de SLA/custo (dimensionada por ambiente); o
+  checkpoint do consumo garante exactly-once dentro da janela de retenção.
 
 ## Regras de negócio (decisões explícitas)
 

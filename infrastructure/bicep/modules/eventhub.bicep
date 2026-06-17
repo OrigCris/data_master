@@ -5,7 +5,7 @@ param location string
 param tags object
 @description('Lista de Event Hubs a criar')
 param hubs array
-@description('Retenção em horas (demo: 1h é suficiente para trigger-once)')
+@description('Retenção em horas (dimensionar por ambiente conforme SLA)')
 param retentionHours int = 1
 @description('Partições por hub')
 param partitionCount int = 1

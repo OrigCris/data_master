@@ -9,7 +9,7 @@ arquitetura por custo/benefício.
 | Componente | Driver de custo | Alavanca de otimização |
 |---|---|---|
 | Databricks | DBU × tempo de cluster | **`AvailableNow`** (micro-batch agendado) + `autotermination 20 min` + clusters pequenos (`Standard_D4ps_v6`, 1 worker) |
-| Event Hubs | throughput units + retenção | plano `Standard`, retenção 1h |
+| Event Hubs | throughput units + retenção | plano `Standard`; retenção dimensionada ao SLA |
 | ADLS Gen2 | GB armazenados + transações | Delta `OPTIMIZE` + liquid clustering (menos arquivos) |
 | Function App | execuções + plano | plano `B1`; produção controlada por TimerTrigger |
 | Log Analytics | GB ingeridos | retenção 30 dias |
