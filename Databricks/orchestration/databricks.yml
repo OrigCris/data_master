@@ -1,0 +1,58 @@
+bundle:
+  name: orchestration-callcenter
+
+# Orquestra o pipeline diário por DEPENDÊNCIA (não por horário): um único job
+# encadeia bronze (dimensões) → silver → gold com `depends_on`, disparando os jobs
+# de cada camada via `run_job_task`. Os ids são resolvidos por nome (lookup), então
+# os bundles das camadas devem estar publicados antes deste.
+#
+# O job `bronze-streaming` mantém schedule próprio (ingestão contínua) e não entra
+# nesta cadeia.
+
+workspace:
+  host: https://adb-3017212933203126.6.azuredatabricks.net/
+
+variables:
+  TIMEZONE:      { default: America/Sao_Paulo }
+  SCHEDULE_CRON: { default: "0 0 5 * * ?" }   # batch diário (05h)
+  bronze_dim_job_id:
+    description: Id do job bronze-dim (resolvido por nome)
+    lookup: { job: "bronze-dim" }
+  silver_job_id:
+    description: Id do job silver-job (resolvido por nome)
+    lookup: { job: "silver-job" }
+  gold_job_id:
+    description: Id do job gold-job (resolvido por nome)
+    lookup: { job: "gold-job" }
+
+targets:
+  prd:
+    default: true
+
+resources:
+  jobs:
+    dm-pipeline:
+      name: "dm-pipeline"
+      schedule:
+        quartz_cron_expression: ${var.SCHEDULE_CRON}
+        timezone_id: ${var.TIMEZONE}
+        pause_status: UNPAUSED
+
+      tasks:
+        # Dimensões (Bronze) e processamento Silver podem rodar em paralelo:
+        # a Silver consome o CDF já ingerido continuamente pelo bronze-streaming.
+        - task_key: ingest_dims
+          run_job_task:
+            job_id: ${var.bronze_dim_job_id}
+
+        - task_key: process_silver
+          run_job_task:
+            job_id: ${var.silver_job_id}
+
+        # Gold depende das dimensões (dim_assistentes) e da Silver.
+        - task_key: build_gold
+          depends_on:
+            - task_key: ingest_dims
+            - task_key: process_silver
+          run_job_task:
+            job_id: ${var.gold_job_id}

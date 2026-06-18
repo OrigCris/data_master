@@ -19,11 +19,13 @@ Esta página registra as decisões mais relevantes, suas alternativas e os
 - **Trade-off**: o progresso fica no checkpoint (opaco) em troca de **exactly-once**,
   **backpressure** e idempotência garantida pelo engine.
 
-### Agendamento em cascata por horário (e não por evento)
-- **Decisão**: bronze (02h) → silver (05h) → gold (06h).
-- **Trade-off**: simples e previsível, mas acopla o início de cada etapa a um
-  horário fixo (não ao término real da anterior). Evolução natural: orquestrar com
-  dependências entre jobs / *file arrival trigger* ([Roadmap](roadmap.md)).
+### Orquestração por dependência (e não por horário)
+- **Decisão**: um job orquestrador (`dm-pipeline`) encadeia dims → silver → gold com
+  `depends_on` via `run_job_task`; só o orquestrador tem schedule. A ingestão de
+  streaming roda em cadência própria (contínua).
+- **Trade-off**: o orquestrador resolve os job ids das camadas por nome (`lookup`),
+  então as camadas precisam ser publicadas antes dele. Em troca, cada etapa começa
+  ao **término real** da anterior, não num horário fixo.
 
 ## Plataforma
 
@@ -52,8 +54,9 @@ Esta página registra as decisões mais relevantes, suas alternativas e os
   retorno (ex.: ligou 12h e voltou às 16h → a das 16h é a rechamada).
 - **Cálculo**: janela por `ID_CLIE` ordenada por `DH_INIC`, com `lag` para a chamada
   anterior e gap = `atual − anterior` (positivo) dentro de 24h.
-- **Escopo atual**: a janela considera as chamadas do próprio dia; retornos que cruzam
-  a meia-noite são um refinamento mapeado no [Roadmap](roadmap.md).
+- **Cobertura**: a base da janela inclui **D-1** além de `odate`, então retornos que
+  cruzam a meia-noite (ex.: 23h → 01h) são capturados; a saída materializa apenas as
+  chamadas de `odate`.
 
 ## Qualidade e operação
 - **Data Quality como gate**: expectativas críticas (chaves não nulas/únicas,

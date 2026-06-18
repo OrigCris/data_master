@@ -10,7 +10,7 @@ on:
         required: true
         default: all
         type: choice
-        options: [all, layer_bronze, layer_silver, layer_gold]
+        options: [all, layer_bronze, layer_silver, layer_gold, orchestration]
 
 permissions:
   contents: read
@@ -32,9 +32,10 @@ jobs:
       - name: Deploy
         run: |
           set -euo pipefail
-          layers="${{ github.event.inputs.layer }}"
-          if [ "$layers" = "all" ]; then layers="layer_bronze layer_silver layer_gold"; fi
-          for layer in $layers; do
-            echo "== deploy $layer =="
-            (cd "Databricks/$layer" && databricks bundle deploy -t prd)
+          bundles="${{ github.event.inputs.layer }}"
+          # Camadas primeiro; orquestração por último (resolve os job ids por nome).
+          if [ "$bundles" = "all" ]; then bundles="layer_bronze layer_silver layer_gold orchestration"; fi
+          for b in $bundles; do
+            echo "== deploy $b =="
+            (cd "Databricks/$b" && databricks bundle deploy -t prd)
           done

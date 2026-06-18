@@ -30,6 +30,10 @@ clusters:
 | `bronze-callcenter` | `Databricks/layer_bronze` | `bronze-dim`, `bronze-streaming` |
 | `silver-callcenter` | `Databricks/layer_silver` | `silver-job` |
 | `gold-callcenter` | `Databricks/layer_gold` | `gold-job` |
+| `orchestration-callcenter` | `Databricks/orchestration` | `dm-pipeline` (encadeia as camadas por `depends_on`) |
+
+O bundle `orchestration` é publicado **por último**: ele resolve os job ids das
+camadas por nome (variável `lookup`), então elas precisam já existir no workspace.
 
 ## Fronteira declarativa × imperativa
 

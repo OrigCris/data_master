@@ -31,10 +31,8 @@ resources:
     # ---------------------- JOB dimensões ----------------------
     bronze-dim:
       name: "bronze-dim"
-      schedule:
-        quartz_cron_expression: ${var.SCHEDULE_CRON}
-        timezone_id: ${var.TIMEZONE}
-        pause_status: UNPAUSED
+      # Sem schedule próprio: é orquestrado por dependência (bundle orchestration).
+      # (O job bronze-streaming mantém schedule próprio por ser ingestão contínua.)
       job_clusters:
         - job_cluster_key: cluster-job-dm-bronze
           new_cluster:

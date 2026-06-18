@@ -70,8 +70,9 @@ Complementos: [ADRs](docs/adrs) · [Runbooks](docs/runbooks) · [Relatório do c
 ├── cli/             # CLI `dm` (Typer) — provision / deploy / run / validate
 ├── database/        # DDL (migrations) + MER (mermaid)
 ├── Databricks/
-│   ├── essential/   # criação de schemas por camada (Unity Catalog)
+│   ├── essential/   # criação de schemas + governança de PII
 │   ├── layer_*/     # Asset Bundles + notebooks (bronze/silver/gold)
+│   ├── orchestration/  # job dm-pipeline (encadeia as camadas por dependência)
 │   └── lib/         # transforms · quality · security (compartilhado e TESTADO)
 ├── docs/            # documentação (+ adrs, runbooks)
 ├── function_app/    # produtor de eventos (Azure Functions)

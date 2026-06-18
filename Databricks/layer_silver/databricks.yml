@@ -20,11 +20,7 @@ resources:
   jobs:
     silver-job:
       name: "silver-job"
-      schedule:
-        quartz_cron_expression: ${var.SCHEDULE_CRON}
-        timezone_id: ${var.TIMEZONE}
-        pause_status: UNPAUSED
-
+      # Sem schedule próprio: é orquestrado por dependência (bundle orchestration).
       job_clusters:
         - job_cluster_key: cluster-job-dm-silver
           new_cluster:
