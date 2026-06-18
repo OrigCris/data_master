@@ -44,6 +44,8 @@ jobs:
 
       - name: Validate bundles (bronze/silver/gold)
         # DATABRICKS_HOST / DATABRICKS_TOKEN vêm de secrets do repositório.
+        # O bundle `orchestration` não é validado aqui: ele resolve os job ids das
+        # camadas por nome (lookup), exigindo que já estejam publicados no workspace.
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}

@@ -31,8 +31,9 @@ quantidade/número · `IN_` indicador · `VL_`/`PC_` valor/percentual · `DS_` d
 ├── cli/                  # CLI `dm` (Typer)
 ├── database/             # DDL (migrations) + MER
 ├── Databricks/
-│   ├── essential/        # criação de schemas por camada
+│   ├── essential/        # criação de schemas + governança de PII
 │   ├── layer_bronze|silver|gold/   # Asset Bundles + notebooks
+│   ├── orchestration/    # job dm-pipeline (encadeia as camadas por dependência)
 │   └── lib/              # transforms, quality, security (compartilhado/testado)
 ├── docs/                 # esta documentação (+ adrs, runbooks)
 ├── function_app/         # produtor de eventos (Azure Functions)

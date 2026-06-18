@@ -59,20 +59,26 @@ Job diário que cruza as tabelas Silver com as dimensões e materializa as **vis
 analíticas D-1** (`visao_ura_calls`, `visao_assistentes`), com `replaceWhere` por
 data de referência. Ver [Geração de Dados Analíticos](analytics.md).
 
-## Orquestração e agendamento
+## Orquestração
 
-Os jobs são agendados em cascata (Quartz cron, fuso `America/Sao_Paulo`):
+O pipeline diário é orquestrado **por dependência** (não por horário): o bundle
+`orchestration` define o job `dm-pipeline`, que encadeia as camadas com `depends_on`
+disparando os jobs de cada camada via `run_job_task`.
 
-| Camada | Job | Agendamento |
-|---|---|---|
-| Bronze (dims) | `bronze-dim` | 02:00 diário |
-| Bronze (streaming) | `bronze-streaming` | a cada 30 min |
-| Silver | `silver-job` | 05:00 diário |
-| Gold | `gold-job` | 06:00 diário |
+```mermaid
+flowchart LR
+    dims[ingest_dims<br/>bronze-dim] --> gold[build_gold<br/>gold-job]
+    silver[process_silver<br/>silver-job] --> gold
+```
 
-> A janela bronze→silver→gold (02h → 05h → 06h) dá folga para a ingestão noturna
-> concluir antes do processamento. Alternativas (gatilho por arquivo/evento) estão
-> discutidas em [Trade-offs](trade-offs.md) e no [Roadmap](roadmap.md).
+| Job | Trigger |
+|---|---|
+| `dm-pipeline` (orquestrador) | agendado diariamente (único schedule do batch) |
+| `bronze-dim`, `silver-job`, `gold-job` | sem schedule próprio — disparados pela cadeia |
+| `bronze-streaming` | schedule próprio (a cada 30 min) — ingestão contínua |
+
+> `gold` só inicia quando **dims** e **silver** concluem. A ingestão de streaming
+> roda de forma independente, alimentando a Bronze ao longo do dia.
 
 ## Pilares transversais
 

@@ -28,8 +28,9 @@ caminhos:
 
 ## 3. Deploy dos jobs
 ```bash
-dm deploy all          # bronze → silver → gold
+dm deploy all          # bronze → silver → gold → orchestration
 ```
+A orquestração entra por último (resolve os job ids das camadas por nome).
 
 ## 4. Produzir e ingerir dados
 - Faça o deploy da **Function App** (`function_app/`) — o TimerTrigger passa a
@@ -41,10 +42,12 @@ dm run bronze-dim       -l layer_bronze
 ```
 
 ## 5. Processar
+O pipeline diário roda pelo orquestrador (`dm-pipeline`), que encadeia
+dims/silver/gold por dependência. Disparo manual:
 ```bash
-dm run silver-job -l layer_silver
-dm run gold-job   -l layer_gold
+dm run dm-pipeline -l orchestration
 ```
+Ou execute uma camada isolada (ad-hoc): `dm run silver-job -l layer_silver`.
 
 ## 6. Visualizar
 As tabelas `g_dm_callcenter.visao_*` estão prontas para BI. A observabilidade
