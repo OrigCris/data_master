@@ -31,6 +31,9 @@ jobs:
       - name: Pytest (unit, sem cluster Spark)
         run: pytest -q
 
+      - name: Build wheel da lib (smoke)
+        run: python -m build --wheel Databricks/lib
+
   validate-bundles:
     name: Validate Databricks Asset Bundles
     runs-on: ubuntu-latest

@@ -10,10 +10,21 @@ tanto pelos jobs no Databricks quanto pela suíte de testes local (`tests/`).
 | [`quality/`](quality) | Framework de Data Quality declarativo com relatório e gate de criticidade. | `Expectation`, `run_expectations`, `QualityReport` |
 | [`security/`](security) | Mascaramento de PII (funções puras + Spark) e geração de *column masks* do Unity Catalog. | `mask_cpf`, `mask_email`, `mask_dataframe`, `column_mask_functions_sql` |
 
-## Como os notebooks consomem
+## Empacotamento e consumo
 
-No Databricks, adicione `Databricks/lib` ao `sys.path` (ou empacote como wheel via
-`databricks.yml`). Exemplo dentro de um notebook Silver:
+A lib é distribuída como **wheel** (`pyproject.toml` aqui). O bundle
+[`layer_silver`](../layer_silver/databricks.yml) constrói o wheel (`artifacts`) e o
+anexa aos jobs (`libraries`), então os notebooks dos jobs importam `from transforms
+...` sem depender de Repos. Em execução **interativa** (dev), os notebooks também
+funcionam via `sys.path.append("/Workspace/Repos/.../Databricks/lib")`.
+
+Build local do wheel:
+
+```bash
+cd Databricks/lib && python -m build --wheel   # gera dist/dm_callcenter_lib-*.whl
+```
+
+Exemplo dentro de um notebook Silver:
 
 ```python
 import sys; sys.path.append("/Workspace/Repos/<repo>/Databricks/lib")

@@ -16,7 +16,6 @@ Evoluções priorizadas.
 - [ ] **Microsoft Purview** para catálogo corporativo e classificação automática de PII.
 - [ ] **Databricks SQL Serverless** + dashboards versionados para o consumo analítico.
 - [ ] **Tempo real** de fato (streaming contínuo) para casos que exijam latência baixa.
-- [ ] **DABs com wheel** empacotando `Databricks/lib` (em vez de `sys.path`).
 - [ ] **Testes de integração** com Spark local (`pyspark` no CI) cobrindo MERGE/CDF.
 
 ---
