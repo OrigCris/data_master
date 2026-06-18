@@ -18,7 +18,7 @@ No Databricks, adicione `Databricks/lib` ao `sys.path` (ou empacote como wheel v
 ```python
 import sys; sys.path.append("/Workspace/Repos/<repo>/Databricks/lib")
 from transforms import SilverStream
-from quality import Expectation, run_expectations
+from quality import Expectation
 
 stream = SilverStream(spark)
 stream.run(
@@ -28,6 +28,8 @@ stream.run(
     keys=["ID_CHAM"],
     checkpoint_location="/Volumes/.../checkpoints/silver/tabe_ura_anlt",
     cluster_by=["CD_PERI", "DT_INIC", "ID_CHAM"],
+    expectations=[Expectation.not_null("ID_CHAM")],   # gate de DQ por micro-batch
+    dq_results_table="prd.s_dm_callcenter.__dq_results",
 )
 ```
 

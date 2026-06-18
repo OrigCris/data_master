@@ -21,10 +21,10 @@ No Databricks, execute o notebook essencial (uma vez):
 > A Silver controla o progresso pelo **checkpoint** do streaming, em
 > `/Volumes/.../checkpoints/silver` (criado automaticamente na primeira execução).
 
-E aplique a governança de PII:
-```sql
--- database/ddl/004_governance.sql (column masks do Unity Catalog)
-```
+E aplique a governança de PII (após criar as dimensões na Bronze), por um dos
+caminhos:
+- notebook `Databricks/essential/apply_pii_masks.ipynb` (usa a lib `security`), ou
+- SQL estático em `database/ddl/004_governance.sql`.
 
 ## 3. Deploy dos jobs
 ```bash

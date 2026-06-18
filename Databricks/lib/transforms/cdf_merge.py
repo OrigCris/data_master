@@ -123,14 +123,28 @@ class SilverStream:
         keys: Sequence[str],
         checkpoint_location: str,
         cluster_by: Sequence[str] | None = None,
+        expectations: list | None = None,
+        dq_results_table: str | None = None,
     ):
-        """Executa o stream com Trigger.AvailableNow e bloqueia até terminar."""
+        """Executa o stream com Trigger.AvailableNow e bloqueia até terminar.
+
+        Se `expectations` for informado, cada micro-batch passa por um **gate de
+        Data Quality** antes do MERGE: o relatório é (opcionalmente) persistido em
+        `dq_results_table` e uma falha **crítica** interrompe o batch.
+        """
 
         def _batch(micro_df: DataFrame, batch_id: int) -> None:
             changes = micro_df.filter(F.col("_change_type").isin(list(self.change_types)))
             if changes.isEmpty():
                 return
             staged = transform(changes)
+            if expectations:
+                from quality import run_expectations  # lazy: evita acoplar o import do módulo
+                report = run_expectations(staged, expectations, dataset=target_fqn)
+                print(report.summary())
+                if dq_results_table:
+                    report.to_table(self.spark, dq_results_table)
+                report.raise_if_critical_failed()
             merge_upsert(self.spark, target_fqn, staged, keys, cluster_by=cluster_by)
 
         query = (

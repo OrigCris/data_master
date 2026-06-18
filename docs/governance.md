@@ -29,7 +29,9 @@ ALTER TABLE prd.b_dm_callcenter.dim_clientes
 ```
 
 A função libera o valor em claro apenas para `is_account_group_member('dm_pii_readers')`.
-Estratégias e geração programática em [`Databricks/lib/security`](../Databricks/lib/security):
+As funções e os `ALTER ... SET MASK` são gerados e aplicados pelo notebook
+[`apply_pii_masks`](../Databricks/essential/apply_pii_masks.ipynb), que usa a lib
+[`Databricks/lib/security`](../Databricks/lib/security):
 
 | Função | Comportamento |
 |---|---|

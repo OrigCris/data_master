@@ -49,18 +49,32 @@ stream.run(
 
 ## Data Quality (gate)
 
-Cada execução pode validar o *staged* com o framework de expectativas:
+Cada notebook Silver passa um conjunto de **expectativas** para o `SilverStream`. A
+cada micro-batch, antes do MERGE, o gate valida o *staged*, registra o resultado em
+`__dq_results` e **interrompe** o batch em caso de falha crítica:
 
 ```python
-from quality import Expectation, run_expectations
+from quality import Expectation
 
-report = run_expectations(staged, [
+checks = [
     Expectation.not_null("ID_CHAM"),
+    Expectation.unique("ID_PESQ"),
     Expectation.between("VL_NOTA", 1, 10),
-], dataset="silver.tabe_pesq_ura")
-report.raise_if_critical_failed()                 # falha o job em violação crítica
-report.to_table(spark, "prd.s_dm_callcenter.__dq_results")
+]
+
+SilverStream(spark).run(
+    source_fqn="prd.b_dm_callcenter.surveys_once",
+    target_fqn="prd.s_dm_callcenter.tabe_pesq_ura",
+    transform=transform,
+    keys=["ID_CHAM"],
+    checkpoint_location="/Volumes/.../checkpoints/silver/tabe_pesq_ura",
+    expectations=checks,
+    dq_results_table="prd.s_dm_callcenter.__dq_results",
+)
 ```
+
+Severidade `critical` falha o job; `warn` apenas registra. O histórico fica em
+[`__dq_results`](../database/ddl/002_silver.sql).
 
 ---
 
