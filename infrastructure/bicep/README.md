@@ -36,6 +36,6 @@ az deployment group create -g rsgcjtecprd001 \
 
 A criação dos **Service Principals** (produtor/consumidor) e o **seed de segredos**
 no Key Vault exigem Microsoft Graph e geram credenciais rotativas — fora do escopo
-do ARM/Bicep. Essa etapa permanece no bootstrap [`scripts`](../create_resouce.sh)
-ou na CLI do projeto (`dm provision --seed-secrets`). O Bicep cuida de todos os
-recursos de plataforma e do RBAC; o bootstrap cuida da identidade e dos segredos.
+do ARM/Bicep. Essa etapa fica no bootstrap [`create_resouce.sh`](../create_resouce.sh).
+O Bicep cuida de todos os recursos de plataforma e do RBAC; o bootstrap cuida da
+identidade e dos segredos.
