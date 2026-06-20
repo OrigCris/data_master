@@ -8,10 +8,11 @@ az group create -n rsgcjtecprd001 -l brazilsouth
 dm provision -g rsgcjtecprd001 --what-if    # revisar
 dm provision -g rsgcjtecprd001              # aplicar
 ```
-Isso cria Storage, Event Hubs, Key Vault, Function App, Databricks, observabilidade
-e o RBAC. Em seguida rode o **bootstrap** de identidade/segredos (SPNs + secrets):
+O Bicep cria Storage, Event Hubs, Key Vault, Function App, Databricks, observabilidade,
+RBAC e as app settings da Function. Em seguida rode o **bootstrap** de identidade/segredos
+(o que o Bicep não faz — SPNs + secrets):
 ```bash
-bash infrastructure/create_resouce.sh       # cria SPNs e popula o Key Vault
+bash infrastructure/bootstrap.sh            # cria SPNs e popula o Key Vault
 ```
 
 ## 2. Preparar o Unity Catalog
