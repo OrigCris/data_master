@@ -40,7 +40,7 @@ app = typer.Typer(help="Data Master CLI — provisiona, publica e opera o pipeli
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BICEP_TEMPLATE = "infrastructure/bicep/main.bicep"
 BICEP_PARAMS = "infrastructure/bicep/params/prd.bicepparam"
-BOOTSTRAP = "infrastructure/create_resouce.sh"
+BOOTSTRAP = "infrastructure/bootstrap.sh"
 
 
 def _run(cmd: list[str], cwd: Path | None = None, dry_run: bool = False) -> int:

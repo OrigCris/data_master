@@ -2,7 +2,7 @@
 
 Provisionamento declarativo e idempotente do ambiente Azure do Data Master,
 organizado em **módulos por domínio**. O bootstrap de identidade/segredos
-(Entra ID) fica em [`create_resouce.sh`](../create_resouce.sh).
+(Entra ID) fica em [`bootstrap.sh`](../bootstrap.sh), executado após o Bicep.
 
 ## Mapa de módulos
 
@@ -36,6 +36,6 @@ az deployment group create -g rsgcjtecprd001 \
 
 A criação dos **Service Principals** (produtor/consumidor) e o **seed de segredos**
 no Key Vault exigem Microsoft Graph e geram credenciais rotativas — fora do escopo
-do ARM/Bicep. Essa etapa fica no bootstrap [`create_resouce.sh`](../create_resouce.sh).
-O Bicep cuida de todos os recursos de plataforma e do RBAC; o bootstrap cuida da
-identidade e dos segredos.
+do ARM/Bicep. Essa etapa fica no bootstrap [`bootstrap.sh`](../bootstrap.sh).
+O Bicep cuida de todos os recursos de plataforma, do RBAC e das app settings; o
+bootstrap cuida da identidade e dos segredos.

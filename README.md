@@ -89,14 +89,12 @@ pip install -r tests/requirements-dev.txt && pytest -q
 
 # 1) Infra (Bicep modular) + bootstrap de identidade/segredos
 pip install -e cli/
-dm provision -g rsgcjtecprd001
-bash infrastructure/create_resouce.sh
+dm provision -g rsgcjtecprd001          # Bicep: recursos + RBAC + app settings
+bash infrastructure/bootstrap.sh        # SPNs + segredos (o que o Bicep não faz)
 
 # 2) Deploy dos jobs e execução do pipeline
-dm deploy all
-dm run bronze-streaming -l layer_bronze
-dm run silver-job -l layer_silver
-dm run gold-job   -l layer_gold
+dm deploy all                            # bronze → silver → gold → orchestration
+dm run dm-pipeline -l orchestration
 ```
 
 Veja o passo a passo detalhado em [Utilização](docs/how-to-use.md).
