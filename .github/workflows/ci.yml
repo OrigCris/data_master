@@ -37,9 +37,9 @@ jobs:
   validate-bundles:
     name: Validate Databricks Asset Bundles
     runs-on: ubuntu-latest
-    # DATABRICKS_HOST / DATABRICKS_TOKEN vêm de secrets do repositório.
-    # Sem eles, os passos abaixo são pulados (job fica verde) — a validação de
-    # bundle depende de um workspace real.
+    # A validação de bundle requer um workspace real (DATABRICKS_HOST/TOKEN via
+    # secrets). Na ausência das credenciais, os passos que dependem do workspace
+    # são pulados.
     env:
       DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
@@ -68,7 +68,7 @@ jobs:
 
       - name: Sem credenciais → validação pulada
         if: env.DATABRICKS_TOKEN == ''
-        run: echo "DATABRICKS_TOKEN não configurado; validação de bundles pulada (job verde)."
+        run: echo "DATABRICKS_TOKEN não configurado; validação de bundles pulada."
 
   validate-bicep:
     name: Validate Bicep IaC

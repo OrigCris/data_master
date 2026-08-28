@@ -10,11 +10,11 @@ sync:
     - notebooks/**
 
 workspace:
-  # host vem do profile (~/.databrickscfg) — não fica no repo.
+  # Host resolvido pelo profile do Databricks CLI (~/.databrickscfg), fora do versionamento.
   profile: prd
 
-# Empacota a lib compartilhada (transforms/quality/security) como wheel e a anexa
-# aos jobs — assim os notebooks importam `from transforms ...` sem depender de Repos.
+# Empacota a lib compartilhada (transforms/quality/security) como wheel e a disponibiliza
+# no cluster dos jobs, tornando `transforms`/`quality`/`security` importáveis.
 artifacts:
   dm_lib:
     type: whl
