@@ -2,8 +2,8 @@ bundle:
   name: bronze-callcenter
 
 workspace:
+  # host vem do profile (~/.databrickscfg) — não fica no repo.
   profile: prd
-  host: https://adb-3017212933203126.6.azuredatabricks.net/
 
 sync:
   include:

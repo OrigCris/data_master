@@ -10,7 +10,8 @@ bundle:
 # nesta cadeia.
 
 workspace:
-  host: https://adb-3017212933203126.6.azuredatabricks.net/
+  # host vem do profile (~/.databrickscfg) — não fica no repo.
+  profile: prd
 
 variables:
   TIMEZONE:      { default: America/Sao_Paulo }
