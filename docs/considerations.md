@@ -6,7 +6,7 @@ ingestão orientada a eventos, processamento incremental e idempotente,
 modelagem analítica, **governança de PII no catálogo**, **observabilidade com
 alertas**, **FinOps** e **automação** (IaC modular, CLI e CI/CD).
 
-As decisões priorizaram **custo controlado** (trigger-once, processamento
+As decisões priorizaram **custo controlado** (processamento agendado `AvailableNow`,
 incremental, clusters job-scoped), **confiabilidade** (idempotência via CDF +
 marcador, MERGE) e **manutenibilidade** (código compartilhado e testado, bundles
 por camada, documentação navegável).
