@@ -2,7 +2,7 @@ bundle:
   name: bronze-callcenter
 
 workspace:
-  # host vem do profile (~/.databrickscfg) — não fica no repo.
+  # Host resolvido pelo profile do Databricks CLI (~/.databrickscfg), fora do versionamento.
   profile: prd
 
 sync:
