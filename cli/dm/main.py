@@ -15,6 +15,7 @@ Uso:
 """
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -48,7 +49,10 @@ def _run(cmd: list[str], cwd: Path | None = None, dry_run: bool = False) -> int:
     typer.secho(f"$ {' '.join(cmd)}{where}", fg=typer.colors.BRIGHT_BLACK)
     if dry_run:
         return 0
-    return subprocess.run(cmd, cwd=cwd).returncode
+    # No Windows, `az`/`databricks` são .cmd — o subprocess não resolve a extensão
+    # sozinho. shutil.which encontra o caminho completo (usa o PATHEXT).
+    exe = shutil.which(cmd[0]) or cmd[0]
+    return subprocess.run([exe, *cmd[1:]], cwd=cwd).returncode
 
 
 @app.command()
