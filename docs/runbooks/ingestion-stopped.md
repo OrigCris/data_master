@@ -21,7 +21,7 @@ Bronze sem novas linhas.
    ```bash
    az eventhubs eventhub show -g rsgcjtecprd001 --namespace-name evhnscjtecprd001 -n evh_cj_tec_ura
    ```
-5. **Consumo Bronze** (trigger-once) executou? Verifique o run do job
+5. **Consumo Bronze** (`AvailableNow`) executou? Verifique o run do job
    `bronze-streaming` e o `lastProgress`.
 
 ## Resolução

@@ -29,7 +29,7 @@ Demonstrar, com um domínio realista, uma solução de dados que cobre todo o ci
 ```mermaid
 flowchart LR
     FN[Azure Functions] -->|JSON| EH[(Event Hubs)]
-    EH -->|trigger-once| B[(Bronze + CDF)]
+    EH -->|AvailableNow| B[(Bronze + CDF)]
     B -->|Change Data Feed| S[(Silver MERGE)]
     S -->|D-1| G[(Gold visões)]
     G --> BI[BI / Dashboards]

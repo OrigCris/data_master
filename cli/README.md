@@ -1,7 +1,7 @@
 # `dm` — Data Master CLI
 
-CLI em Python (Typer) que unifica o ciclo de vida do projeto numa única ferramenta,
-no espírito da CLI do case de referência — porém aderente ao stack Azure/Python.
+CLI em Python (Typer) que unifica o ciclo de vida do projeto — provisionamento,
+publicação e operação — numa única ferramenta aderente ao stack Azure/Python.
 
 ## Instalação
 

@@ -11,7 +11,7 @@ do Unity Catalog, com **MANAGED LOCATION** por camada no ADLS Gen2.
 
 ## Bronze — landing imutável
 
-- **Streaming**: Event Hubs → Delta via `readStream` com **trigger once**. O
+- **Streaming**: Event Hubs → Delta via `readStream` com **`Trigger.AvailableNow`**. O
   schema cru preserva metadados do Event Hubs (`offset`, `enqueuedTime`, etc.) e
   acrescenta `ingestion_ts`/`ingestion_date`.
 - **Dimensões**: geradas sinteticamente (Faker) e gravadas como tabelas managed.

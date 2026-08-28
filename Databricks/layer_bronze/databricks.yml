@@ -91,7 +91,7 @@ resources:
 
       tasks:
         - task_key: ingest_ura
-          description: "Event Hubs → Bronze: ura (trigger once)"
+          description: "Event Hubs → Bronze: ura (AvailableNow)"
           job_cluster_key: cluster-job-stream-bronze
           notebook_task:
             notebook_path: ${var.STREAM_NOTEBOOK}
@@ -108,7 +108,7 @@ resources:
           timeout_seconds: 0
 
         - task_key: ingest_calls
-          description: "Event Hubs → Bronze: calls (trigger once)"
+          description: "Event Hubs → Bronze: calls (AvailableNow)"
           job_cluster_key: cluster-job-stream-bronze
           notebook_task:
             notebook_path: ${var.STREAM_NOTEBOOK}
@@ -125,7 +125,7 @@ resources:
           timeout_seconds: 0
 
         - task_key: ingest_surveys
-          description: "Event Hubs → Bronze: surveys (trigger once)"
+          description: "Event Hubs → Bronze: surveys (AvailableNow)"
           job_cluster_key: cluster-job-stream-bronze
           notebook_task:
             notebook_path: ${var.STREAM_NOTEBOOK}
