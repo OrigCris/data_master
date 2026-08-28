@@ -28,6 +28,13 @@ caminhos:
 - SQL estático em `database/ddl/004_governance.sql`.
 
 ## 3. Deploy dos jobs
+Os bundles usam `profile: prd` (o host **não** fica no repo). Configure-o uma vez
+com a URL do workspace provisionado:
+```bash
+databricks configure --profile prd --host https://adb-<seu_id>.azuredatabricks.net
+# (informe o token quando pedido)
+```
+Depois publique:
 ```bash
 dm deploy all          # bronze → silver → gold → orchestration
 ```

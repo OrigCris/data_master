@@ -37,26 +37,38 @@ jobs:
   validate-bundles:
     name: Validate Databricks Asset Bundles
     runs-on: ubuntu-latest
+    # DATABRICKS_HOST / DATABRICKS_TOKEN vêm de secrets do repositório.
+    # Sem eles, os passos abaixo são pulados (job fica verde) — a validação de
+    # bundle depende de um workspace real.
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Databricks CLI
+        if: env.DATABRICKS_TOKEN != ''
         run: |
           curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
           databricks version
 
+      - name: Configura profile 'prd' (a partir dos secrets)
+        if: env.DATABRICKS_TOKEN != ''
+        run: printf '[prd]\nhost = %s\ntoken = %s\n' "$DATABRICKS_HOST" "$DATABRICKS_TOKEN" > ~/.databrickscfg
+
       - name: Validate bundles (bronze/silver/gold)
-        # DATABRICKS_HOST / DATABRICKS_TOKEN vêm de secrets do repositório.
         # O bundle `orchestration` não é validado aqui: ele resolve os job ids das
         # camadas por nome (lookup), exigindo que já estejam publicados no workspace.
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        if: env.DATABRICKS_TOKEN != ''
         run: |
           for layer in layer_bronze layer_silver layer_gold; do
             echo "== validate $layer =="
             (cd "Databricks/$layer" && databricks bundle validate) || exit 1
           done
+
+      - name: Sem credenciais → validação pulada
+        if: env.DATABRICKS_TOKEN == ''
+        run: echo "DATABRICKS_TOKEN não configurado; validação de bundles pulada (job verde)."
 
   validate-bicep:
     name: Validate Bicep IaC

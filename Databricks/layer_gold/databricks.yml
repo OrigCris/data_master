@@ -14,7 +14,8 @@ sync:
     - notebooks/**
 
 workspace:
-  host: https://adb-3017212933203126.6.azuredatabricks.net/
+  # host vem do profile (~/.databrickscfg) — não fica no repo.
+  profile: prd
 
 targets:
   prd:

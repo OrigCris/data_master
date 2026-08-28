@@ -29,6 +29,9 @@ jobs:
       - name: Install Databricks CLI
         run: curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
 
+      - name: Configura profile 'prd' (a partir dos secrets)
+        run: printf '[prd]\nhost = %s\ntoken = %s\n' "$DATABRICKS_HOST" "$DATABRICKS_TOKEN" > ~/.databrickscfg
+
       - name: Deploy
         run: |
           set -euo pipefail

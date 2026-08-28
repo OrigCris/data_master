@@ -10,7 +10,8 @@ sync:
     - notebooks/**
 
 workspace:
-  host: https://adb-3017212933203126.6.azuredatabricks.net/
+  # host vem do profile (~/.databrickscfg) — não fica no repo.
+  profile: prd
 
 # Empacota a lib compartilhada (transforms/quality/security) como wheel e a anexa
 # aos jobs — assim os notebooks importam `from transforms ...` sem depender de Repos.
