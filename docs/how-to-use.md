@@ -16,8 +16,22 @@ bash infrastructure/bootstrap.sh            # cria SPNs e popula o Key Vault
 ```
 
 ## 2. Preparar o Unity Catalog
-No Databricks, execute o notebook essencial (uma vez):
-- `Databricks/essential/create_databases.ipynb` — cria os schemas por camada.
+Configure o profile do Databricks CLI (uma vez) com a URL do workspace provisionado —
+os bundles usam `profile: prd`, então o host **não** fica no repo:
+```bash
+databricks configure --profile prd --host https://adb-<seu_id>.azuredatabricks.net
+# (informe o token quando pedido)
+```
+Provisione o Unity Catalog (secret scope + storage credential + external location +
+catalog), sem operação manual no workspace:
+```bash
+bash Databricks/essential/setup_unity_catalog.sh
+```
+> Requer o **metastore** do Unity Catalog já atribuído ao workspace — etapa de
+> *account admin*, no nível da conta (a única fora dos scripts).
+
+Crie os schemas por camada:
+- `Databricks/essential/create_databases.ipynb`
 
 > A Silver controla o progresso pelo **checkpoint** do streaming, em
 > `/Volumes/.../checkpoints/silver` (criado automaticamente na primeira execução).
@@ -28,13 +42,7 @@ caminhos:
 - SQL estático em `database/ddl/004_governance.sql`.
 
 ## 3. Deploy dos jobs
-Os bundles usam `profile: prd` (o host **não** fica no repo). Configure-o uma vez
-com a URL do workspace provisionado:
-```bash
-databricks configure --profile prd --host https://adb-<seu_id>.azuredatabricks.net
-# (informe o token quando pedido)
-```
-Depois publique:
+Com o profile `prd` já configurado (passo 2), publique:
 ```bash
 dm deploy all          # bronze → silver → gold → orchestration
 ```
