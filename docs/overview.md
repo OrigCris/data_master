@@ -21,7 +21,7 @@ Um cliente liga para a central. A jornada passa por:
 2. **Atendimento humano** — um ou mais **assistentes** atendem a chamada derivada;
    há transferências entre áreas.
 3. **Pesquisa de satisfação** — parte das chamadas atendidas responde a uma
-   pesquisa (nota 1–10), base para o cálculo de **NPS**.
+   pesquisa (nota 0–10), base para o cálculo de **NPS**.
 
 As entidades de apoio são as dimensões **clientes** e **assistentes** (com
 hierarquia organizacional). O modelo completo está em [Modelo de Dados](mer.md).

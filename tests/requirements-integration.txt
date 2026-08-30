@@ -1,0 +1,6 @@
+# Dependências dos testes de INTEGRAÇÃO (Spark local + Delta). Pesadas — rodam só no
+# job de CI dedicado, não na suíte unitária. As versões acompanham o Databricks
+# Runtime 15.4 LTS (Spark 3.5.x / Delta 3.2.x).
+-r requirements-dev.txt
+pyspark==3.5.1
+delta-spark==3.2.0

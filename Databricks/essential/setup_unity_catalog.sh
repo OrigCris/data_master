@@ -16,7 +16,7 @@
 #
 # Uso: ./setup_unity_catalog.sh
 # =============================================================================
-set -uo pipefail
+set -euo pipefail
 
 PROFILE="${DATABRICKS_PROFILE:-prd}"
 DBX="databricks --profile ${PROFILE}"

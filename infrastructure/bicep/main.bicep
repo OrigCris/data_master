@@ -9,9 +9,10 @@
 //     -f infrastructure/bicep/main.bicep \
 //     -p infrastructure/bicep/params/prd.bicepparam
 //
-// Observação de fronteira: a criação dos Service Principals (Entra ID) e o seed
-// de secrets no Key Vault permanecem no bootstrap (`scripts`), pois exigem
-// Microsoft Graph e segredos rotativos — fora do escopo declarativo do ARM.
+// Observação de fronteira: a criação da Service Principal consumidora (Entra ID) e o
+// seed de secrets no Key Vault permanecem no bootstrap, pois exigem Microsoft Graph e
+// segredos rotativos — fora do escopo declarativo do ARM. O produtor usa a Managed
+// Identity do Function App (papel Data Sender atribuído aqui, via RBAC).
 // =============================================================================
 
 targetScope = 'resourceGroup'
@@ -92,10 +93,6 @@ module functionApp 'modules/functionapp.bicep' = {
       EH_NAME_URA: 'evh_cj_tec_ura'
       EH_NAME_CALLS: 'evh_cj_tec_calls'
       EH_NAME_SURVEYS: 'evh_cj_tec_surveys'
-      KV_URL: keyvault.outputs.vaultUri
-      KV_SECRET_SPN_CLIENT_ID: 'ServicePrincipalAppId'
-      KV_SECRET_SPN_TENANT_ID: 'ServicePrincipalTenantId'
-      KV_SECRET_SPN_CLIENT_SECRET: 'ServicePrincipalSecret'
     }
   }
 }
@@ -116,9 +113,22 @@ module roles 'modules/roles.bicep' = {
   name: 'roles'
   params: {
     storageAccountName: storage.outputs.name
-    keyVaultName: keyvault.outputs.name
+    eventHubNamespaceName: eventhub.outputs.namespaceName
     functionPrincipalId: functionApp.outputs.principalId
     accessConnectorPrincipalId: databricks.outputs.accessConnectorPrincipalId
+  }
+}
+
+// ------------------------------ Alertas (Azure Monitor) ----------------------
+// Regras de alerta provisionadas junto da solução (ingestão parada, exceções da
+// Function). O arquivo também é deployável isoladamente (mesmos parâmetros).
+module alerts '../../monitoring/alerts/alert-rules.bicep' = {
+  name: 'alerts'
+  params: {
+    eventHubNamespaceId: eventhub.outputs.namespaceId
+    appInsightsId: monitoring.outputs.appInsightsId
+    actionGroupId: monitoring.outputs.actionGroupId
+    location: location
   }
 }
 
@@ -127,3 +137,8 @@ output eventHubNamespaceFqdn string = eventhub.outputs.namespaceFqdn
 output keyVaultUri string = keyvault.outputs.vaultUri
 output functionApp string = functionApp.outputs.name
 output databricksWorkspaceUrl string = databricks.outputs.workspaceUrl
+
+// IDs para o deploy das regras de alerta (monitoring/alerts/alert-rules.bicep)
+output eventHubNamespaceId string = eventhub.outputs.namespaceId
+output appInsightsId string = monitoring.outputs.appInsightsId
+output actionGroupId string = monitoring.outputs.actionGroupId

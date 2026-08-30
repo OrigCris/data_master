@@ -8,7 +8,17 @@ from datetime import datetime, timedelta
 from faker import Faker
 
 fake = Faker("pt_BR")
-AREAS = ["Cartões", "Financiamento", "Cobrança", "Relacionamento"]
+
+# Áreas de atendimento canônicas. A área de um atendimento é derivada de forma
+# DETERMINÍSTICA do id do assistente — assim ela bate com a área do mesmo assistente
+# na `dim_assistentes`, que usa esta mesma lista e a mesma regra. Manter as duas em
+# sincronia é o contrato de coerência dos dados sintéticos.
+AREAS = ["Atendimento", "Cobrança", "Financeiro", "Relacionamento"]
+
+
+def area_do_assistente(id_assistente: int) -> str:
+    """Mapeia o id do assistente para sua área (mesma regra da dim_assistentes)."""
+    return AREAS[(id_assistente - 1) % len(AREAS)]
 
 def gerar_fato_chamada_humana(eventos_ura: Iterable[dict]) -> list[dict]:
     eventos_humanos: list[dict] = []
@@ -38,7 +48,7 @@ def gerar_fato_chamada_humana(eventos_ura: Iterable[dict]) -> list[dict]:
                 "id_assistente": assistentes_ids[i],
                 "data_hora_inicio": inicio.isoformat(),
                 "data_hora_fim": fim.isoformat(),
-                "area_atendimento": random.choice(AREAS),
+                "area_atendimento": area_do_assistente(assistentes_ids[i]),
                 }
             )
 

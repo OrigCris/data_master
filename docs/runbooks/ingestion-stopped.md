@@ -5,23 +5,27 @@ Bronze sem novas linhas.
 
 ## Triagem (do produtor ao consumidor)
 1. **Function App** está rodando?
-   - App Insights → falhas/exceções; métrica `Http5xx`.
-   - Causa comum: SPN sem segredo válido no Key Vault.
+   - App Insights → telemetria de **exceções** das execuções (métrica `exceptions/count`;
+     a Function é TimerTrigger, então falha = exceção, não HTTP 5xx).
    ```bash
    az functionapp show -g rsgcjtecprd001 -n funccjtecprd001 --query state
    ```
-2. **Segredos do SPN** existem e estão corretos?
+2. **Managed Identity** da Function habilitada?
    ```bash
-   az keyvault secret show --vault-name akvcjtecprd001 -n ServicePrincipalAppId --query value
+   az functionapp identity show -g rsgcjtecprd001 -n funccjtecprd001 --query principalId
    ```
-   - A MI da Function tem `Key Vault Secrets User`? (RBAC)
 3. **Permissão de envio** ao Event Hubs?
-   - O SPN produtor precisa de `Azure Event Hubs Data Sender` no namespace.
+   - A **MI da Function** precisa de `Azure Event Hubs Data Sender` no namespace
+     (o envio é por OAuth; falha de token → sem produção). Confira o role assignment
+     no namespace `evhnscjtecprd001`.
 4. **Event Hubs** saudável?
    ```bash
    az eventhubs eventhub show -g rsgcjtecprd001 --namespace-name evhnscjtecprd001 -n evh_cj_tec_ura
    ```
-5. **Consumo Bronze** (`AvailableNow`) executou? Verifique o run do job
+5. **Permissão de leitura** do consumidor no Event Hubs?
+   - O SPN consumidor (`spn_dtb_consumer`) precisa de `Azure Event Hubs Data Receiver`
+     no namespace; a leitura é por OAuth/Entra ID (falha de token → sem consumo).
+6. **Consumo Bronze** (`AvailableNow`) executou? Verifique o run do job
    `bronze-streaming` e o `lastProgress`.
 
 ## Resolução

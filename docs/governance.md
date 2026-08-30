@@ -4,13 +4,17 @@ A governança combina **controle de acesso**, **mascaramento de PII** e **identi
 sem segredos**, usando recursos nativos do Azure e do Unity Catalog.
 
 ## Identidade e segredos (sem credenciais no código)
-- **Managed Identity** da Function App lê o **Key Vault** (RBAC `Key Vault Secrets
-  User`); nenhuma credencial fica em configuração.
-- **Service Principals** distintas para produzir (`spn_func_send`, *Event Hubs Data
-  Sender*) e consumir (`spn_dtb_consumer`, *Storage Blob Data Contributor*) —
-  **least privilege**.
-- O **Access Connector** do Databricks acessa o ADLS via MI para as MANAGED LOCATIONs
-  do Unity Catalog.
+- **Produtor**: a **Managed Identity** da Function App tem *Azure Event Hubs Data
+  Sender* no namespace — envia por OAuth, sem SAS keys e sem ler segredo algum.
+- **Consumidor**: a SPN `spn_dtb_consumer` tem **apenas** *Azure Event Hubs Data
+  Receiver* (no namespace) — **least privilege de verdade**: sem `Contributor`, sem
+  acesso ao storage. Seus segredos ficam no **Key Vault**, lidos pelo secret scope do
+  Databricks.
+- O **Access Connector** do Databricks acessa o ADLS via MI (*Storage Blob Data
+  Contributor*) para as MANAGED LOCATIONs do Unity Catalog — por isso o consumidor não
+  precisa de papel no storage.
+- O namespace do Event Hubs tem **`disableLocalAuth: true`**: SAS keys ficam
+  desabilitadas, tudo é RBAC/Entra ID.
 
 ## Controle de acesso (Unity Catalog)
 - Catálogo `prd` com schemas por camada (`b_/s_/g_`).

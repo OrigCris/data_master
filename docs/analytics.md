@@ -23,13 +23,12 @@ Cruza `tabe_calls` + `tabe_pesq_ura` + `dim_assistentes` (hierarquia), com:
 |---|---|
 | `QT_CHAM_ATEN`, `VL_TEMP_MEDI_OPER` | volume e TMA |
 | `PC_TRAF`, `PC_TRAF_INDV`, `PC_RECH` | percentuais de transferência/rechamada |
-| `QT_PRMT`/`QT_NTRO`/`QT_DETR` | promotores/neutros/detratores |
+| `QT_PRMT`/`QT_NTRO`/`QT_DETR` | promotores/passivos/detratores |
 | `VL_NPS` | `(promotores − detratores) / total × 100` |
 
 ### Regra de NPS
-Na escala 1–10 adotada pela pesquisa: **promotor ≥ 6**, **neutro = 5**,
-**detrator ≤ 4**. É uma decisão de negócio explícita (ver [Trade-offs](trade-offs.md));
-ajustar a faixa é uma mudança de uma linha.
+Faixas do **NPS clássico**, na escala **0–10**: **promotor 9–10**, **passivo 7–8**,
+**detrator 0–6**. O `VL_NPS` é `(promotores − detratores) / total × 100`.
 
 ## Padrão de materialização
 ```python

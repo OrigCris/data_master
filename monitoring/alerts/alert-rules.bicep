@@ -1,11 +1,11 @@
 // Regras de alerta (Azure Monitor) para a saúde do pipeline.
 // Deploy independente do main.bicep (após os recursos existirem):
 //   az deployment group create -g <rg> -f monitoring/alerts/alert-rules.bicep \
-//     -p eventHubNamespaceId=<id> functionAppId=<id> actionGroupId=<id>
+//     -p eventHubNamespaceId=<id> appInsightsId=<id> actionGroupId=<id>
 @description('Resource ID do namespace Event Hubs')
 param eventHubNamespaceId string
-@description('Resource ID do Function App')
-param functionAppId string
+@description('Resource ID do Application Insights (telemetria da Function)')
+param appInsightsId string
 @description('Resource ID do Action Group de destino')
 param actionGroupId string
 param location string = resourceGroup().location
@@ -38,23 +38,26 @@ resource ehNoIngestion 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   }
 }
 
-// 2) Falhas na Function App: execuções com erro nos últimos 15 min.
+// 2) Falhas na Function App: exceções nas execuções nos últimos 15 min.
+// A Function é uma TimerTrigger — uma falha é uma exceção Python na execução, não um
+// HTTP 5xx. Por isso o sinal é a métrica `exceptions/count` do Application Insights
+// (a telemetria de exceção do runtime), e não `Http5xx` do Microsoft.Web/sites.
 resource funcFailures 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'func-falhas-execucao'
   location: 'global'
   properties: {
     severity: 1
     enabled: true
-    scopes: [functionAppId]
+    scopes: [appInsightsId]
     evaluationFrequency: 'PT5M'
     windowSize: 'PT15M'
     criteria: {
       'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
       allOf: [
         {
-          name: 'Http5xx'
-          metricNamespace: 'Microsoft.Web/sites'
-          metricName: 'Http5xx'
+          name: 'FunctionExceptions'
+          metricNamespace: 'microsoft.insights/components'
+          metricName: 'exceptions/count'
           operator: 'GreaterThan'
           threshold: 0
           timeAggregation: 'Total'

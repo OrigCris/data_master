@@ -8,7 +8,7 @@ param storageAccountName string
 param appInsightsConnectionString string
 param location string
 param tags object
-@description('App settings de domínio (Event Hubs / Key Vault)')
+@description('App settings de domínio (Event Hubs)')
 param appSettings object
 
 resource sa 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
@@ -31,6 +31,9 @@ var runtimeSettings = [
   { name: 'FUNCTIONS_WORKER_RUNTIME', value: 'python' }
   { name: 'AzureWebJobsStorage', value: 'DefaultEndpointsProtocol=https;AccountName=${sa.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${sa.listKeys().keys[0].value}' }
   { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsightsConnectionString }
+  // Build remoto (Oryx) das dependências Python no publish — usado pelo deploy de CI.
+  { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'true' }
+  { name: 'ENABLE_ORYX_BUILD', value: 'true' }
 ]
 
 var domainSettings = [for k in items(appSettings): {

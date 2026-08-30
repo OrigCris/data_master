@@ -47,31 +47,28 @@ CREATE TABLE IF NOT EXISTS prd.b_dm_callcenter.dim_assistentes (
 COMMENT 'Dimensão de assistentes com hierarquia (supervisor→gerente→superintendente).';
 
 -- Landing de streaming (Event Hubs → Bronze). Mesmo contrato para ura/calls/surveys.
--- CDF habilitado para consumo incremental na Silver. Liquid clustering por data.
+-- Append-only: serve como fonte de streaming Delta direto para a Silver. Liquid
+-- clustering por data.
 CREATE TABLE IF NOT EXISTS prd.b_dm_callcenter.ura_once (
   body             STRING,
   partition        INT,
   offset           STRING,
-  sequenceNumber   LONG,
   enqueuedTime     TIMESTAMP,
   partitionKey     STRING,
   ingestion_ts     TIMESTAMP,
   ingestion_date   DATE
 ) USING DELTA
 CLUSTER BY (ingestion_date)
-TBLPROPERTIES (delta.enableChangeDataFeed = true)
-COMMENT 'Landing cru de eventos de URA vindos do Event Hubs (trigger once).';
+COMMENT 'Landing cru de eventos de URA vindos do Event Hubs (AvailableNow).';
 
 CREATE TABLE IF NOT EXISTS prd.b_dm_callcenter.calls_once (
-  body STRING, partition INT, offset STRING, sequenceNumber LONG,
+  body STRING, partition INT, offset STRING,
   enqueuedTime TIMESTAMP, partitionKey STRING, ingestion_ts TIMESTAMP, ingestion_date DATE
 ) USING DELTA CLUSTER BY (ingestion_date)
-TBLPROPERTIES (delta.enableChangeDataFeed = true)
 COMMENT 'Landing cru de atendimentos humanos (derivações da URA).';
 
 CREATE TABLE IF NOT EXISTS prd.b_dm_callcenter.surveys_once (
-  body STRING, partition INT, offset STRING, sequenceNumber LONG,
+  body STRING, partition INT, offset STRING,
   enqueuedTime TIMESTAMP, partitionKey STRING, ingestion_ts TIMESTAMP, ingestion_date DATE
 ) USING DELTA CLUSTER BY (ingestion_date)
-TBLPROPERTIES (delta.enableChangeDataFeed = true)
 COMMENT 'Landing cru de pesquisas de satisfação.';

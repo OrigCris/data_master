@@ -1,10 +1,12 @@
 """CLI `dm` — orquestra o ciclo de vida do Data Master (Azure).
 
 Comandos:
-    dm provision      Provisiona a infraestrutura (Bicep) e, opcionalmente, o bootstrap.
-    dm deploy LAYER   Publica os Databricks Asset Bundles (bronze/silver/gold/all).
+    dm provision      Provisiona a infraestrutura (Bicep). O bootstrap de identidade
+                      roda à parte (infrastructure/bootstrap.sh).
+    dm deploy LAYER   Publica os Databricks Asset Bundles
+                      (bronze/silver/gold/orchestration/all).
     dm run JOB        Dispara um job de um bundle.
-    dm validate       Valida os bundles (bundle validate) das três camadas.
+    dm validate       Valida todos os bundles (bundle validate).
     dm info           Mostra a configuração resolvida.
 
 Uso:
@@ -71,11 +73,11 @@ def provision(
 
 @app.command()
 def deploy(
-    layer: str = typer.Argument("all", help="layer_bronze | layer_silver | layer_gold | all"),
+    layer: str = typer.Argument("all", help="layer_bronze | layer_silver | layer_gold | orchestration | all"),
     target: str = typer.Option("prd", "--target", "-t"),
     dry_run: bool = typer.Option(False),
 ):
-    """Publica os Databricks Asset Bundles por camada (em ordem bronze→silver→gold)."""
+    """Publica os Databricks Asset Bundles (ordem: bronze→silver→gold→orchestration)."""
     layers = resolve_layers(layer)
     for rel_dir, cmd in build_pipeline_plan(layers, target):
         code = _run(cmd, cwd=REPO_ROOT / rel_dir, dry_run=dry_run)
@@ -99,7 +101,7 @@ def run(
 
 @app.command()
 def validate(dry_run: bool = typer.Option(False)):
-    """Valida os três bundles (CI-friendly)."""
+    """Valida todos os bundles — bronze/silver/gold/orchestration (CI-friendly)."""
     for layer in resolve_layers("all"):
         code = _run(bundle_validate_cmd(), cwd=REPO_ROOT / layer_dir(layer), dry_run=dry_run)
         if code != 0:
@@ -114,7 +116,7 @@ def info():
     typer.echo(f"bicep     : {BICEP_TEMPLATE}")
     typer.echo(f"params    : {BICEP_PARAMS}")
     typer.echo(f"bootstrap : {BOOTSTRAP}")
-    typer.echo("layers    : layer_bronze, layer_silver, layer_gold")
+    typer.echo("bundles   : layer_bronze, layer_silver, layer_gold, orchestration")
 
 
 if __name__ == "__main__":  # pragma: no cover

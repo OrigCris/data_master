@@ -1,6 +1,3 @@
-class KeyVaultSecretError(Exception):
-    """Falha ao recuperar segredos do Key Vault."""
-
 class EventBuildError(Exception):
     """Falha ao serializar/empacotar eventos para envio."""
 

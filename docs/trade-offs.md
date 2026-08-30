@@ -6,18 +6,20 @@ Esta página registra as decisões mais relevantes, suas alternativas e os
 ## Ingestão e processamento
 
 ### Processamento agendado (AvailableNow) vs streaming contínuo ([ADR-0003](adrs/0003-scheduled-availablenow.md))
-- **Decisão**: o consumo (Event Hubs e CDF) roda como *micro-batch* agendado com
-  `Trigger.AvailableNow`, não como stream 24/7.
+- **Decisão**: o consumo (Event Hubs e Bronze→Silver) roda como *micro-batch* agendado
+  com `Trigger.AvailableNow`, não como stream 24/7.
 - **Por quê**: o volume é previsível e não exige latência de segundos; o job liga o
   cluster, processa o backlog e desliga — **custo muito menor**.
 - **Trade-off**: latência de até um ciclo de agendamento (30 min). Aceitável para
   analytics D-1. Para tempo real, ver [Roadmap](roadmap.md).
 
-### Silver incremental por streaming CDF + checkpoint ([ADR-0002](adrs/0002-incremental-streaming-cdf.md))
-- **Decisão**: a Silver consome o Change Data Feed da Bronze por **streaming
-  `AvailableNow` + `foreachBatch` MERGE**, com o **checkpoint** controlando o progresso.
-- **Trade-off**: o progresso fica no checkpoint (opaco) em troca de **exactly-once**,
-  **backpressure** e idempotência garantida pelo engine.
+### Silver incremental por streaming Delta + checkpoint ([ADR-0002](adrs/0002-incremental-streaming.md))
+- **Decisão**: a Silver consome a Bronze (append-only) como **stream Delta** por
+  **`AvailableNow` + `foreachBatch` MERGE**, com o **checkpoint** controlando o
+  progresso. Sem CDF: numa fonte append-only ele não agrega nada (ver ADR-0002).
+- **Trade-off**: o progresso fica no checkpoint (opaco). Com `foreachBatch` a escrita é
+  **at-least-once**; a não-duplicidade não é assumida pelo checkpoint e sim garantida
+  pelo **MERGE idempotente por chave de negócio** (o sink absorve retries).
 
 ### Orquestração por dependência (e não por horário)
 - **Decisão**: um job orquestrador (`dm-pipeline`) encadeia dims → silver → gold com
@@ -35,18 +37,18 @@ Esta página registra as decisões mais relevantes, suas alternativas e os
 ### Event Hubs ([ADR-0004](adrs/0004-eventhubs-vs-servicebus.md))
 - **Event Hubs** (não Service Bus) por ser otimizado para *high-throughput
   ingestion* e integração nativa com o conector Spark.
-- A **retenção** é um parâmetro de SLA/custo (dimensionada por ambiente); o
-  checkpoint do consumo garante exactly-once dentro da janela de retenção.
+- A **retenção** é um parâmetro de SLA/custo (dimensionada por ambiente). Na Bronze, a
+  semântica **exactly-once** vem da combinação **offsets no checkpoint + fonte replayable
+  (Event Hubs/Kafka) + sink transacional Delta** — reprocessável dentro da janela de
+  retenção; o checkpoint sozinho não garante exactly-once.
 
 ## Regras de negócio (decisões explícitas)
 
-### Faixa de NPS adaptada
-- **Decisão**: numa escala 1–10, classifica-se **promotor ≥ 6**, **neutro = 5**,
-  **detrator ≤ 4**.
-- **Observação**: difere do NPS clássico (9–10 / 7–8 / 0–6). É uma **escolha de
-  negócio explícita** para a escala adotada na pesquisa; documentada aqui para não
-  ser confundida com erro. Trocar a faixa é um ajuste de uma linha em
-  `visao_assistentes`.
+### Faixa de NPS (clássica)
+- **Decisão**: NPS clássico na escala **0–10** — **promotor 9–10**, **passivo 7–8**,
+  **detrator 0–6**; `VL_NPS = (promotores − detratores) / total × 100`.
+- **Onde**: classificação em `visao_assistentes` (`IN_PRMT`/`IN_NTRO`/`IN_DETR`); a
+  escala é validada no gate (`VL_NOTA ∈ [0,10]`).
 
 ### Métrica de rechamada (`IN_RECH`)
 - **Definição**: uma chamada é **rechamada** quando o mesmo cliente teve uma chamada
@@ -60,7 +62,7 @@ Esta página registra as decisões mais relevantes, suas alternativas e os
 
 ## Qualidade e operação
 - **Data Quality como gate**: expectativas críticas (chaves não nulas/únicas,
-  `VL_NOTA ∈ [1,10]`) podem **falhar o job**; *warns* apenas registram. Ver
+  `VL_NOTA ∈ [0,10]`) podem **falhar o job**; *warns* apenas registram. Ver
   [`Databricks/lib/quality`](../Databricks/lib/quality).
 - **PII no catálogo, não só no pipeline**: o mascaramento é imposto por *column
   mask* do Unity Catalog, então vale para qualquer consumidor — não depende de o

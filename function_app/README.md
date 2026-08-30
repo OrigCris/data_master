@@ -1,31 +1,31 @@
-# Azure Functions – Event Hubs com SPN via Key Vault
+# Azure Functions — Produtor de eventos (Event Hubs via Managed Identity)
 
-Este projeto implementa uma **Azure Function (TimerTrigger)** que gera dados sintéticos de chamadas de URA, atendimentos humanos e pesquisas de satisfação.  
-Os dados são enviados para **Azure Event Hubs** com **autenticação via AAD (SPN)**, sendo os segredos do Service Principal armazenados em **Azure Key Vault** e acessados com **Managed Identity**.
+**Azure Function (TimerTrigger)** que gera dados sintéticos de chamadas de URA,
+atendimentos humanos e pesquisas de satisfação e os envia para **Azure Event Hubs**.
+A autenticação é por **identidade (Entra ID)**: a **System-Assigned Managed Identity**
+do Function App tem o papel `Azure Event Hubs Data Sender` no namespace — **sem SAS
+keys e sem segredos** em configuração ou no código.
 
 ---
 
 ## 🏗 Arquitetura
 
 - **Generators**: cria eventos sintéticos (`ura`, `calls`, `surveys`)
-- **Services**: cliente para Event Hubs e Key Vault
-- **Auth**: monta credenciais do SPN a partir do KV
+- **Services**: cliente de envio para o Event Hubs
+- **Auth**: credencial da Managed Identity (`DefaultAzureCredential`)
 - **Config**: centraliza variáveis de ambiente
 - **Exceptions**: exceções de domínio
 - **Utils**: utilitários de logging
 
----
-
 ## 📂 Estrutura de pastas
 
 ```
-azurefn-eventhub/
-├── function_app.py                 # Entry point (TimerTrigger)
+function_app/
+├── function_app.py            # Entry point (TimerTrigger)
 ├── requirements.txt
 ├── host.json
-├── local.settings.json             # (não versionar)
 ├── auth/
-│   └── credentials.py
+│   └── credentials.py         # get_credential() → DefaultAzureCredential (MI)
 ├── config/
 │   └── settings.py
 ├── exceptions/
@@ -34,115 +34,60 @@ azurefn-eventhub/
 │   ├── ura.py
 │   ├── calls.py
 │   └── surveys.py
-├── models/
-│   └── schemas.py
 ├── services/
-│   ├── eventhub_client.py
-│   └── keyvault.py
+│   └── eventhub_client.py
 └── utils/
     └── logging_utils.py
 ```
 
----
+## ⚙️ Configuração (App Settings)
 
-## ⚙️ Pré-requisitos
+Provisionadas pelo Bicep ([`functionapp.bicep`](../infrastructure/bicep/modules/functionapp.bicep)):
 
-- **Python 3.10+**
-- Azure CLI (`az`)
-- Extensão Functions Core Tools
-- Acesso a:
-  - Azure Event Hubs
-  - Azure Key Vault
-  - Azure Function App
+| Variável                     | Exemplo                                  | Descrição |
+|------------------------------|------------------------------------------|-----------|
+| `EVENTHUB_NAMESPACE_FQDN`    | `evhnscjtecprd001.servicebus.windows.net`| FQDN do namespace EH |
+| `EH_NAME_URA`                | `evh_cj_tec_ura`                         | Nome do Event Hub |
+| `EH_NAME_CALLS`              | `evh_cj_tec_calls`                       | Nome do Event Hub |
+| `EH_NAME_SURVEYS`            | `evh_cj_tec_surveys`                     | Nome do Event Hub |
 
----
-
-## 📦 Instalação
-
-1. Clone este repositório:
-
-```bash
-git clone <url>
-cd azurefn-eventhub
-```
-
-2. Crie e ative um ambiente virtual:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-.venv\Scripts\activate   # Windows
-```
-
-3. Instale as dependências:
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## 🔑 Configuração (App Settings)
-
-Configure as variáveis no **Function App → Configuration**:
-
-| Variável                     | Exemplo                                      | Descrição |
-|-------------------------------|----------------------------------------------|-----------|
-| `KV_URI`                      | `https://akvcjtecprd001.vault.azure.net/`    | URI do Key Vault |
-| `KV_SECRET_SPN_CLIENT_ID`     | `ServicePrincipalAppId`                      | Nome do segredo no KV |
-| `KV_SECRET_SPN_TENANT_ID`     | `ServicePrincipalTenantId`                   | Nome do segredo no KV |
-| `KV_SECRET_SPN_CLIENT_SECRET` | `ServicePrincipalSecret`                     | Nome do segredo no KV |
-| `EVENTHUB_NAMESPACE_FQDN`     | `meu-namespace.servicebus.windows.net`       | FQDN do namespace EH |
-| `EH_NAME_URA`                 | `evh_cj_tec_ura`                             | Nome do Event Hub |
-| `EH_NAME_CALLS`               | `evh_cj_tec_calls`                           | Nome do Event Hub |
-| `EH_NAME_SURVEYS`             | `evh_cj_tec_surveys`                         | Nome do Event Hub |
-
----
+Não há segredos nem URI de Key Vault: a autenticação usa a Managed Identity.
 
 ## 🔒 RBAC / Permissões
 
-1. **Function App → Identity**
-   - Habilite **System Assigned Managed Identity**
-
-2. **Key Vault**
-   - Atribua à MI a role **Key Vault Secrets User**  
-   (ou Access Policy com permissão *Get* em Secrets)
-
-3. **Event Hubs**
-   - Atribua ao **App Registration (SPN)** a role **Azure Event Hubs Data Sender**
-
----
+- **Function App → Identity**: **System-Assigned Managed Identity** habilitada (Bicep).
+- **Event Hubs**: a MI recebe **`Azure Event Hubs Data Sender`** no namespace
+  ([`roles.bicep`](../infrastructure/bicep/modules/roles.bicep)). O namespace tem
+  `disableLocalAuth: true` — SAS keys não são aceitas.
 
 ## ▶️ Execução local
+
+Com `az login` feito, o `DefaultAzureCredential` usa as credenciais do desenvolvedor
+(que precisam de `Data Sender` no namespace para testar o envio real):
 
 ```bash
 func start
 ```
 
----
+## 🚀 Deploy
 
-## 🚀 Deploy para Azure
+No CI (recomendado), pelo workflow [`deploy-function.yml`](../.github/workflows/deploy-function.yml)
+(`workflow_dispatch`, `environment: prd`), que publica com **build remoto Oryx** das
+dependências. Localmente:
 
 ```bash
-func azure functionapp publish <NOME_DO_FUNCTION_APP>
+func azure functionapp publish funccjtecprd001
 ```
-
----
-
-## 📊 Observabilidade
-
-- Logs estruturados via `logging_utils`
-- Application Insights pode ser habilitado para monitorar execuções
-- Exceptions personalizadas (`EventSendError`, `KeyVaultSecretError`) facilitam troubleshooting
-
----
 
 ## ✅ Fluxo resumido
 
-1. TimerTrigger dispara a cada 2 minutos
-2. Gera eventos URA, Calls e Surveys
-3. Lê credenciais do SPN no Key Vault (via MI)
-4. Cria `ClientSecretCredential` e autentica no Event Hubs
-5. Envia eventos para 3 Event Hubs distintos
+1. TimerTrigger dispara a cada 2 minutos.
+2. Gera eventos URA, Calls e Surveys (mesmo `id_chamada` entre eles).
+3. Obtém a credencial da **Managed Identity** (`get_credential()`).
+4. Autentica no Event Hubs por OAuth e envia aos 3 hubs em lote (`EventDataBatch`).
 
----
+## 📊 Observabilidade
+
+- Logs estruturados via `logging_utils` (contagens por hub).
+- Application Insights habilitado para monitorar execuções.
+- Exceções de domínio (`EventBuildError`, `EventSendError`) facilitam o troubleshooting.

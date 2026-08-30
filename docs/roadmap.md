@@ -2,21 +2,19 @@
 
 Evoluções priorizadas.
 
-## Curto prazo (dívidas técnicas)
-- [ ] Garantir, na ingestão, que os atendimentos de uma mesma chamada cheguem no
-  mesmo micro-batch (a janela de `IN_TRAF` na Silver assume isso).
-
 ## Médio prazo
 - [ ] **File arrival trigger** no orquestrador (disparar por chegada de dado, além
   do schedule diário).
-- [ ] **DLQ** e reprocessamento automático de eventos malformados.
+- [ ] **Reprocessamento automático** da quarentena (a DLQ já isola os eventos
+  malformados; falta o *replay* orquestrado após correção do contrato).
 - [ ] **Budgets do Cost Management** com alerta de custo.
 
 ## Longo prazo (plataforma)
 - [ ] **Microsoft Purview** para catálogo corporativo e classificação automática de PII.
 - [ ] **Databricks SQL Serverless** + dashboards versionados para o consumo analítico.
 - [ ] **Tempo real** de fato (streaming contínuo) para casos que exijam latência baixa.
-- [ ] **Testes de integração** com Spark local (`pyspark` no CI) cobrindo MERGE/CDF.
+- [ ] Ampliar os **testes de integração** com Spark (a base — streaming Delta +
+  checkpoint + MERGE idempotente — já roda no CI; evoluir para cobrir DQ gate e quarentena).
 
 ---
 

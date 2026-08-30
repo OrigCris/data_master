@@ -7,18 +7,18 @@ modelagem analítica, **governança de PII no catálogo**, **observabilidade com
 alertas**, **FinOps** e **automação** (IaC modular, CLI e CI/CD).
 
 As decisões priorizaram **custo controlado** (processamento agendado `AvailableNow`,
-incremental, clusters job-scoped), **confiabilidade** (idempotência via CDF +
-marcador, MERGE) e **manutenibilidade** (código compartilhado e testado, bundles
+incremental, clusters job-scoped), **confiabilidade** (stream Delta com checkpoint e
+**MERGE idempotente por chave** — at-least-once sem duplicar) e **manutenibilidade**
+(código compartilhado e testado, bundles
 por camada, documentação navegável).
 
-A revisão de código também foi tratada como entrega: bugs reais (parse de data da
-pesquisa), duplicação (funções de CDF/MERGE) e limitações conhecidas (regra de
-rechamada, faixa de NPS) estão **corrigidos ou documentados** de forma transparente
-em [Trade-offs](trade-offs.md) e [Roadmap](roadmap.md).
+As **limitações conhecidas** e as **decisões de negócio explícitas** (regra de
+rechamada, faixas do NPS clássico) estão documentadas de forma transparente em
+[Trade-offs](trade-offs.md) e [Roadmap](roadmap.md).
 
-O resultado é uma base **serverless, modular e governada**, pronta para evoluir de
-forma incremental — de tempo real a catálogo corporativo — sem reescrever a
-fundação.
+O resultado é uma base **modular e governada**, sobre serviços gerenciados e
+elásticos, pronta para evoluir de forma incremental — de tempo real a catálogo
+corporativo — sem reescrever a fundação.
 
 ---
 

@@ -16,7 +16,7 @@ Gestão de custos com **Azure Cost Management**. O objetivo é tornar o custo
 ## Decisões que reduzem custo
 - **Processamento agendado (`AvailableNow`)** → o cluster só liga para processar o
   backlog e desliga (ver [Trade-offs](trade-offs.md)).
-- **Processamento incremental (CDF)** → processa o delta, não a tabela inteira.
+- **Processamento incremental (stream Delta)** → processa só o que chegou, não a tabela inteira.
 - **`replaceWhere` na Gold** → reescreve só a partição do dia.
 - **Liquid clustering** → menos arquivos pequenos, menos varredura.
 - **Clusters job-scoped** (não all-purpose) com autotermination curto.

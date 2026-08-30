@@ -16,8 +16,9 @@ formato e **Unity Catalog** como catálogo/governança, no Azure Databricks.
   centralizada.
 
 ## Consequências
-- (+) ACID, time-travel e **Change Data Feed** nativos (base do incremental).
+- (+) ACID, time-travel e **Change Data Feed** nativos (disponíveis se uma fonte
+  mutável precisar; a Bronze append-only é consumida por streaming Delta direto).
 - (+) Catálogo, **lineage** e **column masking** centralizados no Unity Catalog.
 - (−) Acoplamento ao ecossistema Databricks.
 
-Relacionado: [ADR-0002](0002-incremental-streaming-cdf.md), [Layers](../layers.md).
+Relacionado: [ADR-0002](0002-incremental-streaming.md), [Layers](../layers.md).

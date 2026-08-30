@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import azure.functions as func
-from auth.credentials import get_spn_credential
+from auth.credentials import get_credential
 from config.settings import settings
 from generators.calls import gerar_fato_chamada_humana
 from generators.surveys import gerar_fato_pesquisa_satisfacao
@@ -15,25 +15,25 @@ logger = get_logger(__name__)
 @app.schedule(
     schedule="0 */2 * * * *", # a cada 2 minutos
     arg_name="myTimer",
-    run_on_startup=True,
-    use_monitor=False,
+    # Produção: sem execução em deploy/restart/scale (evita disparos inesperados);
+    # o agendamento é persistido pelo monitor do runtime.
+    run_on_startup=False,
+    use_monitor=True,
 )
 def ura_calls_surveys(myTimer: func.TimerRequest) -> None:
-    """Dispara a geração e envio de eventos (URA, Calls, Surveys) usando SPN do KV."""
+    """Dispara a geração e envio de eventos (URA, Calls, Surveys) via Managed Identity."""
     logger.info("Iniciando execução do TimerTrigger (*/2 min).")
 
-    # Credencial do SPN (lida do Key Vault via Managed Identity)
-    spn_cred = get_spn_credential()
+    # Autenticação passwordless pela Managed Identity da Function App.
+    cred = get_credential()
 
-    # Geração dos eventos
     eventos_ura = gerar_eventos_ura()
     eventos_calls = gerar_fato_chamada_humana(eventos_ura)
     eventos_survey = gerar_fato_pesquisa_satisfacao(eventos_ura)
 
-    # Envio
-    sent_ura = send_events(settings.eh_name_ura, spn_cred, eventos_ura)
-    sent_calls = send_events(settings.eh_name_calls, spn_cred, eventos_calls)
-    sent_surveys = send_events(settings.eh_name_surveys, spn_cred, eventos_survey)
+    sent_ura = send_events(settings.eh_name_ura, cred, eventos_ura)
+    sent_calls = send_events(settings.eh_name_calls, cred, eventos_calls)
+    sent_surveys = send_events(settings.eh_name_surveys, cred, eventos_survey)
 
     logger.info(
         "Envio concluído",

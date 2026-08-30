@@ -1,18 +1,14 @@
 from __future__ import annotations
 
-from azure.identity import ClientSecretCredential
-from config.settings import settings
-from exceptions.domain_exceptions import KeyVaultSecretError
-from services.keyvault import get_secret
+from azure.identity import DefaultAzureCredential
 
 
-def get_spn_credential() -> ClientSecretCredential:
-    """Monta sempre a credencial do SPN a partir do Key Vault (MI para ler o KV)."""
-    client_id = get_secret(settings.kv_secret_spn_client_id)
-    tenant_id = get_secret(settings.kv_secret_spn_tenant_id)
-    client_secret = get_secret(settings.kv_secret_spn_client_secret)
+def get_credential() -> DefaultAzureCredential:
+    """Credencial de identidade do Function App para enviar ao Event Hubs.
 
-    if not all([client_id, tenant_id, client_secret]):
-        raise KeyVaultSecretError("Segredos do SPN ausentes ou vazios no Key Vault.")
-
-    return ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
+    Em produção resolve para a **System-Assigned Managed Identity** do Function App
+    (que recebe o papel `Azure Event Hubs Data Sender` no namespace); em
+    desenvolvimento, para as credenciais do `az login`. Não há segredos no código
+    nem no Key Vault — a autenticação é por identidade (Entra ID/OAuth).
+    """
+    return DefaultAzureCredential()
