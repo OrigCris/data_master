@@ -1,0 +1,5 @@
+# Dependências para rodar a suíte de testes local/CI (sem cluster Spark).
+pytest>=8.0
+faker>=24.0
+ruff>=0.5
+build>=1.0

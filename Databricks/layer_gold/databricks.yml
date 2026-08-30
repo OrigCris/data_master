@@ -4,13 +4,18 @@ bundle:
 variables:
   TIMEZONE:      { default: America/Sao_Paulo }
   SCHEDULE_CRON: { default: "0 0 6 * * ?" }
+  CATALOG:       { default: prd }
+  BRONZE_SCHEMA: { default: b_dm_callcenter }
+  SILVER_SCHEMA: { default: s_dm_callcenter }
+  GOLD_SCHEMA:   { default: g_dm_callcenter }
 
 sync:
   include:
     - notebooks/**
 
 workspace:
-  host: https://adb-3017212933203126.6.azuredatabricks.net/
+  # Host resolvido pelo profile do Databricks CLI (~/.databrickscfg), fora do versionamento.
+  profile: prd
 
 targets:
   prd:
@@ -18,13 +23,9 @@ targets:
 
 resources:
   jobs:
-    silver-job:
+    gold-job:
       name: "gold-job"
-      schedule:
-        quartz_cron_expression: ${var.SCHEDULE_CRON}
-        timezone_id: ${var.TIMEZONE}
-        pause_status: UNPAUSED
-
+      # Sem schedule próprio: é orquestrado por dependência (bundle orchestration).
       job_clusters:
         - job_cluster_key: cluster-job-dm-gold
           new_cluster:
@@ -40,6 +41,11 @@ resources:
           job_cluster_key: cluster-job-dm-gold
           notebook_task:
             notebook_path: ./notebooks/visao_assistentes.ipynb
+            base_parameters:
+              catalog:       ${var.CATALOG}
+              bronze_schema: ${var.BRONZE_SCHEMA}
+              silver_schema: ${var.SILVER_SCHEMA}
+              gold_schema:   ${var.GOLD_SCHEMA}
           timeout_seconds: 0
 
         - task_key: create_visao_ura_calls_gold
@@ -47,4 +53,8 @@ resources:
           job_cluster_key: cluster-job-dm-gold
           notebook_task:
             notebook_path: ./notebooks/visao_ura_calls.ipynb
+            base_parameters:
+              catalog:       ${var.CATALOG}
+              silver_schema: ${var.SILVER_SCHEMA}
+              gold_schema:   ${var.GOLD_SCHEMA}
           timeout_seconds: 0

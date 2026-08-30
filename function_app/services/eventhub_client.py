@@ -1,10 +1,13 @@
 from __future__ import annotations
+
 import json
-from typing import Iterable, Sequence
-from azure.eventhub import EventHubProducerClient, EventData
+from collections.abc import Iterable, Sequence
+
+from azure.eventhub import EventData, EventHubProducerClient
 from azure.eventhub.exceptions import EventHubError
 from config.settings import settings
 from exceptions.domain_exceptions import EventBuildError, EventSendError
+
 
 def _producer(eventhub_name: str, credential) -> EventHubProducerClient:
     if not settings.event_hub_fqdn:
@@ -35,17 +38,29 @@ def send_events(eventhub_name: str, credential, items: Sequence[object]) -> int:
             for ev in events:
                 try:
                     batch.add(ev)
-                except ValueError:
+                except ValueError as exc:
+                    # ValueError com o batch VAZIO significa que o próprio evento não
+                    # cabe no tamanho máximo — não adianta enviar/recriar; falha claro.
+                    if len(batch) == 0:
+                        raise EventSendError(
+                            "Evento individual excede o tamanho máximo do batch do Event Hubs."
+                        ) from exc
+                    # batch cheio: envia o acumulado e recomeça com o evento atual.
                     producer.send_batch(batch)
                     total_sent += len(batch)
                     batch = producer.create_batch()
-                    batch.add(ev)
+                    try:
+                        batch.add(ev)
+                    except ValueError as exc:
+                        raise EventSendError(
+                            "Evento individual excede o tamanho máximo do batch do Event Hubs."
+                        ) from exc
             if len(batch) > 0:
                 producer.send_batch(batch)
                 total_sent += len(batch)
         finally:
             producer.close()
-            
+
         return total_sent
 
     except EventHubError as exc:

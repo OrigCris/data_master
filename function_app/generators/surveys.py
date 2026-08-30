@@ -1,8 +1,10 @@
 from __future__ import annotations
-import uuid
+
 import random
-from datetime import datetime
-from typing import Iterable
+import uuid
+from collections.abc import Iterable
+from datetime import date
+
 
 def gerar_fato_pesquisa_satisfacao(eventos_ura: Iterable[dict]) -> list[dict]:
     eventos: list[dict] = []
@@ -15,8 +17,12 @@ def gerar_fato_pesquisa_satisfacao(eventos_ura: Iterable[dict]) -> list[dict]:
                 {
                     "id_chamada": e["id_chamada"],
                     "id_pesquisa": str(uuid.uuid4()),
-                    "data_envio": datetime.now().isoformat(),
-                    "nota": random.randint(1, 10),
+                    # data (não timestamp): a Silver faz parse como DateType.
+                    # Enviar um timestamp ISO completo resultaria em DT_ENVI nulo
+                    # e a pesquisa sumiria do cálculo de NPS no Gold.
+                    "data_envio": date.today().isoformat(),
+                    # Escala NPS clássica: 0–10.
+                    "nota": random.randint(0, 10),
                 }
             )
     return eventos

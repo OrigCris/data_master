@@ -10,7 +10,16 @@ sync:
     - notebooks/**
 
 workspace:
-  host: https://adb-3017212933203126.6.azuredatabricks.net/
+  # Host resolvido pelo profile do Databricks CLI (~/.databrickscfg), fora do versionamento.
+  profile: prd
+
+# Empacota a lib compartilhada (transforms/quality/security) como wheel e a disponibiliza
+# no cluster dos jobs, tornando `transforms`/`quality`/`security` importáveis.
+artifacts:
+  dm_lib:
+    type: whl
+    path: ../lib
+    build: python -m build --wheel
 
 targets:
   prd:
@@ -20,11 +29,7 @@ resources:
   jobs:
     silver-job:
       name: "silver-job"
-      schedule:
-        quartz_cron_expression: ${var.SCHEDULE_CRON}
-        timezone_id: ${var.TIMEZONE}
-        pause_status: UNPAUSED
-
+      # Sem schedule próprio: é orquestrado por dependência (bundle orchestration).
       job_clusters:
         - job_cluster_key: cluster-job-dm-silver
           new_cluster:
@@ -40,6 +45,8 @@ resources:
           job_cluster_key: cluster-job-dm-silver
           notebook_task:
             notebook_path: ./notebooks/silver_ura.ipynb
+          libraries:
+            - whl: ../lib/dist/*.whl
           timeout_seconds: 0
 
         - task_key: create_calls_silver
@@ -47,6 +54,8 @@ resources:
           job_cluster_key: cluster-job-dm-silver
           notebook_task:
             notebook_path: ./notebooks/silver_calls.ipynb
+          libraries:
+            - whl: ../lib/dist/*.whl
           timeout_seconds: 0
 
         - task_key: create_surveys_silver
@@ -54,4 +63,6 @@ resources:
           job_cluster_key: cluster-job-dm-silver
           notebook_task:
             notebook_path: ./notebooks/silver_pesq_ura.ipynb
+          libraries:
+            - whl: ../lib/dist/*.whl
           timeout_seconds: 0

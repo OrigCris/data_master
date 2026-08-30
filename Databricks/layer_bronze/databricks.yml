@@ -2,8 +2,8 @@ bundle:
   name: bronze-callcenter
 
 workspace:
+  # Host resolvido pelo profile do Databricks CLI (~/.databrickscfg), fora do versionamento.
   profile: prd
-  host: https://adb-3017212933203126.6.azuredatabricks.net/
 
 sync:
   include:
@@ -21,7 +21,11 @@ variables:
   # streaming
   STREAM_CRON: { default: "0 */30 * * * ?" }
   SECRET_SCOPE:    { default: data-master-akv }
-  SECRET_KEY:      { default: EventhubConnectionString }
+  EVENTHUB_NAMESPACE: { default: evhnscjtecprd001 }
+  # Chaves no Key Vault com as credenciais da SPN consumidora (OAuth/Entra ID).
+  SP_CLIENT_ID_SECRET:     { default: ServicePrincipalDTBAppId }
+  SP_CLIENT_SECRET_SECRET: { default: ServicePrincipalDTBSecret }
+  SP_TENANT_ID_SECRET:     { default: ServicePrincipalDTBTenantId }
   CHECKPOINT_BASE: { default: "/Volumes/prd/b_dm_callcenter/checkpoints/bronze" }
   STREAM_NOTEBOOK: { default: "${workspace.root_path}/files/notebooks/bronze_streaming" }
   RUN_AS_USER: { default: "cristiano.tecnologia.data@hotmail.com" }
@@ -31,10 +35,8 @@ resources:
     # ---------------------- JOB dimensões ----------------------
     bronze-dim:
       name: "bronze-dim"
-      schedule:
-        quartz_cron_expression: ${var.SCHEDULE_CRON}
-        timezone_id: ${var.TIMEZONE}
-        pause_status: UNPAUSED
+      # Sem schedule próprio: é orquestrado por dependência (bundle orchestration).
+      # (O job bronze-streaming mantém schedule próprio por ser ingestão contínua.)
       job_clusters:
         - job_cluster_key: cluster-job-dm-bronze
           new_cluster:
@@ -76,7 +78,10 @@ resources:
     # ---------------------- JOB streaming ----------------------
     bronze-streaming:
       name: "bronze-streaming"
-      max_concurrent_runs: 3
+      # 1 execução por vez: com AvailableNow, se o run anterior ainda processa o
+      # backlog, não iniciamos outro sobre o mesmo checkpoint (evita concorrência
+      # na mesma fonte/checkpoint entre execuções agendadas).
+      max_concurrent_runs: 1
       schedule:
         quartz_cron_expression: ${var.STREAM_CRON}
         timezone_id: ${var.TIMEZONE}
@@ -93,7 +98,7 @@ resources:
 
       tasks:
         - task_key: ingest_ura
-          description: "Event Hubs → Bronze: ura (trigger once)"
+          description: "Event Hubs → Bronze: ura (AvailableNow)"
           job_cluster_key: cluster-job-stream-bronze
           notebook_task:
             notebook_path: ${var.STREAM_NOTEBOOK}
@@ -102,15 +107,16 @@ resources:
               schema:         ${var.SCHEMA}
               table_name:     "ura_once"
               eventhub_name:  "evh_cj_tec_ura"
+              eventhub_namespace: ${var.EVENTHUB_NAMESPACE}
               secret_scope:   ${var.SECRET_SCOPE}
-              secret_key:     ${var.SECRET_KEY}
+              sp_client_id_secret:     ${var.SP_CLIENT_ID_SECRET}
+              sp_client_secret_secret: ${var.SP_CLIENT_SECRET_SECRET}
+              sp_tenant_id_secret:     ${var.SP_TENANT_ID_SECRET}
               checkpoint_base: ${var.CHECKPOINT_BASE}
-          libraries:
-            - maven: {coordinates: com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.22}
           timeout_seconds: 0
 
         - task_key: ingest_calls
-          description: "Event Hubs → Bronze: calls (trigger once)"
+          description: "Event Hubs → Bronze: calls (AvailableNow)"
           job_cluster_key: cluster-job-stream-bronze
           notebook_task:
             notebook_path: ${var.STREAM_NOTEBOOK}
@@ -119,15 +125,16 @@ resources:
               schema:         ${var.SCHEMA}
               table_name:     "calls_once"
               eventhub_name:  "evh_cj_tec_calls"
+              eventhub_namespace: ${var.EVENTHUB_NAMESPACE}
               secret_scope:   ${var.SECRET_SCOPE}
-              secret_key:     ${var.SECRET_KEY}
+              sp_client_id_secret:     ${var.SP_CLIENT_ID_SECRET}
+              sp_client_secret_secret: ${var.SP_CLIENT_SECRET_SECRET}
+              sp_tenant_id_secret:     ${var.SP_TENANT_ID_SECRET}
               checkpoint_base: ${var.CHECKPOINT_BASE}
-          libraries:
-            - maven: {coordinates: com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.22}
           timeout_seconds: 0
 
         - task_key: ingest_surveys
-          description: "Event Hubs → Bronze: surveys (trigger once)"
+          description: "Event Hubs → Bronze: surveys (AvailableNow)"
           job_cluster_key: cluster-job-stream-bronze
           notebook_task:
             notebook_path: ${var.STREAM_NOTEBOOK}
@@ -136,11 +143,12 @@ resources:
               schema:         ${var.SCHEMA}
               table_name:     "surveys_once"
               eventhub_name:  "evh_cj_tec_surveys"
+              eventhub_namespace: ${var.EVENTHUB_NAMESPACE}
               secret_scope:   ${var.SECRET_SCOPE}
-              secret_key:     ${var.SECRET_KEY}
+              sp_client_id_secret:     ${var.SP_CLIENT_ID_SECRET}
+              sp_client_secret_secret: ${var.SP_CLIENT_SECRET_SECRET}
+              sp_tenant_id_secret:     ${var.SP_TENANT_ID_SECRET}
               checkpoint_base: ${var.CHECKPOINT_BASE}
-          libraries:
-            - maven: {coordinates: com.microsoft.azure:azure-eventhubs-spark_2.12:2.3.22}
           timeout_seconds: 0
 
 targets:

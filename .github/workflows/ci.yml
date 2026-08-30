@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    name: Lint & Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dev dependencies
+        run: pip install -r tests/requirements-dev.txt
+
+      - name: Ruff (lint)
+        run: ruff check function_app Databricks/lib cli
+
+      - name: Pytest (unit, sem cluster Spark)
+        run: pytest -q
+
+      - name: Build wheel da lib (smoke)
+        run: python -m build --wheel Databricks/lib
+
+  validate-bundles:
+    name: Validate Databricks Asset Bundles
+    runs-on: ubuntu-latest
+    # A validação de bundle requer um workspace real (DATABRICKS_HOST/TOKEN via
+    # secrets). Na ausência das credenciais, os passos que dependem do workspace
+    # são pulados.
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        if: env.DATABRICKS_TOKEN != ''
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+          databricks version
+
+      - name: Configura profile 'prd' (a partir dos secrets)
+        if: env.DATABRICKS_TOKEN != ''
+        run: printf '[prd]\nhost = %s\ntoken = %s\n' "$DATABRICKS_HOST" "$DATABRICKS_TOKEN" > ~/.databrickscfg
+
+      - name: Validate bundles (bronze/silver/gold)
+        # O bundle `orchestration` não é validado aqui: ele resolve os job ids das
+        # camadas por nome (lookup), exigindo que já estejam publicados no workspace.
+        if: env.DATABRICKS_TOKEN != ''
+        run: |
+          for layer in layer_bronze layer_silver layer_gold; do
+            echo "== validate $layer =="
+            (cd "Databricks/$layer" && databricks bundle validate) || exit 1
+          done
+
+      - name: Sem credenciais → validação pulada
+        if: env.DATABRICKS_TOKEN == ''
+        run: echo "DATABRICKS_TOKEN não configurado; validação de bundles pulada."
+
+  validate-bicep:
+    name: Validate Bicep IaC
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bicep build (lint/transpile)
+        run: |
+          az bicep install
+          az bicep build --file infrastructure/bicep/main.bicep --stdout > /dev/null
+
+  integration-spark:
+    name: Integration (Spark local + Delta)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java (Temurin 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install integration dependencies (pyspark + delta)
+        run: pip install -r tests/requirements-integration.txt
+
+      - name: Pytest (integração — streaming Delta + checkpoint + MERGE)
+        run: pytest -m integration -q
+
+  security:
+    name: Security scan (bandit + pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install scanners
+        run: pip install bandit pip-audit
+
+      - name: Bandit (SAST do código próprio)
+        # B603/B607: chamadas a `az`/`databricks` na CLI são intencionais e resolvidas
+        # por caminho absoluto (shutil.which), não entrada de usuário.
+        run: bandit -r function_app Databricks/lib cli -q --severity-level medium -s B603,B607
+
+      - name: pip-audit (CVEs nas dependências) — informativo
+        run: pip-audit -r tests/requirements-dev.txt || true
