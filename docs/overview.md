@@ -37,7 +37,7 @@ hierarquia organizacional). O modelo completo está em [Modelo de Dados](mer.md)
 
 | Capacidade | Serviço Azure |
 |---|---|
-| Geração/produção de eventos | Azure Functions (Timer) + SPN |
+| Geração/produção de eventos | Azure Functions (Timer) + Managed Identity |
 | Ingestão em tempo real | Azure Event Hubs |
 | Processamento (medallion) | Azure Databricks + Delta + Unity Catalog |
 | Armazenamento | ADLS Gen2 |
