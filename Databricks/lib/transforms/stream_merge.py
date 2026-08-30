@@ -90,15 +90,10 @@ def merge_upsert(
     ensure_table(spark, target_fqn, staged_df, cluster_by=cluster_by)
     view = "_stg_" + target_fqn.replace(".", "_")
     staged_df.createOrReplaceTempView(view)
-    spark.sql(
-        f"""
-        MERGE INTO {target_fqn} AS S
-        USING {view} AS C
-        ON {build_merge_on(keys)}
-        WHEN MATCHED THEN UPDATE SET *
-        WHEN NOT MATCHED THEN INSERT *
-        """
-    )
+    # Identificadores internos e validados (assert_fqn; chaves e view construídos em
+    # código) — não há input de usuário nesta query, logo não há vetor de injeção.
+    merge_sql = f"MERGE INTO {target_fqn} AS S USING {view} AS C ON {build_merge_on(keys)} WHEN MATCHED THEN UPDATE SET * WHEN NOT MATCHED THEN INSERT *"  # nosec B608
+    spark.sql(merge_sql)
 
 
 @dataclass
