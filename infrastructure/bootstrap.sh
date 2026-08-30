@@ -8,84 +8,82 @@
 #
 # Este script cuida APENAS do que depende do Microsoft Graph / segredos rotativos,
 # fora do escopo declarativo do ARM/Bicep:
-#   - cria os Service Principals (produtor e consumidor)
-#   - grava os segredos no Key Vault (credenciais dos SPNs + connection string do EH)
-#   - concede os papéis (RBAC) que dependem desses SPNs
+#   - cria (ou reutiliza, rotacionando a credencial) a Service Principal consumidora
+#     (Databricks → Event Hubs), com o mínimo de RBAC ('Azure Event Hubs Data
+#     Receiver', no namespace). É **idempotente**: pode ser reexecutado com segurança.
+#   - grava os segredos dessa SPN no Key Vault (lidos pelo secret scope do Databricks)
+#   - aplica as **access policies** do Key Vault (operador → Set; SP "AzureDatabricks"
+#     → Get/List), necessárias porque o AKV-backed secret scope do Databricks só
+#     funciona com o modelo *access policy* (não com Azure RBAC)
+#
+# Autenticação por identidade (Entra ID), sem SAS keys:
+#   - Produtor  : Managed Identity do Function App → 'Data Sender'  (papel dado pelo Bicep)
+#   - Consumidor: SPN spn_dtb_consumer            → 'Data Receiver' (aqui)
+#   - ADLS/UC   : Access Connector (MI)           → 'Storage Blob Data Contributor' (Bicep)
+# Por isso a SPN consumidora NÃO recebe acesso ao storage (o UC usa o Access Connector).
 #
 # Pré-requisito: rode o Bicep ANTES (os recursos precisam já existir).
 # Uso: az login && ./bootstrap.sh
 # =============================================================================
+set -euo pipefail
 
 # ----------------------------- Variáveis -------------------------------------
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 ACCOUNT_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv)
 
 RESOURCE_GROUP="rsgcjtecprd001"
-STORAGE_ACCOUNT="stacjtecprd001"
 EVENTHUB_NAMESPACE="evhnscjtecprd001"
 KEY_VAULT="akvcjtecprd001"
 
-SPN_PRODUCER="spn_func_send"      # produz eventos (Function App → Event Hubs)
-SPN_CONSUMER="spn_dtb_consumer"   # consome/processa (Databricks → Storage)
+SPN_CONSUMER="spn_dtb_consumer"   # consome do Event Hubs (Databricks)
 
-KV_ID=$(az keyvault show --name $KEY_VAULT --query id -o tsv)
+EVENTHUB_NS_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.EventHub/namespaces/$EVENTHUB_NAMESPACE"
 
-# ------- Permissão para o operador gravar segredos no Key Vault (RBAC) --------
-az role assignment create \
-    --role "Key Vault Secrets Officer" \
-    --assignee-object-id $ACCOUNT_OBJECT_ID \
-    --scope $KV_ID
+# ---- Access policy: operador pode gravar segredos no Key Vault (Set/Get/List) ----
+# (o vault está no modelo access policy — ver keyvault.bicep)
+az keyvault set-policy \
+    --name $KEY_VAULT \
+    --object-id $ACCOUNT_OBJECT_ID \
+    --secret-permissions get list set
 
-# ------------------ SPN produtor (Function App → Event Hubs) ------------------
-SP_DETAILS=$(az ad sp create-for-rbac --name $SPN_PRODUCER --role Contributor --scopes /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP)
-SP_APP_ID=$(echo $SP_DETAILS | jq -r '.appId')
-SP_SECRET=$(echo $SP_DETAILS | jq -r '.password')
-TENANT_ID=$(echo $SP_DETAILS | jq -r '.tenant')
-
-az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalAppId" --value $SP_APP_ID
-az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalSecret" --value $SP_SECRET
-az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalTenantId" --value $TENANT_ID
-
-# Ler segredos do Key Vault + enviar para o Event Hubs
-az role assignment create \
-    --role "Key Vault Secrets User" \
-    --assignee $SP_APP_ID \
-    --scope $KV_ID
-
-az role assignment create \
-    --assignee $SP_APP_ID \
-    --role "Azure Event Hubs Data Sender" \
-    --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.EventHub/namespaces/$EVENTHUB_NAMESPACE"
-
-# ------------------- SPN consumidor (Databricks → Storage) -------------------
-DTB_SP_DETAILS=$(az ad sp create-for-rbac --name $SPN_CONSUMER --role "Contributor" --scopes /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP)
-DTB_SP_APP_ID=$(echo $DTB_SP_DETAILS | jq -r '.appId')
-DTB_SP_SECRET=$(echo $DTB_SP_DETAILS | jq -r '.password')
-DTB_TENANT_ID=$(echo $DTB_SP_DETAILS | jq -r '.tenant')
+# --------- SPN consumidora (Databricks → Event Hubs), least privilege ---------
+# Idempotente: se a SPN já existe, reutiliza a identidade e **rotaciona** a credencial
+# (o segredo anterior não é recuperável, então geramos um novo e o regravamos no KV);
+# se não existe, cria já com o único papel necessário, no escopo do namespace — sem
+# Contributor e sem atribuição genérica no Resource Group.
+EXISTING_APP_ID=$(az ad sp list --display-name "$SPN_CONSUMER" --query "[0].appId" -o tsv)
+if [ -z "$EXISTING_APP_ID" ]; then
+  DTB_SP_DETAILS=$(az ad sp create-for-rbac \
+      --name "$SPN_CONSUMER" \
+      --role "Azure Event Hubs Data Receiver" \
+      --scopes "$EVENTHUB_NS_ID")
+  DTB_SP_APP_ID=$(echo "$DTB_SP_DETAILS" | jq -r '.appId')
+  DTB_SP_SECRET=$(echo "$DTB_SP_DETAILS" | jq -r '.password')
+  DTB_TENANT_ID=$(echo "$DTB_SP_DETAILS" | jq -r '.tenant')
+  echo "[+] SPN '$SPN_CONSUMER' criada (appId=$DTB_SP_APP_ID)"
+else
+  DTB_SP_APP_ID="$EXISTING_APP_ID"
+  DTB_TENANT_ID=$(az account show --query tenantId -o tsv)
+  DTB_SP_SECRET=$(az ad sp credential reset --id "$DTB_SP_APP_ID" --query password -o tsv)
+  # garante o papel (idempotente — não falha se já existir)
+  az role assignment create \
+      --assignee "$DTB_SP_APP_ID" \
+      --role "Azure Event Hubs Data Receiver" \
+      --scope "$EVENTHUB_NS_ID" >/dev/null 2>&1 || true
+  echo "[=] SPN '$SPN_CONSUMER' já existia (appId=$DTB_SP_APP_ID) — credencial rotacionada"
+fi
 
 az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalDTBAppId" --value $DTB_SP_APP_ID
 az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalDTBSecret" --value $DTB_SP_SECRET
 az keyvault secret set --vault-name $KEY_VAULT --name "ServicePrincipalDTBTenantId" --value $DTB_TENANT_ID
 
-az role assignment create \
-    --role "Storage Blob Data Contributor" \
-    --assignee $DTB_SP_APP_ID \
-    --scope $(az storage account show --name $STORAGE_ACCOUNT --query id -o tsv)
+# Access policy para o secret scope (AKV-backed) do Databricks ler o Key Vault.
+# A app first-party "AzureDatabricks" precisa de Get/List em secrets (modelo access
+# policy — o AKV-backed scope não suporta RBAC no Key Vault).
+DATABRICKS_SP_OBJECT_ID=$(az ad sp list --display-name "AzureDatabricks" --query "[0].id" -o tsv)
+az keyvault set-policy \
+    --name $KEY_VAULT \
+    --object-id $DATABRICKS_SP_OBJECT_ID \
+    --secret-permissions get list
 
-# Permitir que o secret scope (AKV-backed) do Databricks leia o Key Vault
-az role assignment create \
-    --role "Key Vault Secrets User" \
-    --assignee $(az ad sp list --display-name "AzureDatabricks" --query "[].{Id:id}" --output tsv) \
-    --scope $KV_ID
-
-# ------------------ Connection string do Event Hubs → Key Vault --------------
-EVENTHUB_CONNECTION_STRING=$(az eventhubs namespace authorization-rule keys list \
-    --resource-group $RESOURCE_GROUP \
-    --namespace-name $EVENTHUB_NAMESPACE \
-    --name RootManageSharedAccessKey \
-    --query primaryConnectionString \
-    --output tsv)
-
-az keyvault secret set --vault-name $KEY_VAULT --name "EventhubConnectionString" --value $EVENTHUB_CONNECTION_STRING
-
-echo "[OK] Bootstrap concluído: SPNs criados, segredos gravados e papéis atribuídos."
+echo "[OK] Bootstrap concluído: SPN consumidora criada (Data Receiver), segredos gravados, access policies aplicadas."

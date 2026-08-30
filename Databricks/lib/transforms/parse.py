@@ -7,7 +7,7 @@ CALLS e PESQUISA.
 """
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 try:  # pragma: no cover - depende do runtime Spark
     from pyspark.sql import DataFrame
@@ -19,22 +19,80 @@ except Exception:  # pragma: no cover
     T = None  # type: ignore
 
 
-def parse_body(df: DataFrame, schema: T.StructType, keep_cdf_meta: bool = True) -> DataFrame:
-    """Faz `from_json` da coluna `body`, descarta linhas inválidas e, opcionalmente,
-    preserva os metadados de CDF (`_commit_version`/`_commit_timestamp`)."""
-    parsed = (
-        df.withColumn("body", F.from_json(F.col("body"), schema))
-        .filter(F.col("body").isNotNull())
-    )
-    if keep_cdf_meta and "_commit_version" in df.columns:
-        parsed = (
-            parsed.withColumn("_cv", F.col("_commit_version").cast("long"))
-            .withColumn("_ct", F.col("_commit_timestamp").cast("timestamp"))
-            .select("body.*", "_cv", "_ct")
+# Schema padrão da quarentena (DLQ): payload cru + contexto do erro para triagem.
+QUARANTINE_COLUMNS = (
+    "event_id",
+    "payload",
+    "error_reason",
+    "schema_version",
+    "ingestion_ts",
+    "source",
+)
+
+
+def validate_contract(
+    df: DataFrame,
+    schema: T.StructType,
+    required: Sequence[str],
+    *,
+    source: str,
+    schema_version: str = "1.0",
+    body_col: str = "body",
+) -> tuple[DataFrame, DataFrame]:
+    """Aplica o *data contract* e separa eventos válidos de inválidos.
+
+    Um evento é **inválido** quando o JSON é malformado (o `from_json` devolve
+    `null`) ou quando algum campo **obrigatório** vem nulo (ausente ou com tipo
+    incompatível). Em vez de descartá-lo silenciosamente, ele é roteado para a
+    **quarentena** (DLQ) com o payload cru e o motivo — dado ruim não some e nem
+    contamina a camada confiável.
+
+    Retorna `(valid_df, quarantine_df)`:
+    - `valid_df` preserva as colunas originais (o `transform` segue o fluxo normal);
+    - `quarantine_df` segue o schema de [`QUARANTINE_COLUMNS`](#).
+    """
+    required = list(required or [])
+    parsed = df.withColumn("_parsed", F.from_json(F.col(body_col), schema))
+
+    struct_null = F.col("_parsed").isNull()
+    valid_cond = ~struct_null
+    for c in required:
+        valid_cond = valid_cond & F.col(f"_parsed.{c}").isNotNull()
+
+    valid_df = parsed.filter(valid_cond).drop("_parsed")
+
+    if required:
+        missing = F.array_compact(
+            F.array(*[F.when(F.col(f"_parsed.{c}").isNull(), F.lit(c)) for c in required])
+        )
+        reason = F.when(struct_null, F.lit("malformed_json")).otherwise(
+            F.concat(F.lit("missing_or_invalid: "), F.concat_ws(", ", missing))
         )
     else:
-        parsed = parsed.select("body.*")
-    return parsed
+        reason = F.lit("malformed_json")
+
+    quarantine_df = parsed.filter(~valid_cond).select(
+        F.sha2(F.col(body_col).cast("string"), 256).alias("event_id"),
+        F.col(body_col).cast("string").alias("payload"),
+        reason.alias("error_reason"),
+        F.lit(schema_version).alias("schema_version"),
+        F.current_timestamp().alias("ingestion_ts"),
+        F.lit(source).alias("source"),
+    )
+    return valid_df, quarantine_df
+
+
+def parse_body(df: DataFrame, schema: T.StructType) -> DataFrame:
+    """Faz `from_json` da coluna `body` e projeta os campos do evento.
+
+    Linhas com JSON incompatível viram `null` no `from_json` e são descartadas aqui;
+    a separação explícita entre válido e inválido (quarentena) fica em
+    [`validate_contract`](#), aplicada antes pelo `SilverStream`."""
+    return (
+        df.withColumn("body", F.from_json(F.col("body"), schema))
+        .filter(F.col("body").isNotNull())
+        .select("body.*")
+    )
 
 
 def rename_columns(df: DataFrame, mapping: Mapping[str, str]) -> DataFrame:

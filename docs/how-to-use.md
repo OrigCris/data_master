@@ -9,10 +9,10 @@ dm provision -g rsgcjtecprd001 --what-if    # revisar
 dm provision -g rsgcjtecprd001              # aplicar
 ```
 O Bicep cria Storage, Event Hubs, Key Vault, Function App, Databricks, observabilidade,
-RBAC e as app settings da Function. Em seguida rode o **bootstrap** de identidade/segredos
-(o que o Bicep não faz — SPNs + secrets):
+RBAC (incl. a MI da Function → *Data Sender*) e as app settings. Em seguida rode o
+**bootstrap** de identidade/segredos (o que o Bicep não faz — a SPN consumidora):
 ```bash
-bash infrastructure/bootstrap.sh            # cria SPNs e popula o Key Vault
+bash infrastructure/bootstrap.sh            # cria a SPN consumidora e popula o Key Vault
 ```
 
 ## 2. Preparar o Unity Catalog
@@ -30,11 +30,13 @@ bash Databricks/essential/setup_unity_catalog.sh
 > Requer o **metastore** do Unity Catalog já atribuído ao workspace — etapa de
 > *account admin*, no nível da conta (a única fora dos scripts).
 
-Crie os schemas por camada:
+Crie os schemas por camada (e os **Volumes de checkpoint** do streaming):
 - `Databricks/essential/create_databases.ipynb`
 
-> A Silver controla o progresso pelo **checkpoint** do streaming, em
-> `/Volumes/.../checkpoints/silver` (criado automaticamente na primeira execução).
+> O notebook cria os schemas `b_/s_/g_dm_callcenter` e os **Volumes gerenciados**
+> `checkpoints` (Bronze e Silver). A Silver controla o progresso pelo **checkpoint** do
+> streaming, em `/Volumes/prd/s_dm_callcenter/checkpoints/silver` (o subdiretório é
+> criado na primeira execução; o Volume, aqui).
 
 E aplique a governança de PII (após criar as dimensões na Bronze), por um dos
 caminhos:

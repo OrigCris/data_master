@@ -6,8 +6,12 @@ Action Group provisionado pelo módulo de observabilidade.
 
 | Alerta | Sinal | Janela | Severidade | Por quê |
 |---|---|---|---|---|
-| `evh-sem-ingestao` | `IncomingMessages = 0` no Event Hubs | 30 min | 2 (warning) | Detecta produtor (Function App) parado ou SPN sem permissão de envio. |
-| `func-falhas-execucao` | `Http5xx > 0` no Function App | 15 min | 1 (error) | Falhas de execução do gerador/produtor de eventos. |
+| `evh-sem-ingestao` | `IncomingMessages = 0` no Event Hubs | 30 min | 2 (warning) | Detecta produtor (Function App) parado ou MI sem permissão de envio. |
+| `func-falhas-execucao` | `exceptions/count > 0` no Application Insights | 15 min | 1 (error) | Exceção na execução da Function (TimerTrigger). |
+
+> A Function é uma **TimerTrigger**: uma falha é uma **exceção** na execução, não um
+> HTTP 5xx. Por isso o alerta observa a métrica `exceptions/count` do Application
+> Insights, não `Http5xx` do Function App.
 
 ## Deploy
 
@@ -15,7 +19,7 @@ Action Group provisionado pelo módulo de observabilidade.
 az deployment group create -g rsgcjtecprd001 \
   -f monitoring/alerts/alert-rules.bicep \
   -p eventHubNamespaceId=<id-do-namespace> \
-     functionAppId=<id-da-function> \
+     appInsightsId=<id-do-application-insights> \
      actionGroupId=<id-do-action-group>
 ```
 

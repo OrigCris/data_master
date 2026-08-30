@@ -46,8 +46,8 @@ A camada Silver/Gold adota um padrão de nomes compacto e consistente (estilo
   identifica a chamada de ponta a ponta entre as fontes.
 - **Período `CD_PERI` (yyyyMM)** como dimensão temporal de baixa cardinalidade,
   usada em todos os *cluster keys* para *data skipping*.
-- **Metadados de CDF** (`_cv`, `_ct`) preservados na Silver para auditoria e
-  reprocesso seguro.
+- **Auditoria de carga** (`DH_REFE_CRGA`) registrada na Silver a cada MERGE, para
+  rastreabilidade e reprocesso seguro.
 
 ---
 

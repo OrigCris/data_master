@@ -10,7 +10,7 @@ organizado em **módulos por domínio**. O bootstrap de identidade/segredos
 |---|---|---|
 | `modules/storage.bicep` | ADLS Gen2 (HNS) + container | Data lake (bronze/silver/gold) |
 | `modules/eventhub.bicep` | Event Hubs Namespace + hubs | Ingestão em tempo real |
-| `modules/keyvault.bicep` | Key Vault (RBAC) | Segredos do SPN e do Event Hubs |
+| `modules/keyvault.bicep` | Key Vault (access policy) | Segredos da SPN consumidora (Databricks) |
 | `modules/functionapp.bicep` | Function App + Plan + MI | Produção de eventos |
 | `modules/databricks.bicep` | Workspace + Access Connector | Processamento + Unity Catalog |
 | `modules/monitoring.bicep` | Log Analytics + App Insights + Action Group | Observabilidade |
@@ -34,8 +34,9 @@ az deployment group create -g rsgcjtecprd001 \
 
 ## Fronteira declarativa × imperativa
 
-A criação dos **Service Principals** (produtor/consumidor) e o **seed de segredos**
+A criação da **Service Principal consumidora** (Databricks) e o **seed de segredos**
 no Key Vault exigem Microsoft Graph e geram credenciais rotativas — fora do escopo
-do ARM/Bicep. Essa etapa fica no bootstrap [`bootstrap.sh`](../bootstrap.sh).
+do ARM/Bicep. Essa etapa fica no bootstrap [`bootstrap.sh`](../bootstrap.sh). O produtor
+não tem SPN: usa a Managed Identity do Function App (papel *Data Sender* dado pelo Bicep).
 O Bicep cuida de todos os recursos de plataforma, do RBAC e das app settings; o
-bootstrap cuida da identidade e dos segredos.
+bootstrap cuida da SPN consumidora e dos segredos.

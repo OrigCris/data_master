@@ -1,28 +1,49 @@
 # 16. Benchmark e Performance
 
-Metodologia e resultados esperados para validar performance e escala do pipeline.
-Os números abaixo são **referências de ordem de grandeza** para o ambiente de demo
-(`Standard_D4ps_v6`, 1 worker, `AvailableNow`); reexecute em seu ambiente para medir.
+Experimento reprodutível para medir performance e escala do caminho arquitetural
+central (streaming Delta + `foreachBatch` MERGE). O harness gera carga controlada, mede a execução
+**real** e registra os números — a tabela de resultados abaixo é preenchida rodando os
+cenários, não estimada.
+
+## Harness
+O notebook [`Databricks/essential/benchmark.ipynb`](../Databricks/essential/benchmark.ipynb)
+recebe `scenario`, `volume`, `num_workers` e `node_type`, gera a carga sintética na
+Bronze (append-only), executa a Silver medindo `duration_s`/`throughput_rows_s` e faz
+*append* em `__benchmark_results`. Cada cenário é uma linha acumulada nessa tabela.
 
 ## Metodologia
-1. Gerar carga controlada ajustando os parâmetros do bundle Bronze
-   (`QTD_CLIENTES`, `QTD_ASSIST`) e a frequência do TimerTrigger.
-2. Medir por camada usando a telemetria nativa:
-   - Bronze: `numInputRows` / `batchDuration` do `lastProgress`.
-   - Silver/Gold: duração do job + linhas afetadas pelo MERGE/overwrite.
-3. Repetir 3× e tomar a mediana; registrar custo via [FinOps](finops.md).
+1. Definir o cluster no bundle (`num_workers`, `node_type`) e rodar o harness com o
+   `volume` do cenário.
+2. As métricas saem da execução real: duração cronometrada, linhas de saída e
+   throughput; o custo vem do DBU × tempo (ver [FinOps](finops.md)).
+3. Repetir 3× por cenário e tomar a mediana.
+
+## Cenários (matriz de execução)
+Três cenários isolam o efeito do **volume** (A→B) e do **paralelismo** (B→C):
+
+| Cenário | Volume | Cluster | duração (s) | throughput (rows/s) | custo (DBU×t) |
+|---|---|---|---|---|---|
+| A | 1M | `D4ps_v6` × 1 | _(preencher)_ | _(preencher)_ | _(preencher)_ |
+| B | 10M | `D4ps_v6` × 1 | _(preencher)_ | _(preencher)_ | _(preencher)_ |
+| C | 10M | `D4ps_v6` × 2 | _(preencher)_ | _(preencher)_ | _(preencher)_ |
+
+> Os campos ficam em branco de propósito: preencha com a saída de `__benchmark_results`
+> após rodar cada cenário. A leitura interessante é a **eficiência de scaling** (B→C):
+> dobrar workers raramente reduz o tempo pela metade — quando o gargalo deixa de ser
+> CPU e passa a ser I/O/shuffle, o ganho satura. Use o Spark UI (stages, *shuffle
+> read/write*, *spill*) para atribuir o gargalo.
 
 ## Eixos avaliados
 
-| Eixo | O que medir | Expectativa |
+| Eixo | O que medir | Onde ler |
 |---|---|---|
-| **Latência de ingestão** | Event Hubs → Bronze (`AvailableNow`) | dominada pelo *cold start* do cluster (~1–3 min) |
-| **Throughput Silver** | linhas/s no MERGE incremental | escala linear com o tamanho do delta (CDF) |
-| **Custo por execução** | DBU × tempo | minimizado por autotermination + cluster pequeno |
-| **Eficiência de leitura** | arquivos varridos na Gold | reduzida por liquid clustering + `replaceWhere` |
+| **Latência de ingestão** | Event Hubs → Bronze (`AvailableNow`) | `numInputRows`/`batchDuration` do `lastProgress` |
+| **Throughput Silver** | linhas/s no MERGE incremental | `__benchmark_results.throughput_rows_s` |
+| **Custo por execução** | DBU × tempo | [FinOps](finops.md) |
+| **Eficiência de leitura** | arquivos varridos na Gold | *data skipping* (liquid clustering + `replaceWhere`) |
 
 ## Boas práticas que sustentam a performance
-- **Processar só o delta** (CDF) em vez de full scan.
+- **Processar só o que chegou** (stream incremental) em vez de full scan.
 - **Liquid clustering** por período → *data skipping*.
 - **`OPTIMIZE`** nas dimensões após overwrite.
 - **Clusters job-scoped** dimensionados ao trabalho.

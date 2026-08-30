@@ -6,7 +6,7 @@ tanto pelos jobs no Databricks quanto pela suíte de testes local (`tests/`).
 
 | Pacote | Responsabilidade | Principais APIs |
 |---|---|---|
-| [`transforms/`](transforms) | Padrão incremental Bronze→Silver (streaming CDF + checkpoint + MERGE) e helpers de parsing. | `SilverStream`, `merge_upsert`, `parse_body`, `rename_columns`, `add_period_and_dates` |
+| [`transforms/`](transforms) | Padrão incremental Bronze→Silver (streaming Delta + checkpoint + MERGE) e helpers de parsing/contrato. | `SilverStream`, `merge_upsert`, `parse_body`, `validate_contract`, `rename_columns`, `add_period_and_dates` |
 | [`quality/`](quality) | Framework de Data Quality declarativo com relatório e gate de criticidade. | `Expectation`, `run_expectations`, `QualityReport` |
 | [`security/`](security) | Mascaramento de PII (funções puras + Spark) e geração de *column masks* do Unity Catalog. | `mask_cpf`, `mask_email`, `mask_dataframe`, `column_mask_functions_sql` |
 

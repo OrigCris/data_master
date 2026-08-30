@@ -1,6 +1,6 @@
 """Testes das funções puras da lib de transforms (sem Spark)."""
 import pytest
-from transforms.cdf_merge import assert_fqn, build_merge_on
+from transforms.stream_merge import assert_fqn, build_merge_on
 
 
 def test_build_merge_on_uma_chave():

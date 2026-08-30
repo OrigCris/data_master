@@ -41,8 +41,8 @@ CREATE TABLE IF NOT EXISTS prd.g_dm_callcenter.visao_assistentes (
   QT_RECH            BIGINT,    -- rechamadas (≤24h)
   PC_RECH            DOUBLE,
   VL_TEMP_MEDI_OPER  DOUBLE,    -- tempo médio de atendimento (s)
-  QT_PRMT            BIGINT,    -- promotores
-  QT_NTRO            BIGINT,    -- neutros
-  QT_DETR            BIGINT,    -- detratores
+  QT_PRMT            BIGINT,    -- promotores (nota 9-10)
+  QT_NTRO            BIGINT,    -- passivos/neutros (nota 7-8)
+  QT_DETR            BIGINT,    -- detratores (nota 0-6)
   VL_NPS             DOUBLE     -- (PRMT - DETR) / total * 100
 ) USING DELTA CLUSTER BY (CD_PERI, DT_REFE, ID_ASST);

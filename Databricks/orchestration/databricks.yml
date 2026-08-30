@@ -41,7 +41,7 @@ resources:
 
       tasks:
         # Dimensões (Bronze) e processamento Silver podem rodar em paralelo:
-        # a Silver consome o CDF já ingerido continuamente pelo bronze-streaming.
+        # a Silver consome a Bronze já ingerida continuamente pelo bronze-streaming.
         - task_key: ingest_dims
           run_job_task:
             job_id: ${var.bronze_dim_job_id}

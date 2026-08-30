@@ -35,8 +35,8 @@ Arquitetura **orientada a eventos** e **modular**:
    Hubs**, autenticando via **Service Principal** cujos segredos vêm do **Key Vault**
    (lido por **Managed Identity** — sem segredos no código).
 2. **Bronze** — job Databricks com **`Trigger.AvailableNow`** grava o dado cru em
-   **Delta com Change Data Feed**; dimensões geradas com Faker.
-3. **Silver** — consumo **incremental** do CDF por **streaming + checkpoint**
+   **Delta append-only**; dimensões geradas com Faker.
+3. **Silver** — consumo **incremental** da Bronze por **streaming Delta + checkpoint**
    (`foreachBatch` MERGE), com **MERGE idempotente** por chave de negócio.
 4. **Gold** — visões diárias (**D-1**) materializadas com `replaceWhere`.
 
@@ -49,18 +49,20 @@ documentação detalhada está em [`docs/architecture.md`](../docs/architecture.
 | Decisão | Motivação | ADR |
 |---|---|---|
 | Medallion com Delta + Unity Catalog | ACID, time-travel, CDF e governança nativos | [0001](../docs/adrs/0001-medallion-delta-uc.md) |
-| Silver incremental via streaming CDF + checkpoint | Incremental, idempotente, exactly-once | [0002](../docs/adrs/0002-incremental-streaming-cdf.md) |
+| Silver incremental via streaming Delta + checkpoint | Incremental; at-least-once no `foreachBatch` com idempotência pelo MERGE por chave | [0002](../docs/adrs/0002-incremental-streaming.md) |
 | Processamento agendado (AvailableNow) | Custo muito menor que streaming 24/7 | [0003](../docs/adrs/0003-scheduled-availablenow.md) |
 | Event Hubs | High-throughput + integração Spark | [0004](../docs/adrs/0004-eventhubs-vs-servicebus.md) |
 | PII mascarada no catálogo | Proteção uniforme p/ qualquer consumidor | [0005](../docs/adrs/0005-pii-masking-unity-catalog.md) |
+| Data contracts + DLQ + observabilidade | Não perder dado inválido nem anomalia de volume | [0006](../docs/adrs/0006-data-contracts-dlq-observability.md) |
 
 Trade-offs e limitações conhecidas estão registrados com transparência em
 [`docs/trade-offs.md`](../docs/trade-offs.md).
 
 ## 5. Governança e segurança
 
-- **Identidade sem segredos**: Managed Identity + Key Vault; SPNs separadas para
-  produzir e consumir, com **least privilege**.
+- **Identidade sem segredos**: produtor pela **Managed Identity** da Function (*Data
+  Sender*); consumidor por uma SPN com **apenas** *Data Receiver* — **least privilege**,
+  sem SAS keys (namespace com `disableLocalAuth`).
 - **PII**: a `dim_clientes` (CPF, e-mail, nome, nascimento) é mascarada por **column
   mask do Unity Catalog**, liberando o valor em claro apenas a um grupo do Entra ID.
 - **Acesso por camada**: consumidores de BI só enxergam a Gold.
@@ -68,10 +70,14 @@ Trade-offs e limitações conhecidas estão registrados com transparência em
 ## 6. Qualidade de engenharia
 
 - **Testes** unitários (pytest) cobrindo geradores, helpers de transformação,
-  mascaramento de PII e a CLI — executáveis no CI **sem cluster Spark**.
-- **CI/CD** (GitHub Actions): lint (ruff), testes, validação de bundles e de Bicep.
-- **Código compartilhado** (`Databricks/lib`): o padrão CDF/MERGE é centralizado em
-  `transforms.SilverStream` e exercitado por testes no CI.
+  mascaramento de PII e a CLI (sem cluster Spark), mais **integração** (CDF/checkpoint/MERGE).
+- **CI** (GitHub Actions): lint (ruff), testes unit+integração, **security scan**
+  (bandit/pip-audit) e validação de bundles e de Bicep.
+- **Deploy** (manual, `environment: prd`): bundles do Databricks e **código da Function**
+  (build remoto Oryx). A infraestrutura é IaC (Bicep); o deploy do código da Function é
+  etapa própria, também no pipeline.
+- **Código compartilhado** (`Databricks/lib`): o padrão streaming/MERGE é centralizado
+  em `transforms.SilverStream` e exercitado por testes no CI.
 - **Data Quality** como gate: expectativas críticas falham o job; resultados
   auditados em `__dq_results`.
 
@@ -88,11 +94,14 @@ Trade-offs e limitações conhecidas estão registrados com transparência em
 - **Contrato de dados da pesquisa**: `data_envio` é uma **data** (não timestamp),
   compatível com o `DateType` da Silver — garantindo que a pesquisa entre no cálculo
   de NPS. Coberto por teste de regressão.
-- **Regra de rechamada (`IN_RECH`)** e **faixa de NPS** adotada são decisões de
-  negócio explícitas, registradas em [trade-offs](../docs/trade-offs.md) e
+- **Regra de rechamada (`IN_RECH`)** e as **faixas do NPS clássico** (0–10:
+  promotor 9–10, passivo 7–8, detrator 0–6) são decisões de negócio explícitas,
+  registradas em [trade-offs](../docs/trade-offs.md) e
   [roadmap](../docs/roadmap.md).
-- **Indicadores de transferência (`IN_TRAF`)** assumem que os atendimentos de uma
-  mesma chamada chegam no mesmo micro-batch — verdadeiro no fluxo de ingestão atual.
+- **Indicadores de transferência (`IN_TRAF`)** são recomputados sobre a **chamada
+  inteira**: a cada batch, os atendimentos novos são unidos ao histórico da Silver e a
+  janela é recalculada — corretos mesmo com atendimentos chegando em batches diferentes
+  (sem depender de co-ocorrência no micro-batch).
 
 ## 9. Roadmap
 
@@ -102,11 +111,10 @@ prazo (Purview, SQL Serverless, tempo real). Detalhes em
 
 ## 10. Conclusão
 
-A entrega é uma base **serverless, modular, governada e testada**, pronta para
-evoluir de forma incremental sem reescrever a fundação. A combinação de
-idempotência, custo controlado e automação cobre os pilares avaliados em um programa
-de certificação de nível avançado/expert, com as decisões e limitações documentadas
-de forma transparente.
+A entrega é uma base **modular, governada e testada**, sobre serviços gerenciados e
+elásticos, pronta para evoluir de forma incremental sem reescrever a fundação —
+combinando idempotência, custo controlado e automação, com as decisões e limitações
+documentadas de forma transparente.
 
 ---
 

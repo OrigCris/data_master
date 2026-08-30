@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Camada SILVER — schema s_dm_callcenter
--- Dados limpos/normalizados, consumidos da Bronze por Change Data Feed (CDF)
+-- Dados limpos/normalizados, consumidos da Bronze (append-only) por streaming Delta
 -- e aplicados via MERGE idempotente. Nomenclatura padronizada (ver reference.md).
 -- =============================================================================
 
@@ -21,8 +21,6 @@ CREATE TABLE IF NOT EXISTS prd.s_dm_callcenter.tabe_ura_anlt (
   CD_ULTI_OPCA   STRING,   -- código da última opção
   IN_AUTN        BOOLEAN,  -- autenticado
   IN_DERV_ATEN   BOOLEAN,  -- derivado a atendimento humano
-  _cv            LONG,     -- _commit_version do CDF
-  _ct            TIMESTAMP,-- _commit_timestamp do CDF
   CD_PERI        INT,      -- período yyyyMM
   DT_INIC        DATE,
   DT_FIM         DATE,
@@ -52,8 +50,6 @@ CREATE TABLE IF NOT EXISTS prd.s_dm_callcenter.tabe_pesq_ura (
   ID_PESQ        STRING,
   DT_ENVI        DATE,
   VL_NOTA        INT,      -- nota 1..10
-  _cv            LONG,
-  _ct            TIMESTAMP,
   CD_PERI        INT,
   DH_REFE_CRGA   TIMESTAMP
 ) USING DELTA CLUSTER BY (ID_PESQ);
@@ -69,3 +65,26 @@ CREATE TABLE IF NOT EXISTS prd.s_dm_callcenter.__dq_results (
   checked_at   TIMESTAMP
 ) USING DELTA
 COMMENT 'Resultados das checagens de Data Quality por execução.';
+
+-- Dead-letter queue (DLQ): eventos que violam o data contract não são descartados,
+-- e sim isolados aqui com o payload cru e o motivo, para triagem/reprocessamento.
+CREATE TABLE IF NOT EXISTS prd.s_dm_callcenter.__quarantine (
+  event_id       STRING,   -- sha256 do payload (deduplicação/triagem)
+  payload        STRING,   -- JSON cru recebido na Bronze
+  error_reason   STRING,   -- malformed_json | missing_or_invalid: <campos>
+  schema_version STRING,   -- versão do contrato aplicado
+  ingestion_ts   TIMESTAMP,
+  source         STRING    -- tabela/fonte de origem do evento
+) USING DELTA
+COMMENT 'Eventos em quarentena por violação do data contract (schema/campos obrigatórios).';
+
+-- Histórico de métricas de dataset (volume, freshness) para observabilidade:
+-- alimenta a comparação de volume contra a média móvel das execuções anteriores.
+CREATE TABLE IF NOT EXISTS prd.s_dm_callcenter.__dataset_metrics (
+  dataset       STRING,
+  metric        STRING,   -- row_count | freshness_minutes
+  metric_value  DOUBLE,
+  observed_date DATE,     -- data de referência observada (date_col)
+  observed_at   TIMESTAMP
+) USING DELTA
+COMMENT 'Métricas de dataset por execução (base da observabilidade de volume/freshness).';

@@ -1,8 +1,7 @@
 -- =============================================================================
 -- Governança de dados — Unity Catalog column masking (PII)
 -- Mascaramento aplicado NO CATÁLOGO: o dado em claro é liberado apenas para o
--- grupo 'dm_pii_readers' (Entra ID). Equivale ao Lake Formation + Comprehend do
--- case de referência, porém com recursos nativos do Unity Catalog.
+-- grupo 'dm_pii_readers' (Entra ID), usando recursos nativos do Unity Catalog.
 -- Geração programática equivalente em Databricks/lib/security/pii.py.
 -- =============================================================================
 
@@ -19,10 +18,16 @@ CREATE OR REPLACE FUNCTION prd.b_dm_callcenter.mask_name(v STRING)
 RETURN CASE WHEN is_account_group_member('dm_pii_readers') THEN v
             ELSE concat(split(v, ' ')[0], ' ***') END;
 
+-- Data de nascimento generalizada para o ano (mantém o tipo DATE via trunc).
+CREATE OR REPLACE FUNCTION prd.b_dm_callcenter.mask_data_nascimento(v DATE)
+RETURN CASE WHEN is_account_group_member('dm_pii_readers') THEN v
+            ELSE trunc(v, 'YEAR') END;
+
 -- 2) Aplicação das máscaras às colunas sensíveis
-ALTER TABLE prd.b_dm_callcenter.dim_clientes ALTER COLUMN cpf   SET MASK prd.b_dm_callcenter.mask_cpf;
-ALTER TABLE prd.b_dm_callcenter.dim_clientes ALTER COLUMN email SET MASK prd.b_dm_callcenter.mask_email;
-ALTER TABLE prd.b_dm_callcenter.dim_clientes ALTER COLUMN nome  SET MASK prd.b_dm_callcenter.mask_name;
+ALTER TABLE prd.b_dm_callcenter.dim_clientes ALTER COLUMN cpf             SET MASK prd.b_dm_callcenter.mask_cpf;
+ALTER TABLE prd.b_dm_callcenter.dim_clientes ALTER COLUMN email           SET MASK prd.b_dm_callcenter.mask_email;
+ALTER TABLE prd.b_dm_callcenter.dim_clientes ALTER COLUMN nome            SET MASK prd.b_dm_callcenter.mask_name;
+ALTER TABLE prd.b_dm_callcenter.dim_clientes ALTER COLUMN data_nascimento SET MASK prd.b_dm_callcenter.mask_data_nascimento;
 ALTER TABLE prd.b_dm_callcenter.dim_assistentes ALTER COLUMN email          SET MASK prd.b_dm_callcenter.mask_email;
 ALTER TABLE prd.b_dm_callcenter.dim_assistentes ALTER COLUMN nomeAssistente SET MASK prd.b_dm_callcenter.mask_name;
 

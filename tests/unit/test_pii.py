@@ -1,6 +1,13 @@
 """Testes das funções puras de mascaramento de PII."""
 import pytest
-from security.pii import apply_column_masks_sql, mask_cpf, mask_email, mask_name, redact
+from security.pii import (
+    apply_column_masks_sql,
+    column_mask_functions_sql,
+    mask_cpf,
+    mask_email,
+    mask_name,
+    redact,
+)
 
 
 @pytest.mark.parametrize(
@@ -47,3 +54,13 @@ def test_apply_column_masks_sql_gera_alter_para_colunas_conhecidas():
     assert "email" in sql and "nome" in sql
     # 'segmento' não é PII → não deve receber máscara
     assert "segmento" not in sql
+
+
+def test_data_nascimento_tem_mask_no_catalogo():
+    # a data de nascimento é declarada como PII e deve ganhar mask no catálogo
+    funcs = column_mask_functions_sql("prd", "b_dm_callcenter")
+    assert "mask_data_nascimento" in funcs
+    assert "trunc(v, 'YEAR')" in funcs  # generalizada para o ano, mantendo DATE
+
+    sql = apply_column_masks_sql("prd", "b_dm_callcenter", "dim_clientes", ["data_nascimento"])
+    assert "ALTER COLUMN data_nascimento SET MASK prd.b_dm_callcenter.mask_data_nascimento" in sql

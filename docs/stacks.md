@@ -10,7 +10,7 @@ revisável e aplicável com `what-if` isoladamente.
 |---|---|---|
 | `storage.bicep` | ADLS Gen2 (HNS) | Data lake (bronze/silver/gold) |
 | `eventhub.bicep` | Event Hubs Namespace + 3 hubs | Ingestão em tempo real |
-| `keyvault.bicep` | Key Vault (RBAC) | Segredos do SPN e do Event Hubs |
+| `keyvault.bicep` | Key Vault (access policy) | Segredos da SPN consumidora — modelo access policy exigido pelo AKV-backed secret scope |
 | `functionapp.bicep` | Function App + Plan + MI | Produção de eventos |
 | `databricks.bicep` | Workspace + Access Connector | Processamento + Unity Catalog |
 | `monitoring.bicep` | Log Analytics + App Insights + Action Group | Observabilidade |
@@ -41,6 +41,28 @@ O Bicep cuida de **todos os recursos de plataforma + RBAC**. A criação dos
 **Service Principals** (Entra ID) e o **seed de segredos** dependem do Microsoft
 Graph e de credenciais rotativas — ficam no bootstrap
 [`bootstrap.sh`](../infrastructure/bootstrap.sh), executado após o Bicep.
+
+## CI/CD (portão de qualidade)
+
+Toda mudança passa por [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) antes
+de chegar à `main` — é assim que uma alteração não quebra produção:
+
+| Job | O que valida |
+|---|---|
+| **Lint & Unit Tests** | ruff + pytest (funções puras) + build do wheel |
+| **Integration (Spark)** | streaming Delta + checkpoint + **MERGE idempotente** com Spark local |
+| **Validate Bundles** | `databricks bundle validate` das camadas (com credenciais) |
+| **Validate Bicep** | `az bicep build` da infraestrutura |
+| **Security scan** | `bandit` (SAST do código) + `pip-audit` (CVEs das dependências) |
+
+A promoção para produção é explícita e por acionamento manual (`workflow_dispatch`,
+`environment: prd`) — evita deploy acidental:
+- [`deploy.yml`](../.github/workflows/deploy.yml) → `databricks bundle deploy` das camadas;
+- [`deploy-function.yml`](../.github/workflows/deploy-function.yml) → publica o código da
+  **Function App** (com build remoto Oryx das dependências Python).
+
+Assim o deploy cobre **infra (Bicep) + jobs (bundles) + código da Function** — cada um
+como etapa versionada e auditável.
 
 ---
 

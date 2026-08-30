@@ -14,22 +14,23 @@ Bundle independente.
 ```mermaid
 flowchart LR
     subgraph Ingestao
-      FN[Azure Functions<br/>Timer + SPN] -->|eventos JSON| EH[(Event Hubs<br/>ura / calls / surveys)]
+      FN[Azure Functions<br/>Timer + MI] -->|eventos JSON| EH[(Event Hubs<br/>ura / calls / surveys)]
     end
     subgraph Bronze
-      EH -->|readStream AvailableNow| B[(Delta Bronze<br/>+ CDF)]
+      EH -->|readStream AvailableNow| B[(Delta Bronze<br/>append-only)]
       DIM[Faker dims] --> B
     end
     subgraph Silver
-      B -->|Change Data Feed stream| S[(Delta Silver<br/>foreachBatch MERGE)]
+      B -->|stream Delta| S[(Delta Silver<br/>foreachBatch MERGE)]
       CKPT[(checkpoint)] <-->|progresso| S
     end
     subgraph Gold
       S -->|agregação D-1| G[(Delta Gold<br/>visões)]
     end
     G --> BI[Dashboards / BI]
-    B & S & G -.->|métricas| MON[Azure Monitor]
-    KV[Key Vault] -.->|secrets| FN
+    S -.->|DQ + métricas de dataset| DM[(Delta<br/>__dq_results / __dataset_metrics)]
+    INFRA[Recursos Azure] -.->|métricas/logs| MON[Azure Monitor / App Insights]
+    KV[Key Vault] -.->|secrets SPN consumer| B
     UC[Unity Catalog<br/>governança/PII] --- B & S & G
 ```
 
@@ -37,20 +38,20 @@ flowchart LR
 
 Uma **Azure Function** com **TimerTrigger** gera eventos sintéticos coerentes —
 URA, derivações e pesquisas mantêm o mesmo `id_chamada` — e os envia para três
-**Event Hubs** distintos. A autenticação usa uma **Service Principal (SPN)** cujos
-segredos ficam no **Key Vault**, lidos via **Managed Identity** (a Function nunca
-guarda segredo em configuração). Detalhes em [Ingestão](ingestion.md).
+**Event Hubs** distintos. A autenticação usa a **Managed Identity** do Function App
+(papel *Azure Event Hubs Data Sender*): envio por OAuth, sem SAS keys e sem segredo em
+configuração ou no Key Vault. Detalhes em [Ingestão](ingestion.md).
 
 ## 2. Bronze (landing)
 
 Um job Databricks (**`Trigger.AvailableNow`**) consome cada Event Hub e grava na Bronze em
-**Delta com CDF habilitado**. As dimensões são geradas em paralelo. A Bronze é
-**imutável**: nenhuma transformação de negócio acontece aqui.
+**Delta**. As dimensões são geradas em paralelo. A Bronze é **imutável / append-only**:
+nenhuma transformação de negócio acontece aqui.
 
 ## 3. Silver (Bronze → Silver)
 
-Job diário que consome o **CDF** da Bronze por **streaming `AvailableNow` +
-checkpoint**, faz o parse do JSON cru, normaliza nomes e tipos, deriva colunas de
+Job diário que consome a Bronze (append-only) como **stream Delta + checkpoint**
+(`AvailableNow`), faz o parse do JSON cru, normaliza nomes e tipos, deriva colunas de
 data e aplica **MERGE idempotente** via `foreachBatch`. Ver [Processamento](processing.md).
 
 ## 4. Gold (Silver → Gold)

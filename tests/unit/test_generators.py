@@ -4,7 +4,7 @@ from datetime import date
 
 import pytest
 from faker import Faker
-from generators.calls import gerar_fato_chamada_humana
+from generators.calls import AREAS, area_do_assistente, gerar_fato_chamada_humana
 from generators.surveys import gerar_fato_pesquisa_satisfacao
 from generators.ura import OpcoesURA, gerar_eventos_ura
 
@@ -59,7 +59,7 @@ def test_surveys_data_envio_eh_date_iso():
         parsed = date.fromisoformat(s["data_envio"])
         assert isinstance(parsed, date)
         assert "T" not in s["data_envio"]
-        assert 1 <= s["nota"] <= 10
+        assert 0 <= s["nota"] <= 10
 
 
 def test_surveys_apenas_para_derivadas():
@@ -67,3 +67,19 @@ def test_surveys_apenas_para_derivadas():
     surveys = gerar_fato_pesquisa_satisfacao(ura)
     ids_derivados = {e["id_chamada"] for e in ura if e["derivado_atendimento"]}
     assert {s["id_chamada"] for s in surveys} <= ids_derivados
+
+
+def test_area_deterministica_por_assistente():
+    # a mesma regra da dim_assistentes: id → área (determinística, ciclando as áreas)
+    assert area_do_assistente(1) == AREAS[0]
+    assert area_do_assistente(len(AREAS) + 1) == AREAS[0]
+    assert all(area_do_assistente(i) in AREAS for i in range(1, 25))
+
+
+def test_calls_area_coerente_com_assistente():
+    # em qualquer evento de atendimento, a área bate com a do assistente (coerência
+    # com a dimensão): um assistente nunca aparece com áreas diferentes.
+    ura = gerar_eventos_ura()
+    calls = gerar_fato_chamada_humana(ura)
+    for c in calls:
+        assert c["area_atendimento"] == area_do_assistente(c["id_assistente"])

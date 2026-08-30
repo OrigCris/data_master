@@ -103,8 +103,9 @@ def mask_dataframe(df: DataFrame, columns: Mapping[str, str]) -> DataFrame:
         if col not in out.columns:
             continue
         if kind == "date":
-            # Generaliza a data de nascimento para o ano (reduz risco de reidentificação).
-            out = out.withColumn(col, F.year(F.col(col)).cast("string"))
+            # Generaliza a data de nascimento para o ano (1º de janeiro), como o column
+            # mask do catálogo — mantém o tipo DATE e reduz o risco de reidentificação.
+            out = out.withColumn(col, F.trunc(F.col(col), "year"))
         else:
             out = out.withColumn(col, masker.get(kind, masker["redact"])(F.col(col)))
     return out
@@ -131,13 +132,25 @@ RETURN CASE WHEN is_account_group_member('{privileged_group}') THEN v
 CREATE OR REPLACE FUNCTION {fqn}.mask_name(v STRING)
 RETURN CASE WHEN is_account_group_member('{privileged_group}') THEN v
             ELSE concat(split(v, ' ')[0], ' ***') END;
+
+-- Data de nascimento generalizada para o ano (trunc → 1º de janeiro), preservando o
+-- tipo DATE exigido pelo column mask e reduzindo o risco de reidentificação.
+CREATE OR REPLACE FUNCTION {fqn}.mask_data_nascimento(v DATE)
+RETURN CASE WHEN is_account_group_member('{privileged_group}') THEN v
+            ELSE trunc(v, 'YEAR') END;
 """.strip()
 
 
 def apply_column_masks_sql(catalog: str, schema: str, table: str, columns: Iterable[str]) -> str:
     """SQL que aplica as funções de mask às colunas sensíveis de uma tabela."""
     fqn = f"{catalog}.{schema}.{table}"
-    func_map = {"cpf": "mask_cpf", "email": "mask_email", "nome": "mask_name", "nomeAssistente": "mask_name"}
+    func_map = {
+        "cpf": "mask_cpf",
+        "email": "mask_email",
+        "nome": "mask_name",
+        "nomeAssistente": "mask_name",
+        "data_nascimento": "mask_data_nascimento",
+    }
     stmts = []
     for col in columns:
         fn = func_map.get(col)

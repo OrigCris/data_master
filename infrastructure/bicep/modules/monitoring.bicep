@@ -48,4 +48,5 @@ resource ag 'Microsoft.Insights/actionGroups@2023-01-01' = {
 
 output workspaceId string = law.id
 output actionGroupId string = ag.id
+output appInsightsId string = appi.id
 output appInsightsConnectionString string = appi.properties.ConnectionString
