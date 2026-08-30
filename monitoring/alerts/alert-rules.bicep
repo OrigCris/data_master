@@ -1,5 +1,6 @@
 // Regras de alerta (Azure Monitor) para a saúde do pipeline.
-// Deploy independente do main.bicep (após os recursos existirem):
+// Provisionadas pelo main.bicep (módulo `alerts`). Também executável de forma
+// independente, para manutenção/testes:
 //   az deployment group create -g <rg> -f monitoring/alerts/alert-rules.bicep \
 //     -p eventHubNamespaceId=<id> appInsightsId=<id> actionGroupId=<id>
 @description('Resource ID do namespace Event Hubs')
