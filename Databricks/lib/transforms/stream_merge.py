@@ -123,6 +123,7 @@ class SilverStream:
 
     def _recompute_with_history(
         self,
+        session: SparkSession,
         staged: DataFrame,
         target_fqn: str,
         keys: Sequence[str],
@@ -137,14 +138,18 @@ class SilverStream:
         derivadas (serão recalculadas), sobrepõe pelas linhas novas (`keys`) e chama
         `recompute` sobre o conjunto completo. Como o alvo é a fonte da verdade, um
         evento atrasado é reconciliado corretamente sem *watermark* e sem perda.
+
+        Usa a sessão do micro-batch (`session`) para ler o alvo — dentro de
+        `foreachBatch` o `staged` pertence a uma sessão clonada, e o join precisa
+        acontecer na mesma sessão.
         """
         recompute_keys = list(recompute_keys)
         keys = list(keys)
-        if not self.spark.catalog.tableExists(target_fqn):
+        if not session.catalog.tableExists(target_fqn):
             return recompute(staged)
 
         touched = staged.select(*recompute_keys).distinct()
-        existing = self.spark.table(target_fqn).join(touched, recompute_keys, "left_semi")
+        existing = session.table(target_fqn).join(touched, recompute_keys, "left_semi")
         derived = [c for c in existing.columns if c not in staged.columns]
         existing_base = existing.drop(*derived) if derived else existing
         # linhas novas ganham das antigas de mesma chave; as demais do histórico entram
@@ -193,6 +198,10 @@ class SilverStream:
         def _batch(micro_df: DataFrame, batch_id: int) -> None:
             if micro_df.isEmpty():
                 return
+            # Dentro de foreachBatch o micro-batch pertence a uma sessão CLONADA; usar
+            # essa sessão em tudo (leitura do alvo, temp view, MERGE) evita "view não
+            # encontrada" e joins entre sessões diferentes.
+            session = micro_df.sparkSession
             changes = micro_df
             if contract_schema is not None:
                 changes, quarantined = validate_contract(
@@ -208,15 +217,15 @@ class SilverStream:
                     return
             staged = transform(changes)
             if recompute is not None and recompute_keys:
-                staged = self._recompute_with_history(staged, target_fqn, keys, recompute, recompute_keys)
+                staged = self._recompute_with_history(session, staged, target_fqn, keys, recompute, recompute_keys)
             if expectations:
                 from quality import run_expectations  # lazy: evita acoplar o import do módulo
                 report = run_expectations(staged, expectations, dataset=target_fqn)
                 print(report.summary())
                 if dq_results_table:
-                    report.to_table(self.spark, dq_results_table)
+                    report.to_table(session, dq_results_table)
                 report.raise_if_critical_failed()
-            merge_upsert(self.spark, target_fqn, staged, keys, cluster_by=cluster_by)
+            merge_upsert(session, target_fqn, staged, keys, cluster_by=cluster_by)
 
         query = (
             self.read_stream(source_fqn)
