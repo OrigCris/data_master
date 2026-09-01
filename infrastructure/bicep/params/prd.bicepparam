@@ -1,7 +1,7 @@
 using '../main.bicep'
 
 param namePrefix = 'cjtecprd001'
-param location = 'eastus2'
+param location = 'westus'
 param tags = {
   project: 'data-master'
   domain: 'callcenter'

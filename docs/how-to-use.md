@@ -4,35 +4,37 @@ Passo a passo para colocar a plataforma em pé e rodar o pipeline ponta a ponta.
 
 ## 1. Provisionar a infraestrutura
 ```bash
-az group create -n rsgcjtecprd001 -l eastus2
+az group create -n rsgcjtecprd001 -l westus
 dm provision -g rsgcjtecprd001 --what-if    # revisar
 dm provision -g rsgcjtecprd001              # aplicar
 ```
 O Bicep cria Storage, Event Hubs, Key Vault, Function App, Databricks, observabilidade,
-RBAC (incl. a MI da Function → *Data Sender*) e as app settings. Em seguida rode o
-**bootstrap** de identidade/segredos (o que o Bicep não faz — a SPN consumidora):
+RBAC (incl. a MI da Function → *Data Sender*) e as app settings. Em seguida rode a
+etapa de identidade/segredos (o que o Bicep não faz — a SPN consumidora):
 ```bash
-bash infrastructure/bootstrap.sh            # cria a SPN consumidora e popula o Key Vault
+dm setup-spn -g rsgcjtecprd001              # cria a SPN consumidora e popula o Key Vault
 ```
 
 ## 2. Preparar o Unity Catalog
-Autentique o profile do Databricks CLI (uma vez) na URL do workspace provisionado —
-os bundles usam `profile: prd`, então o host **não** fica no repo:
+Configure o profile do Databricks CLI (uma vez) — resolve o host do workspace no Azure
+e grava o `~/.databrickscfg` (os bundles usam `profile: prd`, então o host **não** fica
+no repo):
 ```bash
-databricks auth login --host https://adb-<seu_id>.azuredatabricks.net --profile prd
+dm setup-databricks -g rsgcjtecprd001
 ```
-> A criação do **secret scope AKV-backed** (passo seguinte) exige um token do Entra ID
-> (Azure AD) — um PAT não satisfaz. Com `az login` ativo, garanta que o bloco `[prd]`
-> do `~/.databrickscfg` use `auth_type = azure-cli`; assim a CLI repassa o token do
-> Azure. Alternativa: criar o scope pela UI do workspace.
+> Grava `auth_type = azure-cli`: a autenticação reaproveita o `az login` (sem browser à
+> parte) e fornece o token do Entra ID que o **secret scope AKV-backed** (passo seguinte)
+> exige — um PAT não satisfaz. Após um rebuild do RG, rode de novo para atualizar o host.
 
 Provisione o Unity Catalog (secret scope + storage credential + external location +
 catalog), sem operação manual no workspace:
 ```bash
-bash Databricks/essential/setup_unity_catalog.sh
+dm setup-catalog -g rsgcjtecprd001
 ```
+> Reconciliador: após um rebuild do RG, rodar de novo reaponta a storage credential
+> para o Access Connector recriado (sem tocar em external location, catalog ou schemas).
 > Requer o **metastore** do Unity Catalog já atribuído ao workspace — etapa de
-> *account admin*, no nível da conta (a única fora dos scripts).
+> *account admin*, no nível da conta (a única fora do CLI).
 
 Crie os schemas por camada (e os **Volumes de checkpoint** do streaming):
 - `Databricks/essential/create_databases.ipynb`

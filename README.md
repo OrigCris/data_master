@@ -78,7 +78,7 @@ Complementos: [ADRs](docs/adrs) · [Runbooks](docs/runbooks) · [Relatório do c
 │   └── lib/         # transforms · quality · security (compartilhado e TESTADO)
 ├── docs/            # documentação (+ adrs, runbooks)
 ├── function_app/    # produtor de eventos (Azure Functions)
-├── infrastructure/  # Bicep modular + bootstrap
+├── infrastructure/  # Bicep modular (SPN consumidora via `dm setup-spn`)
 ├── monitoring/      # dashboard + alertas (Azure Monitor)
 └── tests/           # pytest (unit) — geradores, transforms, PII, CLI
 ```
@@ -89,10 +89,10 @@ Complementos: [ADRs](docs/adrs) · [Runbooks](docs/runbooks) · [Relatório do c
 # 0) Dependências de dev + testes
 pip install -r tests/requirements-dev.txt && pytest -q
 
-# 1) Infra (Bicep modular) + bootstrap de identidade/segredos
+# 1) Infra (Bicep modular) + SPN consumidora/segredos
 pip install -e cli/
 dm provision -g rsgcjtecprd001          # Bicep: recursos + RBAC + app settings
-bash infrastructure/bootstrap.sh        # SPN consumidora + segredos (o que o Bicep não faz)
+dm setup-spn -g rsgcjtecprd001          # SPN consumidora + segredos (o que o Bicep não faz)
 
 # 2) Deploy dos jobs e execução do pipeline
 dm deploy all                            # bronze → silver → gold → orchestration

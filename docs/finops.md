@@ -7,7 +7,7 @@ Gestão de custos com **Azure Cost Management**. O objetivo é tornar o custo
 
 | Componente | Driver de custo | Alavanca de otimização |
 |---|---|---|
-| Databricks | DBU × tempo de cluster | **`AvailableNow`** (micro-batch agendado) + `autotermination 20 min` + clusters pequenos (`Standard_D4ps_v6`, 1 worker) |
+| Databricks | DBU × tempo de cluster | **`AvailableNow`** (micro-batch agendado) + `autotermination 20 min` + clusters pequenos (`Standard_D4ds_v6`, 1 worker) |
 | Event Hubs | throughput units + retenção | plano `Standard`; retenção dimensionada ao SLA |
 | ADLS Gen2 | GB armazenados + transações | Delta `OPTIMIZE` + liquid clustering (menos arquivos) |
 | Function App | execuções | plano de Consumo `Y1` (escala a zero, cobra por execução); produção controlada por TimerTrigger |
