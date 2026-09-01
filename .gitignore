@@ -14,5 +14,8 @@ dist/
 # Bicep
 *.json.bicep
 
+# Databricks Asset Bundles (estado local: terraform state, artefatos de deploy)
+.databricks/
+
 .claude
 .vscode

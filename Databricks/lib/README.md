@@ -33,8 +33,8 @@ from quality import Expectation
 
 stream = SilverStream(spark)
 stream.run(
-    source_fqn="prd.b_dm_callcenter.ura_once",
-    target_fqn="prd.s_dm_callcenter.tabe_ura_anlt",
+    source_table_fqn="prd.b_dm_callcenter.ura_once",
+    target_table_fqn="prd.s_dm_callcenter.tabe_ura_anlt",
     transform=transform,                       # callable: micro_df -> staged_df
     keys=["ID_CHAM"],
     checkpoint_location="/Volumes/.../checkpoints/silver/tabe_ura_anlt",

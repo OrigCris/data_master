@@ -48,7 +48,7 @@ documentação detalhada está em [`docs/architecture.md`](../docs/architecture.
 
 | Decisão | Motivação | ADR |
 |---|---|---|
-| Medallion com Delta + Unity Catalog | ACID, time-travel, CDF e governança nativos | [0001](../docs/adrs/0001-medallion-delta-uc.md) |
+| Medallion com Delta + Unity Catalog | ACID, time-travel e governança nativos | [0001](../docs/adrs/0001-medallion-delta-uc.md) |
 | Silver incremental via streaming Delta + checkpoint | Incremental; at-least-once no `foreachBatch` com idempotência pelo MERGE por chave | [0002](../docs/adrs/0002-incremental-streaming.md) |
 | Processamento agendado (AvailableNow) | Custo muito menor que streaming 24/7 | [0003](../docs/adrs/0003-scheduled-availablenow.md) |
 | Event Hubs | High-throughput + integração Spark | [0004](../docs/adrs/0004-eventhubs-vs-servicebus.md) |
@@ -70,11 +70,11 @@ Trade-offs e limitações conhecidas estão registrados com transparência em
 ## 6. Qualidade de engenharia
 
 - **Testes** unitários (pytest) cobrindo geradores, helpers de transformação,
-  mascaramento de PII e a CLI (sem cluster Spark), mais **integração** (CDF/checkpoint/MERGE).
+  mascaramento de PII e a CLI (sem cluster Spark), mais **integração** (streaming/checkpoint/MERGE).
 - **CI** (GitHub Actions): lint (ruff), testes unit+integração, **security scan**
   (bandit/pip-audit) e validação de bundles e de Bicep.
 - **Deploy** (manual, `environment: prd`): bundles do Databricks e **código da Function**
-  (build remoto Oryx). A infraestrutura é IaC (Bicep); o deploy do código da Function é
+  (build remoto no Flex Consumption). A infraestrutura é IaC (Bicep); o deploy do código da Function é
   etapa própria, também no pipeline.
 - **Código compartilhado** (`Databricks/lib`): o padrão streaming/MERGE é centralizado
   em `transforms.SilverStream` e exercitado por testes no CI.

@@ -11,13 +11,12 @@ formato e **Unity Catalog** como catálogo/governança, no Azure Databricks.
 
 ## Alternativas consideradas
 - **Apache Iceberg + catálogo externo** — ótimo, mas menos integrado ao Databricks
-  no Azure; CDF/time-travel exigiriam mais peças.
-- **Parquet puro + Hive Metastore** — sem ACID, sem CDF nativo, sem governança
-  centralizada.
+  no Azure; recursos transacionais exigiriam mais peças.
+- **Parquet puro + Hive Metastore** — sem ACID e sem governança centralizada.
 
 ## Consequências
-- (+) ACID, time-travel e **Change Data Feed** nativos (disponíveis se uma fonte
-  mutável precisar; a Bronze append-only é consumida por streaming Delta direto).
+- (+) ACID e time-travel nativos; a Bronze append-only é consumida por streaming
+  Delta direto.
 - (+) Catálogo, **lineage** e **column masking** centralizados no Unity Catalog.
 - (−) Acoplamento ao ecossistema Databricks.
 

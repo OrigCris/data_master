@@ -104,7 +104,7 @@ class ObservabilityReport:
 
 
 # ------------------------------ parte Spark ---------------------------------- #
-def _read_history(spark: SparkSession, metrics_table: str, dataset: str, metric: str, before: date, window: int) -> list[float]:
+def _read_history(spark: SparkSession, metrics_table: str, target_table_fqn: str, metric: str, before: date, window: int) -> list[float]:
     """Lê os valores da métrica nas últimas `window` **datas** anteriores a `before`.
 
     Consolida uma linha por `observed_date` (o valor da execução mais recente daquela
@@ -115,7 +115,7 @@ def _read_history(spark: SparkSession, metrics_table: str, dataset: str, metric:
         return []
     hist = (
         spark.table(metrics_table)
-        .filter((F.col("dataset") == dataset) & (F.col("metric") == metric))
+        .filter((F.col("dataset") == target_table_fqn) & (F.col("metric") == metric))
         .filter(F.col("observed_date") < F.lit(before))
         .groupBy("observed_date")
         .agg(F.expr("max_by(metric_value, observed_at)").alias("metric_value"))
@@ -127,8 +127,7 @@ def _read_history(spark: SparkSession, metrics_table: str, dataset: str, metric:
 
 def run_observability(
     spark: SparkSession,
-    table_fqn: str,
-    dataset: str,
+    target_table_fqn: str,
     metrics_table: str,
     *,
     date_col: str,
@@ -150,13 +149,13 @@ def run_observability(
     sinaliza, não interrompe o pipeline — mas pode ser elevada a `critical`.
     """
     lo, hi = volume_bounds
-    tbl = spark.table(table_fqn)
+    tbl = spark.table(target_table_fqn)
 
     observed = tbl.agg(F.max(date_col).alias("d")).collect()[0]["d"]
     observed_date = observed if observed is not None else date.today()
     current_volume = tbl.filter(F.col(date_col) == F.lit(observed_date)).count()
 
-    baseline = rolling_average(_read_history(spark, metrics_table, dataset, "row_count", observed_date, window))
+    baseline = rolling_average(_read_history(spark, metrics_table, target_table_fqn, "row_count", observed_date, window))
     is_anom, vol_detail = volume_anomaly(current_volume, baseline, lo=lo, hi=hi)
 
     results = [
@@ -178,7 +177,7 @@ def run_observability(
             detail = f"freshness={freshness_minutes:.0f}min{limite}"
         results.append(ObservationResult("freshness_minutes", freshness_minutes, freshness_severity, not stale, detail))
 
-    report = ObservabilityReport(dataset=dataset, observed_date=observed_date, results=results)
+    report = ObservabilityReport(dataset=target_table_fqn, observed_date=observed_date, results=results)
     _persist_metrics(spark, metrics_table, report)
     return report
 

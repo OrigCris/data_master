@@ -26,7 +26,7 @@
 # Uso: az login && ./bootstrap.sh
 # =============================================================================
 set -euo pipefail
-
+export MSYS_NO_PATHCONV=1
 # ----------------------------- Variáveis -------------------------------------
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 ACCOUNT_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv)
@@ -53,13 +53,13 @@ az keyvault set-policy \
 # Contributor e sem atribuição genérica no Resource Group.
 EXISTING_APP_ID=$(az ad sp list --display-name "$SPN_CONSUMER" --query "[0].appId" -o tsv)
 if [ -z "$EXISTING_APP_ID" ]; then
-  DTB_SP_DETAILS=$(az ad sp create-for-rbac \
+  # --query "[...]" -o tsv devolve os três campos separados por TAB numa linha; o
+  # `read` os quebra sem depender de jq (o `az` é o único pré-requisito do script).
+  read -r DTB_SP_APP_ID DTB_SP_SECRET DTB_TENANT_ID < <(az ad sp create-for-rbac \
       --name "$SPN_CONSUMER" \
       --role "Azure Event Hubs Data Receiver" \
-      --scopes "$EVENTHUB_NS_ID")
-  DTB_SP_APP_ID=$(echo "$DTB_SP_DETAILS" | jq -r '.appId')
-  DTB_SP_SECRET=$(echo "$DTB_SP_DETAILS" | jq -r '.password')
-  DTB_TENANT_ID=$(echo "$DTB_SP_DETAILS" | jq -r '.tenant')
+      --scopes "$EVENTHUB_NS_ID" \
+      --query "[appId,password,tenant]" -o tsv)
   echo "[+] SPN '$SPN_CONSUMER' criada (appId=$DTB_SP_APP_ID)"
 else
   DTB_SP_APP_ID="$EXISTING_APP_ID"

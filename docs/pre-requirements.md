@@ -17,7 +17,7 @@
 | Git | — | Versionamento |
 
 ## Quotas e SKUs (ambiente de demo)
-- ADLS Gen2 `Standard_LRS`; Event Hubs `Standard`; Function App plano `B1`;
+- ADLS Gen2 `Standard_LRS`; Event Hubs `Standard`; Function App plano de Consumo (`Y1`);
   Databricks `Premium`. Ajuste conforme o ambiente — ver [FinOps](finops.md).
 
 ## Verificação rápida

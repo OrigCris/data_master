@@ -64,11 +64,17 @@ else
 fi
 
 # ------------------------------- 4) Catalog ----------------------------------
+# ------------------------------- 4) Catalog ----------------------------------
+CATALOG_STORAGE="${LAKE_URL}managed/prd"
+
 if ${DBX} catalogs get "${CATALOG}" >/dev/null 2>&1; then
   echo "[=] catalog '${CATALOG}' já existe"
 else
-  ${DBX} catalogs create "${CATALOG}"
-  echo "[+] catalog '${CATALOG}' criado"
+  ${DBX} catalogs create --json "{
+    \"name\": \"${CATALOG}\",
+    \"storage_root\": \"${CATALOG_STORAGE}\"
+  }"
+  echo "[+] catalog '${CATALOG}' criado com managed storage em '${CATALOG_STORAGE}'"
 fi
 
 echo "[OK] Unity Catalog pronto. Em seguida rode o notebook essential/create_databases."
