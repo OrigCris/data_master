@@ -1,7 +1,7 @@
 """CLI `dm` — orquestra o ciclo de vida do Data Master (Azure).
 
 Comandos:
-    dm provision      Provisiona a infraestrutura (Bicep).
+    dm provision      Cria o Resource Group e provisiona a infraestrutura (Bicep).
     dm setup-spn      Cria/rotaciona a SPN consumidora (Databricks → Event Hubs) e
                       popula o Key Vault (Entra ID/Graph — o que o Bicep não faz).
     dm setup-databricks  Configura o profile `prd` do Databricks CLI (host do workspace
@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import configparser
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -110,18 +111,33 @@ def _json_body(text: str, default):
     return default
 
 
+def _bicep_location(default: str = "westus") -> str:
+    """Lê a região do `.bicepparam` (fonte única) para criar o Resource Group."""
+    try:
+        text = (REPO_ROOT / BICEP_PARAMS).read_text(encoding="utf-8")
+        m = re.search(r"param\s+location\s*=\s*'([^']+)'", text)
+        return m.group(1) if m else default
+    except OSError:
+        return default
+
+
 @app.command()
 def provision(
     resource_group: str = typer.Option(..., "--resource-group", "-g"),
     what_if: bool = typer.Option(False, help="Apenas pré-visualiza (az what-if)."),
     dry_run: bool = typer.Option(False, help="Imprime os comandos sem executar."),
 ):
-    """Provisiona a infraestrutura via Bicep modular."""
+    """Cria o Resource Group (idempotente) e provisiona a infraestrutura via Bicep."""
+    location = _bicep_location()
+    # O deployment é escopo de RG (what-if inclusive), então o grupo precisa existir.
+    # `az group create` é idempotente — no-op se já existe com a mesma região.
+    code = _run(["az", "group", "create", "-n", resource_group, "-l", location], cwd=REPO_ROOT, dry_run=dry_run)
+    if code != 0:
+        raise typer.Exit(code)
     cmd = (bicep_whatif_cmd if what_if else bicep_deploy_cmd)(
         resource_group, BICEP_TEMPLATE, BICEP_PARAMS
     )
-    code = _run(cmd, cwd=REPO_ROOT, dry_run=dry_run)
-    raise typer.Exit(code)
+    raise typer.Exit(_run(cmd, cwd=REPO_ROOT, dry_run=dry_run))
 
 
 @app.command(name="setup-spn")
