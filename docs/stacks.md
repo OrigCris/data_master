@@ -39,8 +39,8 @@ camadas por nome (variável `lookup`), então elas precisam já existir no works
 
 O Bicep cuida de **todos os recursos de plataforma + RBAC**. A criação dos
 **Service Principals** (Entra ID) e o **seed de segredos** dependem do Microsoft
-Graph e de credenciais rotativas — ficam no bootstrap
-[`bootstrap.sh`](../infrastructure/bootstrap.sh), executado após o Bicep.
+Graph e de credenciais rotativas — ficam no comando `dm setup-spn`, executado após
+o Bicep.
 
 ## CI/CD (portão de qualidade)
 

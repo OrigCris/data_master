@@ -4,13 +4,13 @@
 - Assinatura Azure ativa com permissão para criar Resource Groups e recursos.
 - Função **Owner** ou **Contributor + User Access Administrator** no escopo do RG
   (necessário para criar *role assignments* via Bicep).
-- Permissão para criar **Service Principals** no Entra ID (bootstrap de segredos).
+- Permissão para criar **Service Principals** no Entra ID (`dm setup-spn`).
 - **Unity Catalog** habilitado no workspace Databricks (catálogo `prd`).
 
 ## Ferramentas locais
 | Ferramenta | Versão | Uso |
 |---|---|---|
-| Azure CLI (`az`) | ≥ 2.60 | Provisionamento / bootstrap |
+| Azure CLI (`az`) | ≥ 2.60 | Provisionamento / SPN consumidora |
 | Bicep | ≥ 0.27 | IaC (`az bicep`) |
 | Databricks CLI | ≥ 0.220 | Asset Bundles |
 | Python | 3.11 | Function App, libs, CLI, testes |

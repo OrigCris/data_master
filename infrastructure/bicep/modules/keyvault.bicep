@@ -4,7 +4,7 @@
 // modelo de *access policy* — ele não suporta o modelo Azure RBAC no Key Vault. Como o
 // Databricks lê os segredos da SPN consumidora por um AKV-backed scope, o vault precisa
 // estar nesse modelo. As policies (operador → Set; SP "AzureDatabricks" → Get/List) são
-// aplicadas pelo bootstrap, pois dependem de object ids resolvidos via Microsoft Graph.
+// aplicadas pelo dm setup-spn, pois dependem de object ids resolvidos via Microsoft Graph.
 @description('Nome do Key Vault')
 param name string
 param location string
@@ -18,7 +18,7 @@ resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
     sku: { family: 'A', name: 'standard' }
     tenantId: subscription().tenantId
     enableRbacAuthorization: false      // access policy: exigido pelo AKV-backed scope
-    accessPolicies: []                  // populadas pelo bootstrap (Set / Get-List)
+    accessPolicies: []                  // populadas pelo dm setup-spn (Set / Get-List)
     enableSoftDelete: true
     softDeleteRetentionInDays: 7
     publicNetworkAccess: 'Enabled'

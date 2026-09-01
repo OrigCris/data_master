@@ -42,7 +42,7 @@ resources:
           new_cluster:
             spark_version: 15.4.x-scala2.12
             data_security_mode: USER_ISOLATION
-            node_type_id: Standard_D4ps_v6
+            node_type_id: Standard_D4ds_v6
             num_workers: 1
           
       tasks:
@@ -91,7 +91,7 @@ resources:
             spark_version: 15.4.x-scala2.12
             data_security_mode: SINGLE_USER
             single_user_name: ${var.RUN_AS_USER}
-            node_type_id: Standard_D4ps_v6
+            node_type_id: Standard_D4ds_v6
             num_workers: 1
 
       tasks:
