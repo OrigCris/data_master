@@ -26,18 +26,11 @@ resources:
     gold-job:
       name: "gold-job"
       # Sem schedule próprio: é orquestrado por dependência (bundle orchestration).
-      job_clusters:
-        - job_cluster_key: cluster-job-dm-gold
-          new_cluster:
-            spark_version: 15.4.x-scala2.12
-            data_security_mode: USER_ISOLATION
-            node_type_id: Standard_D4ds_v6
-            num_workers: 1
 
       tasks:
         - task_key: create_visao_assistentes_gold
           description: Cria/atualiza os dados da tabela visao_assistentes
-          job_cluster_key: cluster-job-dm-gold
+          existing_cluster_id: <ID_CLUSTER>
           notebook_task:
             notebook_path: ./notebooks/visao_assistentes.ipynb
             base_parameters:
@@ -49,7 +42,7 @@ resources:
 
         - task_key: create_visao_ura_calls_gold
           description: Cria/atualiza os dados da tabela visao_ura_calls
-          job_cluster_key: cluster-job-dm-gold
+          existing_cluster_id: <ID_CLUSTER>
           notebook_task:
             notebook_path: ./notebooks/visao_ura_calls.ipynb
             base_parameters:

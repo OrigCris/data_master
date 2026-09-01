@@ -36,16 +36,9 @@ resources:
     # após `dm setup-catalog` e antes dos jobs das camadas.
     setup-databases:
       name: "setup-databases"
-      job_clusters:
-        - job_cluster_key: cluster-essential
-          new_cluster:
-            spark_version: 15.4.x-scala2.12
-            data_security_mode: USER_ISOLATION
-            node_type_id: Standard_D4ds_v6
-            num_workers: 1
       tasks:
         - task_key: create_databases
-          job_cluster_key: cluster-essential
+          existing_cluster_id: <ID_CLUSTER>
           notebook_task:
             notebook_path: ./create_databases.ipynb
           timeout_seconds: 0
@@ -54,16 +47,9 @@ resources:
     # existirem na Bronze (job bronze-dim).
     apply-pii-masks:
       name: "apply-pii-masks"
-      job_clusters:
-        - job_cluster_key: cluster-essential
-          new_cluster:
-            spark_version: 15.4.x-scala2.12
-            data_security_mode: USER_ISOLATION
-            node_type_id: Standard_D4ds_v6
-            num_workers: 1
       tasks:
         - task_key: apply_pii_masks
-          job_cluster_key: cluster-essential
+          existing_cluster_id: <ID_CLUSTER>
           notebook_task:
             notebook_path: ./apply_pii_masks.ipynb
             base_parameters:
@@ -77,16 +63,9 @@ resources:
     # Benchmark reprodutível (ad-hoc). Parâmetros pelos widgets do notebook.
     benchmark:
       name: "benchmark"
-      job_clusters:
-        - job_cluster_key: cluster-essential
-          new_cluster:
-            spark_version: 15.4.x-scala2.12
-            data_security_mode: USER_ISOLATION
-            node_type_id: Standard_D4ds_v6
-            num_workers: 1
       tasks:
         - task_key: benchmark
-          job_cluster_key: cluster-essential
+          existing_cluster_id: <ID_CLUSTER>
           notebook_task:
             notebook_path: ./benchmark.ipynb
           libraries:
