@@ -37,7 +37,7 @@ quantidade/número · `IN_` indicador · `VL_`/`PC_` valor/percentual · `DS_` d
 │   └── lib/              # transforms, quality, security (compartilhado/testado)
 ├── docs/                 # esta documentação (+ adrs, runbooks)
 ├── function_app/         # produtor de eventos (Azure Functions)
-├── infrastructure/       # Bicep modular + bootstrap
+├── infrastructure/       # Bicep modular (SPN consumidora via `dm setup-spn`)
 ├── monitoring/           # dashboard + alertas
 └── tests/                # pytest (unit)
 ```

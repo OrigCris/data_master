@@ -10,7 +10,7 @@
 //     -p infrastructure/bicep/params/prd.bicepparam
 //
 // Observação de fronteira: a criação da Service Principal consumidora (Entra ID) e o
-// seed de secrets no Key Vault permanecem no bootstrap, pois exigem Microsoft Graph e
+// seed de secrets no Key Vault ficam no `dm setup-spn`, pois exigem Microsoft Graph e
 // segredos rotativos — fora do escopo declarativo do ARM. O produtor usa a Managed
 // Identity do Function App (papel Data Sender atribuído aqui, via RBAC).
 // =============================================================================

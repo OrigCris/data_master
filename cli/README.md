@@ -15,12 +15,16 @@ dm --help
 | Comando | O que faz |
 |---|---|
 | `dm provision -g <rg>` | Provisiona a infraestrutura via Bicep modular (`--what-if` para pré-visualizar). |
+| `dm setup-spn -g <rg>` | Cria/rotaciona a SPN consumidora (Databricks → Event Hubs) e popula o Key Vault — Entra ID/Graph, o que o Bicep não faz. Idempotente. |
+| `dm setup-databricks -g <rg>` | Configura o profile `prd` do Databricks CLI (host do workspace + `auth_type = azure-cli`) no `~/.databrickscfg`. Reconciliador. |
+| `dm setup-catalog -g <rg>` | Provisiona/reconcilia o Unity Catalog: secret scope AKV, storage credential, external location e catalog `prd`. Reconciliador. |
 | `dm deploy [all\|layer_bronze\|layer_silver\|layer_gold]` | Publica os Databricks Asset Bundles na ordem das camadas. |
 | `dm run <job> -l <layer>` | Dispara um job de um bundle (ex.: `dm run bronze-streaming -l layer_bronze`). |
 | `dm validate` | Valida todos os bundles — bronze/silver/gold/orchestration (`databricks bundle validate`). |
 | `dm info` | Mostra a configuração resolvida. |
 
-Use `--dry-run` em qualquer comando para imprimir os comandos sem executá-los.
+Use `--dry-run` nos comandos de Bicep/bundles (`provision`/`deploy`/`run`/`validate`)
+para imprimir os comandos sem executá-los.
 
 ## Design
 
