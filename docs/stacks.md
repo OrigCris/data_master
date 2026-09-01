@@ -59,7 +59,7 @@ A promoção para produção é explícita e por acionamento manual (`workflow_d
 `environment: prd`) — evita deploy acidental:
 - [`deploy.yml`](../.github/workflows/deploy.yml) → `databricks bundle deploy` das camadas;
 - [`deploy-function.yml`](../.github/workflows/deploy-function.yml) → publica o código da
-  **Function App** (com build remoto Oryx das dependências Python).
+  **Function App** (com build remoto das dependências Python no Flex Consumption).
 
 Assim o deploy cobre **infra (Bicep) + jobs (bundles) + código da Function** — cada um
 como etapa versionada e auditável.

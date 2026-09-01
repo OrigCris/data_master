@@ -44,7 +44,6 @@ resources:
             data_security_mode: USER_ISOLATION
             node_type_id: Standard_D4ps_v6
             num_workers: 1
-            autotermination_minutes: 20
           
       tasks:
         - task_key: create_dim_clientes
@@ -94,7 +93,6 @@ resources:
             single_user_name: ${var.RUN_AS_USER}
             node_type_id: Standard_D4ps_v6
             num_workers: 1
-            autotermination_minutes: 20
 
       tasks:
         - task_key: ingest_ura
@@ -152,4 +150,5 @@ resources:
           timeout_seconds: 0
 
 targets:
-  default: {}
+  prd:
+    default: true

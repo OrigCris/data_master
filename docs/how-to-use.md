@@ -4,7 +4,7 @@ Passo a passo para colocar a plataforma em pé e rodar o pipeline ponta a ponta.
 
 ## 1. Provisionar a infraestrutura
 ```bash
-az group create -n rsgcjtecprd001 -l brazilsouth
+az group create -n rsgcjtecprd001 -l eastus2
 dm provision -g rsgcjtecprd001 --what-if    # revisar
 dm provision -g rsgcjtecprd001              # aplicar
 ```
@@ -16,12 +16,16 @@ bash infrastructure/bootstrap.sh            # cria a SPN consumidora e popula o 
 ```
 
 ## 2. Preparar o Unity Catalog
-Configure o profile do Databricks CLI (uma vez) com a URL do workspace provisionado —
+Autentique o profile do Databricks CLI (uma vez) na URL do workspace provisionado —
 os bundles usam `profile: prd`, então o host **não** fica no repo:
 ```bash
-databricks configure --profile prd --host https://adb-<seu_id>.azuredatabricks.net
-# (informe o token quando pedido)
+databricks auth login --host https://adb-<seu_id>.azuredatabricks.net --profile prd
 ```
+> A criação do **secret scope AKV-backed** (passo seguinte) exige um token do Entra ID
+> (Azure AD) — um PAT não satisfaz. Com `az login` ativo, garanta que o bloco `[prd]`
+> do `~/.databrickscfg` use `auth_type = azure-cli`; assim a CLI repassa o token do
+> Azure. Alternativa: criar o scope pela UI do workspace.
+
 Provisione o Unity Catalog (secret scope + storage credential + external location +
 catalog), sem operação manual no workspace:
 ```bash

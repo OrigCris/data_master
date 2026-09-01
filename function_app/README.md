@@ -72,8 +72,8 @@ func start
 ## 🚀 Deploy
 
 No CI (recomendado), pelo workflow [`deploy-function.yml`](../.github/workflows/deploy-function.yml)
-(`workflow_dispatch`, `environment: prd`), que publica com **build remoto Oryx** das
-dependências. Localmente:
+(`workflow_dispatch`, `environment: prd`), que publica com **build remoto** das
+dependências (Flex Consumption). Localmente:
 
 ```bash
 func azure functionapp publish funccjtecprd001

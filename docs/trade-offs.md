@@ -16,7 +16,7 @@ Esta página registra as decisões mais relevantes, suas alternativas e os
 ### Silver incremental por streaming Delta + checkpoint ([ADR-0002](adrs/0002-incremental-streaming.md))
 - **Decisão**: a Silver consome a Bronze (append-only) como **stream Delta** por
   **`AvailableNow` + `foreachBatch` MERGE**, com o **checkpoint** controlando o
-  progresso. Sem CDF: numa fonte append-only ele não agrega nada (ver ADR-0002).
+  progresso (ver ADR-0002).
 - **Trade-off**: o progresso fica no checkpoint (opaco). Com `foreachBatch` a escrita é
   **at-least-once**; a não-duplicidade não é assumida pelo checkpoint e sim garantida
   pelo **MERGE idempotente por chave de negócio** (o sink absorve retries).
@@ -32,7 +32,7 @@ Esta página registra as decisões mais relevantes, suas alternativas e os
 ## Plataforma
 
 ### Delta + Unity Catalog ([ADR-0001](adrs/0001-medallion-delta-uc.md))
-- ACID, time-travel e CDF nativos; catálogo, governança e lineage centralizados.
+- ACID e time-travel nativos; catálogo, governança e lineage centralizados.
 
 ### Event Hubs ([ADR-0004](adrs/0004-eventhubs-vs-servicebus.md))
 - **Event Hubs** (não Service Bus) por ser otimizado para *high-throughput

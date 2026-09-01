@@ -10,7 +10,7 @@ Padrão `<tipo><app><amb><seq>`, ex.: `stacjtecprd001` (storage), `evhnscjtecprd
 | `sta` | Storage Account |
 | `evhns` / `evh` | Event Hubs namespace / hub |
 | `akv` | Key Vault |
-| `func` / `asp` | Function App / App Service Plan |
+| `func` / `asp` | Function App / plano da Function (Consumo) |
 | `dbw` | Databricks Workspace |
 | `log` / `appi` / `ag` | Log Analytics / App Insights / Action Group |
 
