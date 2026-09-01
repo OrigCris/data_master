@@ -37,7 +37,6 @@ resources:
             data_security_mode: USER_ISOLATION
             node_type_id: Standard_D4ps_v6
             num_workers: 1
-            autotermination_minutes: 20
 
       tasks:
         - task_key: create_ura_silver

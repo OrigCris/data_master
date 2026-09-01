@@ -9,7 +9,7 @@ O consumo Bronze→Silver é feito por **Structured Streaming** lendo a Bronze c
 **fonte de streaming Delta** (`readStream.format("delta")`), com **`Trigger.AvailableNow`**
 (processa todo o backlog em micro-batches e encerra) e **`foreachBatch`** aplicando
 **MERGE** idempotente. Como a Bronze é **append-only**, o stream já entrega só as linhas
-novas — não é preciso Change Data Feed (ver [ADR-0002](adrs/0002-incremental-streaming.md)).
+novas (ver [ADR-0002](adrs/0002-incremental-streaming.md)).
 O **checkpoint** controla o progresso por fonte. Como uso `foreachBatch`, a escrita é
 **at-least-once**; a ausência de duplicidade vem do **MERGE por chave de negócio**,
 projetado para ser idempotente em reexecuções.
@@ -21,8 +21,8 @@ from transforms import SilverStream
 
 stream = SilverStream(spark)
 stream.run(
-    source_fqn="prd.b_dm_callcenter.ura_once",
-    target_fqn="prd.s_dm_callcenter.tabe_ura_anlt",
+    source_table_fqn="prd.b_dm_callcenter.ura_once",
+    target_table_fqn="prd.s_dm_callcenter.tabe_ura_anlt",
     transform=transform,                       # parse + normalização (callable)
     keys=["ID_CHAM"],
     checkpoint_location="/Volumes/.../checkpoints/silver/tabe_ura_anlt",
@@ -90,8 +90,8 @@ checks = [
 ]
 
 SilverStream(spark).run(
-    source_fqn="prd.b_dm_callcenter.surveys_once",
-    target_fqn="prd.s_dm_callcenter.tabe_pesq_ura",
+    source_table_fqn="prd.b_dm_callcenter.surveys_once",
+    target_table_fqn="prd.s_dm_callcenter.tabe_pesq_ura",
     transform=transform,
     keys=["ID_CHAM"],
     checkpoint_location="/Volumes/.../checkpoints/silver/tabe_pesq_ura",

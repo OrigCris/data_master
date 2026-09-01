@@ -16,7 +16,7 @@ Exemplo:
         Expectation.between("VL_NOTA", 1, 10),
         Expectation.accepted_values("IN_AUTN", [True, False]),
     ]
-    report = run_expectations(df, checks, dataset="silver.tabe_ura_anlt")
+    report = run_expectations(df, checks, "prd.s_dm_callcenter.tabe_ura_anlt")
     report.raise_if_critical_failed()
     report.to_table(spark, "prd.s_dm_callcenter.__dq_results")
 """
@@ -144,10 +144,11 @@ class QualityReport:
         df.write.format("delta").mode("append").saveAsTable(table_fqn)
 
 
-def run_expectations(df: DataFrame, checks: Sequence[Expectation], dataset: str) -> QualityReport:
+def run_expectations(df: DataFrame, checks: Sequence[Expectation], target_table_fqn: str) -> QualityReport:
     """Executa todas as expectations e devolve o relatório consolidado.
 
-    Faz `cache()` no DataFrame para evitar reprocessar a cada checagem.
+    `target_table_fqn` identifica o dataset checado (vira a coluna `dataset` no
+    histórico). Faz `cache()` no DataFrame para não reprocessar a cada checagem.
     """
     df.cache()
     try:
@@ -157,4 +158,4 @@ def run_expectations(df: DataFrame, checks: Sequence[Expectation], dataset: str)
         ]
     finally:
         df.unpersist()
-    return QualityReport(dataset=dataset, results=results)
+    return QualityReport(dataset=target_table_fqn, results=results)

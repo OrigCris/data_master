@@ -16,7 +16,7 @@ do Unity Catalog, com **MANAGED LOCATION** por camada no ADLS Gen2.
   acrescenta `ingestion_ts`/`ingestion_date`.
 - **Dimensões**: geradas sinteticamente (Faker) e gravadas como tabelas managed.
 - **Append-only**: como só cresce por append, é consumida pela Silver como **fonte de
-  streaming Delta direto** — sem Change Data Feed (ver [ADR-0002](adrs/0002-incremental-streaming.md)).
+  streaming Delta direto** (ver [ADR-0002](adrs/0002-incremental-streaming.md)).
 - **Liquid clustering** por `ingestion_date`.
 
 ## Silver — incremental e idempotente
@@ -39,7 +39,7 @@ execução reescreve apenas a partição do dia, mantendo o histórico. Clusteri
 
 ## Por que Delta + Unity Catalog?
 
-O **Delta Lake** entrega ACID, time-travel e CDF nativos, e o **Unity Catalog**
+O **Delta Lake** entrega ACID e time-travel nativos, e o **Unity Catalog**
 centraliza catálogo, governança e *lineage* — ver [Trade-offs](trade-offs.md).
 
 ---

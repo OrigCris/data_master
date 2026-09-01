@@ -27,7 +27,7 @@ def spark(tmp_path_factory):
     warehouse = tmp_path_factory.mktemp("warehouse")
     builder = (
         SparkSession.builder.master("local[2]")
-        .appName("it-silver-cdf")
+        .appName("it-silver-stream")
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
         .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
         .config("spark.sql.warehouse.dir", str(warehouse))
@@ -59,7 +59,7 @@ def test_stream_checkpoint_merge_idempotente(spark, tmp_path):
     silver = "spark_catalog.it.silver_ura"
     checkpoint = str(tmp_path / "ckpt")
 
-    # Bronze append-only: consumida como fonte de streaming Delta direto (sem CDF).
+    # Bronze append-only: consumida como fonte de streaming Delta direto.
     spark.sql(f"CREATE TABLE {bronze} (body STRING) USING DELTA")
     _append_events(spark, bronze, [("1", "a"), ("2", "b"), ("3", "c")])
 

@@ -19,7 +19,7 @@ organizado em **módulos por domínio**. O bootstrap de identidade/segredos
 ## Deploy
 
 ```bash
-az group create -n rsgcjtecprd001 -l brazilsouth
+az group create -n rsgcjtecprd001 -l eastus2
 
 # Pré-visualização (what-if)
 az deployment group what-if -g rsgcjtecprd001 \

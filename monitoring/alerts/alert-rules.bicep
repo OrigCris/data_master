@@ -61,7 +61,8 @@ resource funcFailures 'Microsoft.Insights/metricAlerts@2018-03-01' = {
           metricName: 'exceptions/count'
           operator: 'GreaterThan'
           threshold: 0
-          timeAggregation: 'Total'
+          // exceptions/count só admite a agregação Count (contagem de exceções).
+          timeAggregation: 'Count'
           criterionType: 'StaticThresholdCriterion'
         }
       ]
