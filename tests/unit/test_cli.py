@@ -2,7 +2,6 @@
 import pytest
 from dm.builders import (
     ALL_BUNDLES,
-    LAYERS,
     bicep_deploy_cmd,
     build_pipeline_plan,
     bundle_deploy_cmd,
@@ -20,6 +19,7 @@ def test_resolve_layers_all_inclui_orquestracao():
 def test_resolve_layers_single():
     assert resolve_layers("layer_silver") == ["layer_silver"]
     assert resolve_layers("orchestration") == ["orchestration"]
+    assert resolve_layers("essential") == ["essential"]
 
 
 def test_resolve_layers_invalid():
@@ -47,6 +47,11 @@ def test_pipeline_plan_ordena_bundles_com_orquestracao_por_ultimo():
     plan = build_pipeline_plan(resolve_layers("all"), "prd")
     dirs = [d for d, _ in plan]
     assert dirs == [layer_dir(b) for b in ALL_BUNDLES]
-    assert dirs[0].endswith("layer_bronze")
-    assert dirs[len(LAYERS) - 1].endswith("layer_gold")
+    assert dirs[0].endswith("essential")
     assert dirs[-1].endswith("orchestration")
+    # camadas na ordem bronze → silver → gold, entre essential e orquestração.
+    assert (
+        dirs.index(layer_dir("layer_bronze"))
+        < dirs.index(layer_dir("layer_silver"))
+        < dirs.index(layer_dir("layer_gold"))
+    )

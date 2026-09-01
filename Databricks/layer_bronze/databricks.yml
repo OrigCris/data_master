@@ -44,7 +44,7 @@ resources:
             data_security_mode: USER_ISOLATION
             node_type_id: Standard_D4ds_v6
             num_workers: 1
-          
+
       tasks:
         - task_key: create_dim_clientes
           description: Cria/atualiza a dimensão de clientes (Bronze)

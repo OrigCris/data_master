@@ -1,0 +1,94 @@
+bundle:
+  name: essential-callcenter
+
+# Bundle de bootstrap/operação pontual do Unity Catalog: sobe os notebooks essenciais
+# como jobs SEM schedule, para rodar sob demanda via CLI (`dm run <job> -l essential`)
+# — sem import manual pela UI. Cada job usa job cluster próprio.
+
+variables:
+  CATALOG:       { default: prd }
+  BRONZE_SCHEMA: { default: b_dm_callcenter }
+  PRIV_GROUP:    { default: dm_pii_readers }
+
+sync:
+  include:
+    - "*.ipynb"
+
+workspace:
+  # Host resolvido pelo profile do Databricks CLI (~/.databrickscfg), fora do versionamento.
+  profile: prd
+
+# A lib compartilhada vira wheel e é anexada aos jobs que a importam (apply_pii_masks,
+# benchmark), tornando `security`/`transforms` importáveis sem depender de Repos.
+artifacts:
+  dm_lib:
+    type: whl
+    path: ../lib
+    build: python -m build --wheel
+
+targets:
+  prd:
+    default: true
+
+resources:
+  jobs:
+    # Cria os schemas (b_/s_/g_dm_callcenter) e os Volumes de checkpoint. Rodar UMA vez,
+    # após `dm setup-catalog` e antes dos jobs das camadas.
+    setup-databases:
+      name: "setup-databases"
+      job_clusters:
+        - job_cluster_key: cluster-essential
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            data_security_mode: USER_ISOLATION
+            node_type_id: Standard_D4ds_v6
+            num_workers: 1
+      tasks:
+        - task_key: create_databases
+          job_cluster_key: cluster-essential
+          notebook_task:
+            notebook_path: ./create_databases.ipynb
+          timeout_seconds: 0
+
+    # Cria e aplica as column masks de PII nas dimensões. Rodar após as dimensões
+    # existirem na Bronze (job bronze-dim).
+    apply-pii-masks:
+      name: "apply-pii-masks"
+      job_clusters:
+        - job_cluster_key: cluster-essential
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            data_security_mode: USER_ISOLATION
+            node_type_id: Standard_D4ds_v6
+            num_workers: 1
+      tasks:
+        - task_key: apply_pii_masks
+          job_cluster_key: cluster-essential
+          notebook_task:
+            notebook_path: ./apply_pii_masks.ipynb
+            base_parameters:
+              catalog:          ${var.CATALOG}
+              bronze_schema:    ${var.BRONZE_SCHEMA}
+              privileged_group: ${var.PRIV_GROUP}
+          libraries:
+            - whl: ../lib/dist/*.whl
+          timeout_seconds: 0
+
+    # Benchmark reprodutível (ad-hoc). Parâmetros pelos widgets do notebook.
+    benchmark:
+      name: "benchmark"
+      job_clusters:
+        - job_cluster_key: cluster-essential
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            data_security_mode: USER_ISOLATION
+            node_type_id: Standard_D4ds_v6
+            num_workers: 1
+      tasks:
+        - task_key: benchmark
+          job_cluster_key: cluster-essential
+          notebook_task:
+            notebook_path: ./benchmark.ipynb
+          libraries:
+            - whl: ../lib/dist/*.whl
+          timeout_seconds: 0
