@@ -47,7 +47,9 @@ a cada execução; a quarentena cresce quando um evento não respeita o contrato
 
 ## Telemetria no código
 - A Function App loga contagens de envio por hub (`extra={"counts": {...}}`).
-- O notebook Bronze imprime `numInputRows`/`batchDuration` do último batch.
+- O notebook Bronze imprime as **linhas gravadas no run** (via `numOutputRows` do commit
+  Delta) e o total acumulado — no `AvailableNow`, o `numInputRows` do stream pode vir 0
+  mesmo com dados processados, então o commit transacional do Delta é a fonte de verdade.
 - A Data Quality grava resultados em `__dq_results`; a observabilidade grava métricas
   em `__dataset_metrics`; ambos servem de auditoria histórica.
 

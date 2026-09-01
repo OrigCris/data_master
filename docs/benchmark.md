@@ -37,7 +37,7 @@ Três cenários isolam o efeito do **volume** (A→B) e do **paralelismo** (B→
 
 | Eixo | O que medir | Onde ler |
 |---|---|---|
-| **Latência de ingestão** | Event Hubs → Bronze (`AvailableNow`) | `numInputRows`/`batchDuration` do `lastProgress` |
+| **Latência de ingestão** | Event Hubs → Bronze (`AvailableNow`) | `numOutputRows` do commit Delta / `batchDuration` do run |
 | **Throughput Silver** | linhas/s no MERGE incremental | `__benchmark_results.throughput_rows_s` |
 | **Custo por execução** | DBU × tempo | [FinOps](finops.md) |
 | **Eficiência de leitura** | arquivos varridos na Gold | *data skipping* (liquid clustering + `replaceWhere`) |

@@ -10,13 +10,15 @@ from collections.abc import Sequence
 
 LAYERS = ("layer_bronze", "layer_silver", "layer_gold")
 ORCHESTRATION = "orchestration"
-# Ordem de deploy: camadas primeiro; a orquestração por último, pois resolve os
-# job ids das camadas por nome (lookup) — eles precisam já existir.
-ALL_BUNDLES = (*LAYERS, ORCHESTRATION)
+ESSENTIAL = "essential"
+# Ordem de deploy: `essential` primeiro (schemas/volumes/PII, bootstrap one-off);
+# camadas no meio; a orquestração por último, pois resolve os job ids das camadas
+# por nome (lookup) — eles precisam já existir.
+ALL_BUNDLES = (ESSENTIAL, *LAYERS, ORCHESTRATION)
 
 
 def resolve_layers(layer: str) -> list[str]:
-    """Expande 'all' para todos os bundles (camadas + orquestração); valida nomes."""
+    """Expande 'all' para todos os bundles (essential + camadas + orquestração); valida nomes."""
     if layer == "all":
         return list(ALL_BUNDLES)
     if layer in ALL_BUNDLES:

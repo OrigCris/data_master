@@ -4,10 +4,11 @@ Passo a passo para colocar a plataforma em pé e rodar o pipeline ponta a ponta.
 
 ## 1. Provisionar a infraestrutura
 ```bash
-az group create -n rsgcjtecprd001 -l westus
 dm provision -g rsgcjtecprd001 --what-if    # revisar
 dm provision -g rsgcjtecprd001              # aplicar
 ```
+O `provision` **cria o Resource Group** (idempotente, na região do `.bicepparam`) e
+aplica o Bicep — não precisa de `az group create` à parte.
 O Bicep cria Storage, Event Hubs, Key Vault, Function App, Databricks, observabilidade,
 RBAC (incl. a MI da Function → *Data Sender*) e as app settings. Em seguida rode a
 etapa de identidade/segredos (o que o Bicep não faz — a SPN consumidora):
@@ -27,7 +28,7 @@ dm setup-databricks -g rsgcjtecprd001
 > exige — um PAT não satisfaz. Após um rebuild do RG, rode de novo para atualizar o host.
 
 Provisione o Unity Catalog (secret scope + storage credential + external location +
-catalog), sem operação manual no workspace:
+catalog).
 ```bash
 dm setup-catalog -g rsgcjtecprd001
 ```
@@ -36,25 +37,30 @@ dm setup-catalog -g rsgcjtecprd001
 > Requer o **metastore** do Unity Catalog já atribuído ao workspace — etapa de
 > *account admin*, no nível da conta (a única fora do CLI).
 
-Crie os schemas por camada (e os **Volumes de checkpoint** do streaming):
-- `Databricks/essential/create_databases.ipynb`
+Crie os schemas e os **Volumes de checkpoint** publicando o bundle `essential` e
+rodando o job (não agendado) — sem import manual pela UI:
+```bash
+dm deploy essential
+dm run setup-databases -l essential
+```
+> Cria os schemas `b_/s_/g_dm_callcenter` e os **Volumes gerenciados** `checkpoints`
+> (Bronze e Silver). A Silver controla o progresso pelo **checkpoint** do streaming, em
+> `/Volumes/prd/s_dm_callcenter/checkpoints/silver` (o subdiretório é criado na primeira
+> execução; o Volume, aqui).
 
-> O notebook cria os schemas `b_/s_/g_dm_callcenter` e os **Volumes gerenciados**
-> `checkpoints` (Bronze e Silver). A Silver controla o progresso pelo **checkpoint** do
-> streaming, em `/Volumes/prd/s_dm_callcenter/checkpoints/silver` (o subdiretório é
-> criado na primeira execução; o Volume, aqui).
-
-E aplique a governança de PII (após criar as dimensões na Bronze), por um dos
-caminhos:
-- notebook `Databricks/essential/apply_pii_masks.ipynb` (usa a lib `security`), ou
-- SQL estático em `database/ddl/004_governance.sql`.
+A governança de PII (após as dimensões existirem na Bronze) roda pelo mesmo bundle:
+```bash
+dm run apply-pii-masks -l essential
+```
+> Alternativa declarativa equivalente: o SQL estático em `database/ddl/004_governance.sql`.
 
 ## 3. Deploy dos jobs
 Com o profile `prd` já configurado (passo 2), publique:
 ```bash
-dm deploy all          # bronze → silver → gold → orchestration
+dm deploy all          # essential → bronze → silver → gold → orchestration
 ```
-A orquestração entra por último (resolve os job ids das camadas por nome).
+A orquestração entra por último (resolve os job ids das camadas por nome). O `essential`
+já foi publicado no passo 2, mas `all` o inclui de novo (idempotente).
 
 ## 4. Produzir e ingerir dados
 - Faça o deploy da **Function App** (`function_app/`) — o TimerTrigger passa a
