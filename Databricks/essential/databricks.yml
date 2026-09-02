@@ -39,18 +39,25 @@ resources:
       name: "setup-databases"
       tasks:
         - task_key: create_databases
-          existing_cluster_id: 0902-204343-vxrvf73n
+          job_cluster_key: cluster-essential
           notebook_task:
             notebook_path: ./create_databases.ipynb
           timeout_seconds: 0
 
-    # Cria as funções de mask de PII no Unity Catalog. Rodar antes das dimensões (que
-    # aplicam as máscaras às próprias colunas).
-    setup-pii-functions:
-      name: "setup-pii-functions"
+    # Cria e aplica as column masks de PII nas dimensões. Rodar após as dimensões
+    # existirem na Bronze (job bronze-dim).
+    apply-pii-masks:
+      name: "apply-pii-masks"
+      job_clusters:
+        - job_cluster_key: cluster-essential
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            data_security_mode: USER_ISOLATION
+            node_type_id: Standard_D4ds_v6
+            num_workers: 1
       tasks:
-        - task_key: setup_pii_functions
-          existing_cluster_id: 0902-204343-vxrvf73n
+        - task_key: apply_pii_masks
+          job_cluster_key: cluster-essential
           notebook_task:
             notebook_path: ./setup_pii_functions.ipynb
             base_parameters:
@@ -66,7 +73,7 @@ resources:
       name: "benchmark"
       tasks:
         - task_key: benchmark
-          existing_cluster_id: 0902-204343-vxrvf73n
+          job_cluster_key: cluster-essential
           notebook_task:
             notebook_path: ./benchmark.ipynb
           libraries:

@@ -30,7 +30,11 @@ resources:
       tasks:
         - task_key: create_ura_silver
           description: Cria/atualiza os dados da tabela TABE_URA_ANLT (silver)
+<<<<<<< HEAD
           existing_cluster_id: 0902-204343-vxrvf73n
+=======
+          existing_cluster_id: <ID_CLUSTER>
+>>>>>>> 073beb1a6f5e37e3982397ead33c39ca6bfe3d25
           notebook_task:
             notebook_path: ./notebooks/silver_ura.ipynb
           libraries:
@@ -39,7 +43,11 @@ resources:
 
         - task_key: create_calls_silver
           description: Cria/atualiza os dados da tabela TABE_CALLS (silver)
+<<<<<<< HEAD
           existing_cluster_id: 0902-204343-vxrvf73n
+=======
+          existing_cluster_id: <ID_CLUSTER>
+>>>>>>> 073beb1a6f5e37e3982397ead33c39ca6bfe3d25
           notebook_task:
             notebook_path: ./notebooks/silver_calls.ipynb
           libraries:
@@ -48,7 +56,11 @@ resources:
 
         - task_key: create_surveys_silver
           description: Cria/atualiza os dados da tabela TABE_PESQ_URA (silver)
+<<<<<<< HEAD
           existing_cluster_id: 0902-204343-vxrvf73n
+=======
+          existing_cluster_id: <ID_CLUSTER>
+>>>>>>> 073beb1a6f5e37e3982397ead33c39ca6bfe3d25
           notebook_task:
             notebook_path: ./notebooks/silver_pesq_ura.ipynb
           libraries:

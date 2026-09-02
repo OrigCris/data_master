@@ -48,7 +48,11 @@ resources:
       tasks:
         - task_key: create_dim_clientes
           description: Cria/atualiza a dimensão de clientes (Bronze)
+<<<<<<< HEAD
           existing_cluster_id: 0902-204343-vxrvf73n
+=======
+          existing_cluster_id: <ID_CLUSTER>
+>>>>>>> 073beb1a6f5e37e3982397ead33c39ca6bfe3d25
           notebook_task:
             notebook_path: ${workspace.root_path}/files/notebooks/bronze_dim_clientes
             base_parameters:
@@ -63,7 +67,11 @@ resources:
 
         - task_key: create_dim_assistentes
           description: Cria/atualiza a dimensão de assistentes (Bronze)
+<<<<<<< HEAD
           existing_cluster_id: 0902-204343-vxrvf73n
+=======
+          existing_cluster_id: <ID_CLUSTER>
+>>>>>>> 073beb1a6f5e37e3982397ead33c39ca6bfe3d25
           notebook_task:
             notebook_path: ${workspace.root_path}/files/notebooks/bronze_dim_assistentes
             base_parameters:
@@ -91,7 +99,11 @@ resources:
       tasks:
         - task_key: ingest_ura
           description: "Event Hubs → Bronze: ura (AvailableNow)"
+<<<<<<< HEAD
           existing_cluster_id: 0902-204343-vxrvf73n
+=======
+          existing_cluster_id: <ID_CLUSTER>
+>>>>>>> 073beb1a6f5e37e3982397ead33c39ca6bfe3d25
           notebook_task:
             notebook_path: ${var.STREAM_NOTEBOOK}
             base_parameters:
@@ -111,7 +123,11 @@ resources:
 
         - task_key: ingest_calls
           description: "Event Hubs → Bronze: calls (AvailableNow)"
+<<<<<<< HEAD
           existing_cluster_id: 0902-204343-vxrvf73n
+=======
+          existing_cluster_id: <ID_CLUSTER>
+>>>>>>> 073beb1a6f5e37e3982397ead33c39ca6bfe3d25
           notebook_task:
             notebook_path: ${var.STREAM_NOTEBOOK}
             base_parameters:
@@ -131,7 +147,11 @@ resources:
 
         - task_key: ingest_surveys
           description: "Event Hubs → Bronze: surveys (AvailableNow)"
+<<<<<<< HEAD
           existing_cluster_id: 0902-204343-vxrvf73n
+=======
+          existing_cluster_id: <ID_CLUSTER>
+>>>>>>> 073beb1a6f5e37e3982397ead33c39ca6bfe3d25
           notebook_task:
             notebook_path: ${var.STREAM_NOTEBOOK}
             base_parameters:

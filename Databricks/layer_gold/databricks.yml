@@ -28,7 +28,11 @@ resources:
       tasks:
         - task_key: create_visao_assistentes_gold
           description: Cria/atualiza os dados da tabela visao_assistentes
+<<<<<<< HEAD
           existing_cluster_id: 0902-204343-vxrvf73n
+=======
+          existing_cluster_id: <ID_CLUSTER>
+>>>>>>> 073beb1a6f5e37e3982397ead33c39ca6bfe3d25
           notebook_task:
             notebook_path: ./notebooks/visao_assistentes.ipynb
             base_parameters:
@@ -40,7 +44,11 @@ resources:
 
         - task_key: create_visao_ura_calls_gold
           description: Cria/atualiza os dados da tabela visao_ura_calls
+<<<<<<< HEAD
           existing_cluster_id: 0902-204343-vxrvf73n
+=======
+          existing_cluster_id: <ID_CLUSTER>
+>>>>>>> 073beb1a6f5e37e3982397ead33c39ca6bfe3d25
           notebook_task:
             notebook_path: ./notebooks/visao_ura_calls.ipynb
             base_parameters:
