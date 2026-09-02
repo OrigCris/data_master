@@ -37,16 +37,9 @@ resources:
     # reexecutável de forma idempotente (CREATE ... IF NOT EXISTS).
     setup-databases:
       name: "setup-databases"
-      job_clusters:
-        - job_cluster_key: cluster-essential
-          new_cluster:
-            spark_version: 15.4.x-scala2.12
-            data_security_mode: USER_ISOLATION
-            node_type_id: Standard_D4ds_v6
-            num_workers: 1
       tasks:
         - task_key: create_databases
-          job_cluster_key: cluster-essential
+          existing_cluster_id: 0902-204343-vxrvf73n
           notebook_task:
             notebook_path: ./create_databases.ipynb
           timeout_seconds: 0
@@ -55,16 +48,9 @@ resources:
     # aplicam as máscaras às próprias colunas).
     setup-pii-functions:
       name: "setup-pii-functions"
-      job_clusters:
-        - job_cluster_key: cluster-essential
-          new_cluster:
-            spark_version: 15.4.x-scala2.12
-            data_security_mode: USER_ISOLATION
-            node_type_id: Standard_D4ds_v6
-            num_workers: 1
       tasks:
         - task_key: setup_pii_functions
-          job_cluster_key: cluster-essential
+          existing_cluster_id: 0902-204343-vxrvf73n
           notebook_task:
             notebook_path: ./setup_pii_functions.ipynb
             base_parameters:
@@ -78,16 +64,9 @@ resources:
     # Benchmark reprodutível (ad-hoc). Parâmetros pelos widgets do notebook.
     benchmark:
       name: "benchmark"
-      job_clusters:
-        - job_cluster_key: cluster-essential
-          new_cluster:
-            spark_version: 15.4.x-scala2.12
-            data_security_mode: USER_ISOLATION
-            node_type_id: Standard_D4ds_v6
-            num_workers: 1
       tasks:
         - task_key: benchmark
-          job_cluster_key: cluster-essential
+          existing_cluster_id: 0902-204343-vxrvf73n
           notebook_task:
             notebook_path: ./benchmark.ipynb
           libraries:

@@ -8,6 +8,7 @@ Comandos:
                       + auth via Azure CLI) no ~/.databrickscfg.
     dm setup-catalog  Provisiona/reconcilia o Unity Catalog (secret scope, storage
                       credential, external location e catalog).
+    dm create-cluster Cria/reutiliza um cluster all-purpose e imprime o cluster_id.
     dm deploy LAYER   Publica os Databricks Asset Bundles
                       (essential/bronze/silver/gold/orchestration/all).
     dm run JOB        Dispara um job de um bundle.
@@ -207,10 +208,12 @@ def setup_databricks(
 ):
     """Configura o profile do Databricks CLI no ~/.databrickscfg.
 
-    Resolve o host do workspace no Azure e grava o profile com `auth_type = azure-cli`:
-    a autenticação reaproveita o `az login` (sem browser à parte) e fornece o token do
-    Entra ID que o AKV-backed secret scope exige (um PAT não satisfaz). Reconciliador —
-    cria o profile se falta, atualiza o host se o workspace mudou (ex.: rebuild do RG),
+    Resolve o host do workspace no Azure e grava o profile com `auth_type = azure-cli`
+    e o `azure_tenant_id` do `az login`: a autenticação reaproveita o `az login` (sem
+    browser à parte) e fornece o token do Entra ID que o AKV-backed secret scope exige
+    (um PAT não satisfaz); o tenant é fixado porque a auto-descoberta da CLI Databricks
+    pode extrair um valor inválido do host. Reconciliador — reescreve a seção a cada
+    execução, atualizando host e tenant se o workspace mudou (ex.: rebuild do RG) e
     preservando os demais profiles. Requer `az login` e o workspace já provisionado.
     """
     # A extensão 'databricks' do az resolve o host do workspace (idempotente).
@@ -218,6 +221,10 @@ def setup_databricks(
     url = _az(["databricks", "workspace", "show", "-g", resource_group, "-n", workspace,
                "--query", "workspaceUrl", "-o", "tsv"], capture=True)
     host = f"https://{url}"
+    # Tenant fixado explicitamente: sem ele, a CLI Databricks tenta auto-descobrir o tenant
+    # sondando o host e, em alguns workspaces, extrai um valor inválido (ex.: 'login.html'),
+    # quebrando o azure-cli auth. O tenant do `az login` é a fonte correta.
+    tenant = _az(["account", "show", "--query", "tenantId", "-o", "tsv"], capture=True)
 
     cfg_path = Path.home() / ".databrickscfg"
     cfg = configparser.ConfigParser()
@@ -232,11 +239,12 @@ def setup_databricks(
     cfg.add_section(profile)
     cfg.set(profile, "host", host)
     cfg.set(profile, "auth_type", "azure-cli")
+    cfg.set(profile, "azure_tenant_id", tenant)
     with cfg_path.open("w", encoding="utf-8") as fh:
         cfg.write(fh)
 
     verb = "atualizado" if existed else "criado"
-    typer.secho(f"✓ profile [{profile}] {verb} em {cfg_path} (host={host}, auth_type=azure-cli)", fg=typer.colors.GREEN)
+    typer.secho(f"✓ profile [{profile}] {verb} em {cfg_path} (host={host}, auth_type=azure-cli, tenant fixado)", fg=typer.colors.GREEN)
     typer.secho(f"  valide com: databricks --profile {profile} current-user me", fg=typer.colors.BRIGHT_BLACK)
 
 
@@ -345,6 +353,79 @@ def setup_catalog(
 
     typer.secho("✓ Unity Catalog pronto.", fg=typer.colors.GREEN)
     typer.secho("  Próximo passo: dm run setup-databases -l essential", fg=typer.colors.BRIGHT_BLACK)
+
+
+@app.command(name="create-cluster")
+def create_cluster(
+    name: str = typer.Option("dm-all-purpose", help="Nome do cluster all-purpose."),
+    node_type: str = typer.Option("Standard_D4ds_v6", help="SKU da VM dos nós."),
+    workers: int = typer.Option(1, help="Número de workers (0 = single node)."),
+    spark_version: str = typer.Option("15.4.x-scala2.12", help="Databricks Runtime (LTS)."),
+    autotermination: int = typer.Option(20, help="Minutos ociosos até o auto-desligamento."),
+    set_in_bundles: bool = typer.Option(True, "--set-in-bundles/--no-set-in-bundles",
+                                        help="Substitui o placeholder <ID_CLUSTER> dos bundles pelo id."),
+    profile: str = typer.Option("prd", "--profile", "-p"),
+):
+    """Cria (ou reutiliza) um cluster all-purpose e injeta o `cluster_id` nos bundles.
+
+    Cluster pequeno com `data_security_mode = SINGLE_USER` (exigido pelo Unity Catalog) e
+    autotermination curto (FinOps). Idempotente: se já existe um cluster com o mesmo nome,
+    devolve o id existente em vez de criar outro. Por padrão substitui o placeholder
+    `<ID_CLUSTER>` dos bundles (branch de teste) pelo id resolvido — use `--no-set-in-bundles`
+    para apenas imprimir. Requer o profile do Databricks configurado (`dm setup-databricks`).
+    """
+    def dbx(args, check=True):
+        return _dbx(args, profile=profile, check=check)
+
+    # Idempotência por nome: reaproveita um cluster homônimo em vez de duplicar.
+    listing = _json_body(dbx(["clusters", "list", "-o", "json"], check=False).stdout, [])
+    clusters = listing.get("clusters", []) if isinstance(listing, dict) else listing
+    existing = next((c for c in clusters if c.get("cluster_name") == name), None)
+    if existing:
+        cluster_id = existing["cluster_id"]
+        typer.secho(f"[=] cluster '{name}' já existe (cluster_id={cluster_id})", fg=typer.colors.YELLOW)
+    else:
+        # SINGLE_USER precisa do dono nomeado — o próprio usuário autenticado.
+        me = _json_body(dbx(["current-user", "me", "-o", "json"]).stdout, {})
+        owner = me.get("userName", "")
+        spec = {
+            "cluster_name": name,
+            "spark_version": spark_version,
+            "node_type_id": node_type,
+            "num_workers": workers,
+            "autotermination_minutes": autotermination,
+            "data_security_mode": "SINGLE_USER",
+            "single_user_name": owner,
+            "runtime_engine": "STANDARD",
+        }
+        created = _json_body(dbx(["clusters", "create", "--no-wait", "--json", json.dumps(spec)]).stdout, {})
+        cluster_id = created.get("cluster_id", "")
+        typer.secho(f"[+] cluster '{name}' criado (cluster_id={cluster_id}, {node_type}, {workers} worker(s))", fg=typer.colors.GREEN)
+
+    typer.secho(f"\n  cluster_id: {cluster_id}", fg=typer.colors.CYAN, bold=True)
+
+    if set_in_bundles:
+        _inject_cluster_id(cluster_id)
+    else:
+        typer.secho("  Para preencher os bundles depois: dm create-cluster (com --set-in-bundles)", fg=typer.colors.BRIGHT_BLACK)
+
+
+def _inject_cluster_id(cluster_id: str, placeholder: str = "<ID_CLUSTER>") -> None:
+    """Substitui o placeholder `<ID_CLUSTER>` pelo id nos databricks.yml dos bundles
+    (branch de teste). Cross-platform (sem grep/sed). No-op idempotente: se nenhum
+    bundle tem mais o placeholder, avisa que já estão preenchidos."""
+    bundles_root = REPO_ROOT / "Databricks"
+    touched = 0
+    for yml in bundles_root.glob("*/databricks.yml"):
+        text = yml.read_text(encoding="utf-8")
+        if placeholder in text:
+            yml.write_text(text.replace(placeholder, cluster_id), encoding="utf-8")
+            typer.secho(f"  [~] {yml.relative_to(REPO_ROOT)}: {placeholder} → {cluster_id}", fg=typer.colors.GREEN)
+            touched += 1
+    if touched:
+        typer.secho(f"✓ {touched} bundle(s) atualizados com o cluster_id.", fg=typer.colors.GREEN)
+    else:
+        typer.secho(f"  [=] nenhum bundle com '{placeholder}' (já preenchidos).", fg=typer.colors.BRIGHT_BLACK)
 
 
 @app.command()
