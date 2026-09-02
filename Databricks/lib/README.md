@@ -6,9 +6,9 @@ tanto pelos jobs no Databricks quanto pela suíte de testes local (`tests/`).
 
 | Pacote | Responsabilidade | Principais APIs |
 |---|---|---|
-| [`transforms/`](transforms) | Padrão incremental Bronze→Silver (streaming Delta + checkpoint + MERGE) e helpers de parsing/contrato. | `SilverStream`, `merge_upsert`, `parse_body`, `validate_contract`, `rename_columns`, `add_period_and_dates` |
+| [`transforms/`](transforms) | Padrão incremental Bronze→Silver (streaming Delta + checkpoint + MERGE), contratos versionados e helpers de estruturação. | `SilverStream`, `merge_upsert`, `merge_quarantine`, `contracts.contract_for`, `validate_contract`, `rename_columns`, `add_period_and_dates` |
 | [`quality/`](quality) | Framework de Data Quality declarativo com relatório e gate de criticidade. | `Expectation`, `run_expectations`, `QualityReport` |
-| [`security/`](security) | Mascaramento de PII (funções puras + Spark) e geração de *column masks* do Unity Catalog. | `mask_cpf`, `mask_email`, `mask_dataframe`, `column_mask_functions_sql` |
+| [`security/`](security) | Governança de PII: geradores de SQL das *column masks* do Unity Catalog. | `column_mask_functions_sql`, `apply_column_masks_sql` |
 
 ## Empacotamento e consumo
 
@@ -35,7 +35,7 @@ stream = SilverStream(spark)
 stream.run(
     source_table_fqn="prd.b_dm_callcenter.ura_once",
     target_table_fqn="prd.s_dm_callcenter.tabe_ura_anlt",
-    transform=transform,                       # callable: micro_df -> staged_df
+    transform=transform,                       # callable: eventos estruturados -> transformed_df
     keys=["ID_CHAM"],
     checkpoint_location="/Volumes/.../checkpoints/silver/tabe_ura_anlt",
     cluster_by=["CD_PERI", "DT_INIC", "ID_CHAM"],
@@ -44,5 +44,5 @@ stream.run(
 )
 ```
 
-> As funções puras (`build_merge_on`, `mask_cpf`, expectations) têm cobertura de
-> testes em [`tests/unit`](../../tests/unit) e rodam no CI sem cluster Spark.
+> As funções puras (`build_merge_on`, geradores de column mask, expectations) têm
+> cobertura de testes em [`tests/unit`](../../tests/unit) e rodam no CI sem cluster Spark.

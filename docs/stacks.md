@@ -13,7 +13,9 @@ revisável e aplicável com `what-if` isoladamente.
 | `keyvault.bicep` | Key Vault (access policy) | Segredos da SPN consumidora — modelo access policy exigido pelo AKV-backed secret scope |
 | `functionapp.bicep` | Function App + Plan + MI | Produção de eventos |
 | `databricks.bicep` | Workspace + Access Connector | Processamento + Unity Catalog |
-| `monitoring.bicep` | Log Analytics + App Insights + Action Group | Observabilidade |
+| `monitoring/core.bicep` | Log Analytics + App Insights + Action Group | Observabilidade (núcleo) |
+| `monitoring/alert-rules.bicep` | Metric alerts por severidade | Alertas como código |
+| `monitoring/workbook.bicep` (+ `workbook.json`) | Azure Workbook | Dashboard da jornada do dado |
 | `roles.bicep` | Role assignments | RBAC *least privilege* |
 
 O orquestrador [`main.bicep`](../infrastructure/bicep/main.bicep) compõe os módulos

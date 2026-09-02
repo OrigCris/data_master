@@ -46,29 +46,64 @@ CREATE TABLE IF NOT EXISTS prd.b_dm_callcenter.dim_assistentes (
 ) USING DELTA
 COMMENT 'Dimensão de assistentes com hierarquia (supervisor→gerente→superintendente).';
 
--- Landing de streaming (Event Hubs → Bronze). Mesmo contrato para ura/calls/surveys.
+-- Landing de streaming (Event Hubs → Bronze). O evento é parseado contra o contrato
+-- versionado da tabela (transforms.contracts): a Bronze guarda o payload original
+-- (raw_payload, auditável) E os campos já estruturados, mais os metadados do Event Hubs.
 -- Append-only: serve como fonte de streaming Delta direto para a Silver. Liquid
 -- clustering por data.
 CREATE TABLE IF NOT EXISTS prd.b_dm_callcenter.ura_once (
-  body             STRING,
+  raw_payload          STRING,
+  id_chamada           STRING,
+  id_cliente           STRING,
+  id_fila              STRING,
+  data_hora_inicio     TIMESTAMP,
+  data_hora_fim        TIMESTAMP,
+  autenticado          BOOLEAN,
+  opcoes_navegadas     INT,
+  codigo_opcao         STRING,
+  derivado_atendimento BOOLEAN,
+  partition            INT,
+  offset               STRING,
+  enqueuedTime         TIMESTAMP,
+  partitionKey         STRING,
+  schema_version       STRING,
+  ingestion_ts         TIMESTAMP,
+  ingestion_date       DATE
+) USING DELTA
+CLUSTER BY (ingestion_date)
+COMMENT 'Eventos de URA estruturados na Bronze + payload original (AvailableNow).';
+
+CREATE TABLE IF NOT EXISTS prd.b_dm_callcenter.calls_once (
+  raw_payload      STRING,
+  id_chamada       STRING,
+  id_atendimento   STRING,
+  id_cliente       STRING,
+  id_assistente    INT,
+  data_hora_inicio TIMESTAMP,
+  data_hora_fim    TIMESTAMP,
+  area_atendimento STRING,
   partition        INT,
   offset           STRING,
   enqueuedTime     TIMESTAMP,
   partitionKey     STRING,
+  schema_version   STRING,
   ingestion_ts     TIMESTAMP,
   ingestion_date   DATE
-) USING DELTA
-CLUSTER BY (ingestion_date)
-COMMENT 'Landing cru de eventos de URA vindos do Event Hubs (AvailableNow).';
-
-CREATE TABLE IF NOT EXISTS prd.b_dm_callcenter.calls_once (
-  body STRING, partition INT, offset STRING,
-  enqueuedTime TIMESTAMP, partitionKey STRING, ingestion_ts TIMESTAMP, ingestion_date DATE
 ) USING DELTA CLUSTER BY (ingestion_date)
-COMMENT 'Landing cru de atendimentos humanos (derivações da URA).';
+COMMENT 'Atendimentos humanos estruturados na Bronze + payload original.';
 
 CREATE TABLE IF NOT EXISTS prd.b_dm_callcenter.surveys_once (
-  body STRING, partition INT, offset STRING,
-  enqueuedTime TIMESTAMP, partitionKey STRING, ingestion_ts TIMESTAMP, ingestion_date DATE
+  raw_payload    STRING,
+  id_chamada     STRING,
+  id_pesquisa    STRING,
+  data_envio     DATE,
+  nota           INT,
+  partition      INT,
+  offset         STRING,
+  enqueuedTime   TIMESTAMP,
+  partitionKey   STRING,
+  schema_version STRING,
+  ingestion_ts   TIMESTAMP,
+  ingestion_date DATE
 ) USING DELTA CLUSTER BY (ingestion_date)
-COMMENT 'Landing cru de pesquisas de satisfação.';
+COMMENT 'Pesquisas de satisfação estruturadas na Bronze + payload original.';

@@ -1,12 +1,15 @@
-// Observabilidade: Log Analytics + Application Insights + Action Group (alertas).
+// Núcleo de observabilidade: Log Analytics + Application Insights + Action Group.
+// Criado cedo (o Application Insights alimenta a connection string da Function App);
+// alertas e workbook são módulos separados, deployados depois que Event Hubs/Function
+// existem (ver main.bicep).
 @description('Nome do workspace Log Analytics')
 param workspaceName string
 @description('Nome do Action Group (destino dos alertas)')
 param actionGroupName string
+@description('E-mail que recebe os alertas (configurável — sem hardcode no módulo)')
+param alertEmail string
 param location string
 param tags object
-@description('E-mail que recebe os alertas')
-param alertEmail string = 'cristiano.tecnologia.data@hotmail.com'
 
 resource law 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: workspaceName

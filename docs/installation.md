@@ -17,7 +17,7 @@ dm --help
 | `dm provision -g <rg>` | Provisiona a infraestrutura (Bicep). `--what-if` pré-visualiza. |
 | `dm deploy [all\|layer_*]` | Publica os Asset Bundles na ordem das camadas. |
 | `dm run <job> -l <layer>` | Dispara um job de um bundle. |
-| `dm validate` | Valida todos os bundles (bronze/silver/gold/orchestration). |
+| `dm validate` | Valida todos os bundles (essential/bronze/silver/gold/orchestration). |
 | `dm info` | Mostra a configuração resolvida. |
 
 > `--dry-run` imprime os comandos sem executá-los — útil para revisar antes de

@@ -1,26 +1,24 @@
 """Upsert incremental Bronze→Silver: stream Delta + foreachBatch + MERGE idempotente.
 
 A Bronze é append-only, então o stream Delta entrega só as linhas novas
-(`skipChangeCommits` ignora reescritas de OPTIMIZE). Com `AvailableNow` + `foreachBatch` a escrita é
-at-least-once — a não-duplicidade vem do MERGE por chave de negócio, não do checkpoint
-(que só controla o progresso). Ver ADR-0002 e o runbook `streaming-checkpoint-reset`.
+(`skipChangeCommits` ignora reescritas de OPTIMIZE). Com `AvailableNow` + `foreachBatch`
+a escrita é at-least-once — a não-duplicidade vem do MERGE por chave de negócio, não do
+checkpoint (que só controla o progresso). Ver ADR-0002.
 """
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
+from quality import run_expectations
+
 from .parse import validate_contract
 
-# pyspark é resolvido no runtime do cluster; o import é protegido para permitir testar
-# as funções puras (build_merge_on, assert_fqn) sem Spark.
 try:  # pragma: no cover - depende do runtime Spark
     from pyspark.sql import DataFrame, SparkSession
-    from pyspark.sql import functions as F
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
     DataFrame = object  # type: ignore
     SparkSession = object  # type: ignore
-    F = None  # type: ignore
 
 
 def build_merge_on(keys: Sequence[str], target_alias: str = "S", source_alias: str = "C") -> str:
@@ -42,11 +40,11 @@ def assert_fqn(fqn: str) -> tuple[str, str, str]:
     return parts[0], parts[1], parts[2]
 
 
-def ensure_table(spark: SparkSession, fqn: str, staged_df: DataFrame, cluster_by: Sequence[str] | None = None) -> None:
-    """Cria a tabela vazia com o schema do staged_df, se ainda não existir."""
+def ensure_table(spark: SparkSession, fqn: str, template_df: DataFrame, cluster_by: Sequence[str] | None = None) -> None:
+    """Cria a tabela vazia com o schema de `template_df`, se ainda não existir."""
     assert_fqn(fqn)
     if not spark.catalog.tableExists(fqn):
-        empty = spark.createDataFrame([], staged_df.schema)
+        empty = spark.createDataFrame([], template_df.schema)
         empty.write.format("delta").mode("overwrite").saveAsTable(fqn)
         if cluster_by:
             cols = ", ".join(cluster_by)
@@ -56,26 +54,41 @@ def ensure_table(spark: SparkSession, fqn: str, staged_df: DataFrame, cluster_by
 def merge_upsert(
     spark: SparkSession,
     target_table_fqn: str,
-    staged_df: DataFrame,
+    transformed_df: DataFrame,
     keys: Sequence[str],
     cluster_by: Sequence[str] | None = None,
 ) -> None:
-    """Aplica MERGE (upsert) idempotente do staged_df na tabela alvo."""
-    ensure_table(spark, target_table_fqn, staged_df, cluster_by=cluster_by)
+    """Aplica MERGE (upsert) idempotente de `transformed_df` na tabela alvo."""
+    ensure_table(spark, target_table_fqn, transformed_df, cluster_by=cluster_by)
     view = "_stg_" + target_table_fqn.replace(".", "_")
-    staged_df.createOrReplaceTempView(view)
+    transformed_df.createOrReplaceTempView(view)
     # Identificadores internos e validados (assert_fqn; chaves e view construídos em
     # código) — sem input de usuário, logo sem vetor de injeção.
     merge_sql = f"MERGE INTO {target_table_fqn} AS S USING {view} AS C ON {build_merge_on(keys)} WHEN MATCHED THEN UPDATE SET * WHEN NOT MATCHED THEN INSERT *"  # nosec B608
     spark.sql(merge_sql)
 
 
+def merge_quarantine(spark: SparkSession, quarantine_table: str, quarantine_df: DataFrame) -> None:
+    """Grava a DLQ de forma idempotente por `event_id`.
+
+    O `foreachBatch` é at-least-once: um retry do mesmo micro-batch reapresenta o mesmo
+    evento inválido. Como o `event_id` é determinístico (hash do payload), o MERGE
+    `WHEN NOT MATCHED` insere só a primeira ocorrência — sem duplicidade lógica na DLQ.
+    """
+    ensure_table(spark, quarantine_table, quarantine_df)
+    view = "_dlq_" + quarantine_table.replace(".", "_")
+    quarantine_df.createOrReplaceTempView(view)
+    merge_sql = f"MERGE INTO {quarantine_table} AS T USING {view} AS S ON T.event_id = S.event_id WHEN NOT MATCHED THEN INSERT *"  # nosec B608
+    spark.sql(merge_sql)
+
+
 @dataclass
 class SilverStream:
-    """Consome a Bronze (append-only) como stream Delta e faz upsert idempotente na Silver.
+    """Consome a Bronze (append-only, já estruturada) como stream Delta e faz upsert
+    idempotente na Silver.
 
-    O primeiro run processa o snapshot existente (backfill); depois o checkpoint
-    assume o controle do progresso.
+    O primeiro run processa o snapshot existente (backfill); depois o checkpoint assume
+    o controle do progresso.
     """
 
     spark: SparkSession
@@ -92,7 +105,7 @@ class SilverStream:
     def _recompute_with_history(
         self,
         session: SparkSession,
-        staged_df: DataFrame,
+        transformed_df: DataFrame,
         target_table_fqn: str,
         keys: Sequence[str],
         recompute: Callable[[DataFrame], DataFrame],
@@ -110,15 +123,14 @@ class SilverStream:
         recompute_keys = list(recompute_keys)
         keys = list(keys)
         if not session.catalog.tableExists(target_table_fqn):
-            return recompute(staged_df)
+            return recompute(transformed_df)
 
-        batch_keys = staged_df.select(*recompute_keys).distinct()
+        batch_keys = transformed_df.select(*recompute_keys).distinct()
         existing = session.table(target_table_fqn).join(batch_keys, recompute_keys, "left_semi")
-        derived = [c for c in existing.columns if c not in staged_df.columns]
+        derived = [c for c in existing.columns if c not in transformed_df.columns]
         existing_base = existing.drop(*derived) if derived else existing
-        # linhas novas ganham das antigas de mesma chave; as demais do histórico entram
-        combined = existing_base.join(staged_df, keys, "left_anti").unionByName(
-            staged_df, allowMissingColumns=True
+        combined = existing_base.join(transformed_df, keys, "left_anti").unionByName(
+            transformed_df, allowMissingColumns=True
         )
         return recompute(combined)
 
@@ -132,7 +144,6 @@ class SilverStream:
         cluster_by: Sequence[str] | None = None,
         expectations: list | None = None,
         dq_results_table: str | None = None,
-        contract_schema=None,
         contract_required: Sequence[str] | None = None,
         quarantine_table: str | None = None,
         schema_version: str = "1.0",
@@ -141,44 +152,45 @@ class SilverStream:
     ):
         """Roda o stream (AvailableNow) e bloqueia até terminar.
 
-        Por micro-batch: (1) **data contract** — inválidos vão para `quarantine_table`,
-        só os válidos seguem; (2) **recompute** por chave, se informado (junta ao
-        histórico e reprocessa o grupo inteiro — corrige derivações entre batches);
-        (3) **gate de DQ**, se informado (falha crítica interrompe); (4) **MERGE**
-        idempotente por chave.
+        Por micro-batch: (1) **contrato** de campos obrigatórios — inválidos vão à
+        `quarantine_table` (idempotente por `event_id`), só os válidos seguem; (2)
+        **transform** (renomeação/derivação, sem `from_json` — a Bronze já estruturou);
+        (3) **recompute** por chave, se informado (junta ao histórico e reprocessa o
+        grupo inteiro — corrige derivações entre batches); (4) **gate de DQ**, se
+        informado (falha crítica interrompe); (5) **MERGE** idempotente por chave.
         """
 
-        def _batch(micro_df: DataFrame, batch_id: int) -> None:
+        def _batch(micro_df: DataFrame, _batch_id: int) -> None:
             if micro_df.isEmpty():
                 return
             # foreachBatch entrega o micro-batch numa sessão CLONADA; usá-la em tudo
             # (leitura do alvo, temp view, MERGE) evita "view não encontrada" e joins
             # entre sessões distintas.
             session = micro_df.sparkSession
-            events = micro_df
-            if contract_schema is not None:
-                events, quarantined = validate_contract(
-                    events,
-                    contract_schema,
-                    contract_required or [],
+            valid_events_df = micro_df
+            if contract_required:
+                valid_events_df, quarantined = validate_contract(
+                    valid_events_df,
+                    contract_required,
                     source=source_table_fqn,
                     schema_version=schema_version,
                 )
                 if quarantine_table:
-                    quarantined.write.format("delta").mode("append").saveAsTable(quarantine_table)
-                if events.isEmpty():
+                    merge_quarantine(session, quarantine_table, quarantined)
+                if valid_events_df.isEmpty():
                     return
-            staged_df = transform(events)
+            transformed_df = transform(valid_events_df)
             if recompute is not None and recompute_keys:
-                staged_df = self._recompute_with_history(session, staged_df, target_table_fqn, keys, recompute, recompute_keys)
+                transformed_df = self._recompute_with_history(
+                    session, transformed_df, target_table_fqn, keys, recompute, recompute_keys
+                )
             if expectations:
-                from quality import run_expectations  # lazy: evita acoplar o import do módulo
-                report = run_expectations(staged_df, expectations, target_table_fqn)
+                report = run_expectations(transformed_df, expectations, target_table_fqn)
                 print(report.summary())
                 if dq_results_table:
                     report.to_table(session, dq_results_table)
                 report.raise_if_critical_failed()
-            merge_upsert(session, target_table_fqn, staged_df, keys, cluster_by=cluster_by)
+            merge_upsert(session, target_table_fqn, transformed_df, keys, cluster_by=cluster_by)
 
         query = (
             self.read_stream(source_table_fqn)

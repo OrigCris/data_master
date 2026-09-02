@@ -66,17 +66,18 @@ CREATE TABLE IF NOT EXISTS prd.s_dm_callcenter.__dq_results (
 ) USING DELTA
 COMMENT 'Resultados das checagens de Data Quality por execução.';
 
--- Dead-letter queue (DLQ): eventos que violam o data contract não são descartados,
--- e sim isolados aqui com o payload cru e o motivo, para triagem/reprocessamento.
+-- Dead-letter queue (DLQ): eventos com campo obrigatório ausente/inválido não são
+-- descartados, e sim isolados aqui com o payload original e o motivo, para triagem/
+-- reprocessamento. Escrita idempotente por event_id (MERGE WHEN NOT MATCHED).
 CREATE TABLE IF NOT EXISTS prd.s_dm_callcenter.__quarantine (
-  event_id       STRING,   -- sha256 do payload (deduplicação/triagem)
-  payload        STRING,   -- JSON cru recebido na Bronze
-  error_reason   STRING,   -- malformed_json | missing_or_invalid: <campos>
+  event_id       STRING,   -- sha256 do payload original (idempotência/triagem)
+  payload        STRING,   -- payload original recebido na Bronze
+  error_reason   STRING,   -- missing_or_invalid: <campos>
   schema_version STRING,   -- versão do contrato aplicado
   ingestion_ts   TIMESTAMP,
   source         STRING    -- tabela/fonte de origem do evento
 ) USING DELTA
-COMMENT 'Eventos em quarentena por violação do data contract (schema/campos obrigatórios).';
+COMMENT 'Eventos em quarentena por violação do contrato (campos obrigatórios).';
 
 -- Histórico de métricas de dataset (volume, freshness) para observabilidade:
 -- alimenta a comparação de volume contra a média móvel das execuções anteriores.

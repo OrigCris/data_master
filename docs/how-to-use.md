@@ -48,9 +48,10 @@ dm run setup-databases -l essential
 > `/Volumes/prd/s_dm_callcenter/checkpoints/silver` (o subdiretório é criado na primeira
 > execução; o Volume, aqui).
 
-A governança de PII (após as dimensões existirem na Bronze) roda pelo mesmo bundle:
+Crie as **funções de máscara de PII** — **antes** das dimensões, pois cada dimensão
+aplica as máscaras às próprias colunas ao ser criada:
 ```bash
-dm run apply-pii-masks -l essential
+dm run setup-pii-functions -l essential
 ```
 > Alternativa declarativa equivalente: o SQL estático em `database/ddl/004_governance.sql`.
 

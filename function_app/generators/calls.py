@@ -5,6 +5,7 @@ import uuid
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 
+from config.settings import settings
 from faker import Faker
 
 fake = Faker("pt_BR")
@@ -28,7 +29,7 @@ def gerar_fato_chamada_humana(eventos_ura: Iterable[dict]) -> list[dict]:
             continue
 
         num_atendimentos = random.randint(1, 7)
-        assistentes_ids = random.sample(range(1, 21), k=num_atendimentos)
+        assistentes_ids = random.sample(range(1, settings.qtd_assistentes + 1), k=num_atendimentos)
         data_hora_inicio = evento["data_hora_fim"]
 
         if isinstance(data_hora_inicio, str):

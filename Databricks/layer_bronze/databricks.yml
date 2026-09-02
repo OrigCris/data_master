@@ -14,7 +14,6 @@ variables:
   CATALOG:         { default: prd }
   SCHEMA:          { default: b_dm_callcenter }
   TIMEZONE:        { default: America/Sao_Paulo }
-  SCHEDULE_CRON:   { default: "0 0 2 * * ?" }
   QTD_CLIENTES:    { default: "10000" }
   QTD_ASSIST:      { default: "1000" }
 
@@ -29,6 +28,14 @@ variables:
   CHECKPOINT_BASE: { default: "/Volumes/prd/b_dm_callcenter/checkpoints/bronze" }
   STREAM_NOTEBOOK: { default: "${workspace.root_path}/files/notebooks/bronze_streaming" }
   RUN_AS_USER: { default: "cristiano.tecnologia.data@hotmail.com" }
+
+# A lib compartilhada vira wheel e é anexada aos jobs: a Bronze usa `transforms.contracts`
+# para o parse estrutural e as dimensões usam `security` para aplicar as column masks.
+artifacts:
+  dm_lib:
+    type: whl
+    path: ../lib
+    build: python -m build --wheel
 
 resources:
   jobs:
@@ -58,6 +65,7 @@ resources:
               qtd_clientes: ${var.QTD_CLIENTES}
           libraries:
             - pypi: { package: faker }
+            - whl: ../lib/dist/*.whl
           timeout_seconds: 0
 
         - task_key: create_dim_assistentes
@@ -72,6 +80,7 @@ resources:
               qtd_assistentes: ${var.QTD_ASSIST}
           libraries:
             - pypi: { package: faker }
+            - whl: ../lib/dist/*.whl
           timeout_seconds: 0
 
     # ---------------------- JOB streaming ----------------------
@@ -111,6 +120,8 @@ resources:
               sp_client_secret_secret: ${var.SP_CLIENT_SECRET_SECRET}
               sp_tenant_id_secret:     ${var.SP_TENANT_ID_SECRET}
               checkpoint_base: ${var.CHECKPOINT_BASE}
+          libraries:
+            - whl: ../lib/dist/*.whl
           timeout_seconds: 0
 
         - task_key: ingest_calls
@@ -129,6 +140,8 @@ resources:
               sp_client_secret_secret: ${var.SP_CLIENT_SECRET_SECRET}
               sp_tenant_id_secret:     ${var.SP_TENANT_ID_SECRET}
               checkpoint_base: ${var.CHECKPOINT_BASE}
+          libraries:
+            - whl: ../lib/dist/*.whl
           timeout_seconds: 0
 
         - task_key: ingest_surveys
@@ -147,6 +160,8 @@ resources:
               sp_client_secret_secret: ${var.SP_CLIENT_SECRET_SECRET}
               sp_tenant_id_secret:     ${var.SP_TENANT_ID_SECRET}
               checkpoint_base: ${var.CHECKPOINT_BASE}
+          libraries:
+            - whl: ../lib/dist/*.whl
           timeout_seconds: 0
 
 targets:

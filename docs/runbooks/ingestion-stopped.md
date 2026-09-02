@@ -1,7 +1,7 @@
 # Runbook — Ingestão parada (sem eventos na Bronze)
 
-**Disparo**: alerta `evh-sem-ingestao` (`IncomingMessages = 0` por 30 min) ou
-Bronze sem novas linhas.
+**Disparo**: alerta `oper-evh-sem-ingestao` (`IncomingMessages = 0` na janela esperada)
+ou Bronze sem novas linhas.
 
 ## Triagem (do produtor ao consumidor)
 1. **Function App** está rodando?

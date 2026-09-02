@@ -2,10 +2,13 @@
 -- Governança de dados — Unity Catalog column masking (PII)
 -- Mascaramento aplicado NO CATÁLOGO: o dado em claro é liberado apenas para o
 -- grupo 'dm_pii_readers' (Entra ID), usando recursos nativos do Unity Catalog.
--- Geração programática equivalente em Databricks/lib/security/pii.py.
+-- Responsabilidades no pipeline: (1) as FUNÇÕES são criadas uma vez pelo notebook
+-- essential/setup_pii_functions; (2) cada dimensão APLICA suas máscaras às próprias
+-- colunas, após persistir a tabela. Os geradores de SQL estão em security/pii.py;
+-- este arquivo é a referência declarativa equivalente.
 -- =============================================================================
 
--- 1) Funções de mascaramento reutilizáveis (Bronze)
+-- 1) Funções reutilizáveis (criadas por essential/setup_pii_functions)
 CREATE OR REPLACE FUNCTION prd.b_dm_callcenter.mask_cpf(v STRING)
 RETURN CASE WHEN is_account_group_member('dm_pii_readers') THEN v
             ELSE regexp_replace(v, '(\\d{3})\\.?\\d{3}\\.?\\d{3}-?(\\d{2})', '$1.***.***-$2') END;
@@ -23,7 +26,7 @@ CREATE OR REPLACE FUNCTION prd.b_dm_callcenter.mask_data_nascimento(v DATE)
 RETURN CASE WHEN is_account_group_member('dm_pii_readers') THEN v
             ELSE trunc(v, 'YEAR') END;
 
--- 2) Aplicação das máscaras às colunas sensíveis
+-- 2) Aplicação por tabela (cada notebook de dimensão aplica após persistir)
 ALTER TABLE prd.b_dm_callcenter.dim_clientes ALTER COLUMN cpf             SET MASK prd.b_dm_callcenter.mask_cpf;
 ALTER TABLE prd.b_dm_callcenter.dim_clientes ALTER COLUMN email           SET MASK prd.b_dm_callcenter.mask_email;
 ALTER TABLE prd.b_dm_callcenter.dim_clientes ALTER COLUMN nome            SET MASK prd.b_dm_callcenter.mask_name;

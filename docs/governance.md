@@ -33,18 +33,23 @@ ALTER TABLE prd.b_dm_callcenter.dim_clientes
 ```
 
 A função libera o valor em claro apenas para `is_account_group_member('dm_pii_readers')`.
-As funções e os `ALTER ... SET MASK` são gerados e aplicados pelo notebook
-[`apply_pii_masks`](../Databricks/essential/apply_pii_masks.ipynb), que usa a lib
+As responsabilidades são separadas: as **funções** são criadas uma vez pelo notebook
+[`setup_pii_functions`](../Databricks/essential/setup_pii_functions.ipynb) (job do
+bundle `essential`); cada **dimensão** aplica as máscaras às próprias colunas ao ser
+criada (a tabela é dona da própria política). Ambos usam os geradores de SQL de
 [`Databricks/lib/security`](../Databricks/lib/security):
 
-| Função | Comportamento |
-|---|---|
-| `mask_cpf` | `123.***.***-09` |
-| `mask_email` | `c***@dominio.com` |
-| `mask_name` | primeiro nome + iniciais |
-| data de nascimento | generalizada para o ano |
+| Função | Comportamento | Aplicada em |
+|---|---|---|
+| `mask_cpf` | `123.***.***-09` | `dim_clientes.cpf` |
+| `mask_email` | `c***@dominio.com` | `dim_clientes.email`, `dim_assistentes.email` |
+| `mask_name` | primeiro nome + iniciais | `dim_clientes.nome`, `dim_assistentes.nomeAssistente` |
+| `mask_data_nascimento` | generalizada para o ano (DATE) | `dim_clientes.data_nascimento` |
 
-> As funções puras de mascaramento têm testes em
+Os demais nomes da hierarquia de assistentes (supervisor→superintendente) ficam em
+claro, por serem necessários à análise gerencial.
+
+> Os geradores de SQL das column masks têm testes em
 > [`tests/unit/test_pii.py`](../tests/unit/test_pii.py).
 
 ## Auditoria e lineage

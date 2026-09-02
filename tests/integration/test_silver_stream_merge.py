@@ -16,7 +16,6 @@ pytest.importorskip("delta")
 from delta import configure_spark_with_delta_pip  # noqa: E402
 from pyspark.sql import SparkSession  # noqa: E402
 from pyspark.sql import functions as F  # noqa: E402
-from pyspark.sql import types as T  # noqa: E402
 from transforms import SilverStream  # noqa: E402
 
 pytestmark = pytest.mark.integration
@@ -39,18 +38,13 @@ def spark(tmp_path_factory):
 
 
 def _append_events(spark, fqn, events):
-    """Grava eventos JSON crus na Bronze (append-only → o stream Delta os entrega)."""
-    rows = [(f'{{"id": "{i}", "val": "{v}"}}',) for i, v in events]
-    spark.createDataFrame(rows, ["body"]).write.format("delta").mode("append").saveAsTable(fqn)
+    """Grava eventos já estruturados na Bronze (append-only → o stream Delta os entrega)."""
+    spark.createDataFrame(list(events), ["id", "val"]).write.format("delta").mode("append").saveAsTable(fqn)
 
 
 def _transform(df):
-    schema = T.StructType([
-        T.StructField("id", T.StringType()),
-        T.StructField("val", T.StringType()),
-    ])
-    parsed = df.withColumn("b", F.from_json("body", schema)).select("b.*")
-    return parsed.select(F.col("id").alias("ID"), F.col("val").alias("VAL"))
+    # A Bronze já entrega os campos estruturados; a Silver apenas projeta/renomeia.
+    return df.select(F.col("id").alias("ID"), F.col("val").alias("VAL"))
 
 
 def test_stream_checkpoint_merge_idempotente(spark, tmp_path):
@@ -59,8 +53,8 @@ def test_stream_checkpoint_merge_idempotente(spark, tmp_path):
     silver = "spark_catalog.it.silver_ura"
     checkpoint = str(tmp_path / "ckpt")
 
-    # Bronze append-only: consumida como fonte de streaming Delta direto.
-    spark.sql(f"CREATE TABLE {bronze} (body STRING) USING DELTA")
+    # Bronze append-only (já estruturada): consumida como fonte de streaming Delta.
+    spark.sql(f"CREATE TABLE {bronze} (id STRING, val STRING) USING DELTA")
     _append_events(spark, bronze, [("1", "a"), ("2", "b"), ("3", "c")])
 
     stream = SilverStream(spark)

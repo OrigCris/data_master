@@ -13,7 +13,9 @@ consumidora ficam no comando `dm setup-spn`, executado após o Bicep.
 | `modules/keyvault.bicep` | Key Vault (access policy) | Segredos da SPN consumidora (Databricks) |
 | `modules/functionapp.bicep` | Function App + Plan + MI | Produção de eventos |
 | `modules/databricks.bicep` | Workspace + Access Connector | Processamento + Unity Catalog |
-| `modules/monitoring.bicep` | Log Analytics + App Insights + Action Group | Observabilidade |
+| `modules/monitoring/core.bicep` | Log Analytics + App Insights + Action Group | Observabilidade (núcleo) |
+| `modules/monitoring/alert-rules.bicep` | Metric alerts por severidade | Alertas como código |
+| `modules/monitoring/workbook.bicep` (+ `workbook.json`) | Azure Workbook operacional | Dashboard da jornada do dado |
 | `modules/roles.bicep` | Role assignments (least privilege) | RBAC |
 
 ## Deploy

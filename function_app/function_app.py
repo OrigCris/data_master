@@ -13,7 +13,7 @@ app = func.FunctionApp()
 logger = get_logger(__name__)
 
 @app.schedule(
-    schedule="0 */2 * * * *", # a cada 2 minutos
+    schedule="0 */2 * * * *",
     arg_name="myTimer",
     # Produção: sem execução em deploy/restart/scale (evita disparos inesperados);
     # o agendamento é persistido pelo monitor do runtime.

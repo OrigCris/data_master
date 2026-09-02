@@ -21,7 +21,7 @@ from datetime import UTC, date, datetime
 try:  # pragma: no cover - runtime Spark
     from pyspark.sql import SparkSession
     from pyspark.sql import functions as F
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
     SparkSession = object  # type: ignore
     F = None  # type: ignore
 

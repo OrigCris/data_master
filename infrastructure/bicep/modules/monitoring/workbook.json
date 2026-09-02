@@ -1,0 +1,379 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# Data Master — Observabilidade\n\nSaúde **ponta a ponta** da jornada do dado: **entrando** (Event Hubs) → **produzido** (Function App) → **processado** (Databricks) → **confiável** (Data Reliability). Cada gráfico responde a uma pergunta operacional — se ficar vermelho, há o que investigar."
+      },
+      "name": "intro"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## 1 · Overview / Saúde geral\nEstá entrando dado? A Function está saudável? Há falhas?"
+      },
+      "name": "s1"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "requests | summarize Execucoes=count(), Falhas=countif(success==false) | extend TaxaSucesso_pct=iff(Execucoes>0, round(100.0*(Execucoes-Falhas)/Execucoes,1), 0.0)",
+        "size": 4,
+        "title": "Function App — saúde (24h)",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "crossComponentResources": [
+          "__APPINSIGHTS_ID__"
+        ],
+        "visualization": "table"
+      },
+      "name": "ov-func",
+      "customWidth": "50"
+    },
+    {
+      "type": 10,
+      "content": {
+        "version": "MetricsItem/2.0",
+        "size": 0,
+        "chartType": -1,
+        "resourceType": "microsoft.eventhub/namespaces",
+        "metricScope": 0,
+        "resourceIds": [
+          "__EVENTHUB_ID__"
+        ],
+        "timeContext": {
+          "durationMs": 86400000
+        },
+        "metrics": [
+          {
+            "namespace": "microsoft.eventhub/namespaces",
+            "metric": "microsoft.eventhub/namespaces--IncomingMessages",
+            "aggregation": 1
+          }
+        ],
+        "title": "Mensagens recebidas (24h)"
+      },
+      "customWidth": "50",
+      "name": "ov-incoming"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "> **Freshness dos datasets** e **status dos jobs** ficam no Databricks (Delta / System Tables) — ver seções 3 e 4. [Abrir Databricks](https://__DATABRICKS_URL__)"
+      },
+      "name": "ov-note"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## 2 · Ingestion — Function + Event Hubs"
+      },
+      "name": "s2"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "requests | summarize Execucoes=count() by bin(timestamp, 1h) | render timechart",
+        "size": 0,
+        "title": "Execuções",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "crossComponentResources": [
+          "__APPINSIGHTS_ID__"
+        ],
+        "visualization": "timechart"
+      },
+      "name": "in-exec",
+      "customWidth": "50"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "exceptions | summarize Exceptions=count() by bin(timestamp, 1h) | render timechart",
+        "size": 0,
+        "title": "Exceptions",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "crossComponentResources": [
+          "__APPINSIGHTS_ID__"
+        ],
+        "visualization": "timechart"
+      },
+      "name": "in-exc",
+      "customWidth": "50"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "requests | summarize DuracaoMediaMs=avg(duration) by bin(timestamp, 1h) | render timechart",
+        "size": 0,
+        "title": "Duração média (ms)",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "crossComponentResources": [
+          "__APPINSIGHTS_ID__"
+        ],
+        "visualization": "timechart"
+      },
+      "name": "in-dur",
+      "customWidth": "50"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "requests | summarize Total=count(), Sucesso=countif(success==true) by bin(timestamp,1h) | extend TaxaSucesso_pct=iff(Total>0, round(100.0*Sucesso/Total,1),0.0) | project timestamp, TaxaSucesso_pct | render timechart",
+        "size": 0,
+        "title": "Taxa de sucesso por hora",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "crossComponentResources": [
+          "__APPINSIGHTS_ID__"
+        ],
+        "visualization": "timechart"
+      },
+      "name": "in-succ",
+      "customWidth": "50"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "exceptions | order by timestamp desc | project timestamp, problemId, outerMessage | take 20",
+        "size": 0,
+        "title": "Erros recentes",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "crossComponentResources": [
+          "__APPINSIGHTS_ID__"
+        ],
+        "visualization": "table"
+      },
+      "name": "in-err"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "### Event Hubs — throughput e saúde da ingestão"
+      },
+      "name": "in-eh"
+    },
+    {
+      "type": 10,
+      "content": {
+        "version": "MetricsItem/2.0",
+        "size": 0,
+        "chartType": 2,
+        "resourceType": "microsoft.eventhub/namespaces",
+        "metricScope": 0,
+        "resourceIds": [
+          "__EVENTHUB_ID__"
+        ],
+        "timeContext": {
+          "durationMs": 86400000
+        },
+        "metrics": [
+          {
+            "namespace": "microsoft.eventhub/namespaces",
+            "metric": "microsoft.eventhub/namespaces--IncomingMessages",
+            "aggregation": 1
+          }
+        ],
+        "title": "IncomingMessages"
+      },
+      "customWidth": "50",
+      "name": "eh-in-msg"
+    },
+    {
+      "type": 10,
+      "content": {
+        "version": "MetricsItem/2.0",
+        "size": 0,
+        "chartType": 2,
+        "resourceType": "microsoft.eventhub/namespaces",
+        "metricScope": 0,
+        "resourceIds": [
+          "__EVENTHUB_ID__"
+        ],
+        "timeContext": {
+          "durationMs": 86400000
+        },
+        "metrics": [
+          {
+            "namespace": "microsoft.eventhub/namespaces",
+            "metric": "microsoft.eventhub/namespaces--OutgoingMessages",
+            "aggregation": 1
+          }
+        ],
+        "title": "OutgoingMessages"
+      },
+      "customWidth": "50",
+      "name": "eh-out-msg"
+    },
+    {
+      "type": 10,
+      "content": {
+        "version": "MetricsItem/2.0",
+        "size": 0,
+        "chartType": 2,
+        "resourceType": "microsoft.eventhub/namespaces",
+        "metricScope": 0,
+        "resourceIds": [
+          "__EVENTHUB_ID__"
+        ],
+        "timeContext": {
+          "durationMs": 86400000
+        },
+        "metrics": [
+          {
+            "namespace": "microsoft.eventhub/namespaces",
+            "metric": "microsoft.eventhub/namespaces--IncomingBytes",
+            "aggregation": 1
+          }
+        ],
+        "title": "IncomingBytes"
+      },
+      "customWidth": "50",
+      "name": "eh-in-byt"
+    },
+    {
+      "type": 10,
+      "content": {
+        "version": "MetricsItem/2.0",
+        "size": 0,
+        "chartType": 2,
+        "resourceType": "microsoft.eventhub/namespaces",
+        "metricScope": 0,
+        "resourceIds": [
+          "__EVENTHUB_ID__"
+        ],
+        "timeContext": {
+          "durationMs": 86400000
+        },
+        "metrics": [
+          {
+            "namespace": "microsoft.eventhub/namespaces",
+            "metric": "microsoft.eventhub/namespaces--OutgoingBytes",
+            "aggregation": 1
+          }
+        ],
+        "title": "OutgoingBytes"
+      },
+      "customWidth": "50",
+      "name": "eh-out-byt"
+    },
+    {
+      "type": 10,
+      "content": {
+        "version": "MetricsItem/2.0",
+        "size": 0,
+        "chartType": 2,
+        "resourceType": "microsoft.eventhub/namespaces",
+        "metricScope": 0,
+        "resourceIds": [
+          "__EVENTHUB_ID__"
+        ],
+        "timeContext": {
+          "durationMs": 86400000
+        },
+        "metrics": [
+          {
+            "namespace": "microsoft.eventhub/namespaces",
+            "metric": "microsoft.eventhub/namespaces--ThrottledRequests",
+            "aggregation": 1
+          }
+        ],
+        "title": "ThrottledRequests"
+      },
+      "customWidth": "50",
+      "name": "eh-thr"
+    },
+    {
+      "type": 10,
+      "content": {
+        "version": "MetricsItem/2.0",
+        "size": 0,
+        "chartType": 2,
+        "resourceType": "microsoft.eventhub/namespaces",
+        "metricScope": 0,
+        "resourceIds": [
+          "__EVENTHUB_ID__"
+        ],
+        "timeContext": {
+          "durationMs": 86400000
+        },
+        "metrics": [
+          {
+            "namespace": "microsoft.eventhub/namespaces",
+            "metric": "microsoft.eventhub/namespaces--ServerErrors",
+            "aggregation": 1
+          }
+        ],
+        "title": "ServerErrors"
+      },
+      "customWidth": "50",
+      "name": "eh-srv"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "> Para separar **URA / Calls / Surveys**, filtre/divida os gráficos acima pela dimensão **EntityName** (o nome do hub: `evh_cj_tec_ura`, `evh_cj_tec_calls`, `evh_cj_tec_surveys`) no seletor do tile."
+      },
+      "name": "eh-split"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## 3 · Processing — Databricks\n\nA observabilidade dos **jobs Databricks** (último run, status, duração, tendência, tasks lentas) vive nas **System Tables** do próprio Databricks — não há integração direta e limpa com o Azure Monitor sem arquitetura nova, então **não** é replicada aqui.\n\nConsulte no Databricks SQL:\n\n```\nselect job_name, result_state, period_start_time, period_end_time\nfrom system.lakeflow.job_run_timeline\norder by period_start_time desc\n```\n\n[Abrir Databricks](https://__DATABRICKS_URL__)"
+      },
+      "name": "s3"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## 4 · Data Reliability\n\nTrês camadas distintas, todas em **tabelas Delta** (consultáveis no Databricks) — sem export automático para o Azure Monitor:\n\n| Camada | O que garante | Tabela |\n|---|---|---|\n| **Data Contract** | estrutura mínima + obrigatórios; inválidos → quarentena | `__quarantine` |\n| **Data Quality** | regras de qualidade + quality gate (falha o job) | `__dq_results` |\n| **Data Observability** | volume / freshness / comportamento do dataset | `__dataset_metrics` |\n\nUma falha crítica de dados aparece como **falha do job** Databricks. [Abrir Databricks](https://__DATABRICKS_URL__)"
+      },
+      "name": "s4"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## 5 · Performance / Latência\n\nDuração das execuções da Function abaixo. A **latência de ingestão** (`ingestion_ts - enqueuedTime`) e a **duração dos jobs** vivem no Databricks/Delta (a Bronze guarda `enqueuedTime` e `ingestion_ts`) — analise-as lá."
+      },
+      "name": "s5"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "requests | summarize p50=percentile(duration,50), p95=percentile(duration,95) by bin(timestamp,1h) | render timechart",
+        "size": 0,
+        "title": "Duração das execuções (tendência)",
+        "queryType": 0,
+        "resourceType": "microsoft.insights/components",
+        "crossComponentResources": [
+          "__APPINSIGHTS_ID__"
+        ],
+        "visualization": "timechart"
+      },
+      "name": "pf-dur"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## 6 · FinOps\n\nCusto/DBU do Databricks vive nas **System Tables** (`system.billing.usage`), a fonte mais apropriada — não duplicamos coleta. O custo dos recursos Azure fica no **Cost Management** do portal. O proxy operacional de consumo aqui é o **throughput** do Event Hubs (seção 2) e a **duração** das execuções (seção 5)."
+      },
+      "name": "s6"
+    }
+  ],
+  "isLocked": false,
+  "fallbackResourceIds": [
+    "__LAW_ID__"
+  ],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}

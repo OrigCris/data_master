@@ -14,4 +14,9 @@ class Settings:
     eh_name_calls: str = os.environ.get("EH_NAME_CALLS", "evh_cj_tec_calls").strip()
     eh_name_surveys: str = os.environ.get("EH_NAME_SURVEYS", "evh_cj_tec_surveys").strip()
 
+    # Totais das dimensões sintéticas: devem casar com as dims da Bronze (dim_clientes /
+    # dim_assistentes) para que ids de cliente/assistente referenciem registros existentes.
+    qtd_clientes: int = int(os.environ.get("QTD_CLIENTES", "10000"))
+    qtd_assistentes: int = int(os.environ.get("QTD_ASSISTENTES", "1000"))
+
 settings = Settings()

@@ -1,7 +1,7 @@
 # 11. Processamento de Dados (Silver)
 
-A camada Silver transforma o dado cru da Bronze em tabelas limpas e normalizadas,
-de forma **incremental** e **idempotente**.
+A camada Silver transforma o dado **estruturado** da Bronze em tabelas limpas e
+normalizadas, de forma **incremental** e **idempotente** — sem refazer `from_json`.
 
 ## Padrão incremental (streaming Delta + checkpoint + MERGE)
 
@@ -23,7 +23,7 @@ stream = SilverStream(spark)
 stream.run(
     source_table_fqn="prd.b_dm_callcenter.ura_once",
     target_table_fqn="prd.s_dm_callcenter.tabe_ura_anlt",
-    transform=transform,                       # parse + normalização (callable)
+    transform=transform,                       # normalização (callable; a Bronze já estruturou)
     keys=["ID_CHAM"],
     checkpoint_location="/Volumes/.../checkpoints/silver/tabe_ura_anlt",
     cluster_by=["CD_PERI", "DT_INIC", "ID_CHAM"],
@@ -34,8 +34,8 @@ stream.run(
    `Trigger.AvailableNow` (ignora reescritas de `OPTIMIZE`; a Bronze só cresce por append).
 2. **foreachBatch** — para cada micro-batch: aplica o `transform` e faz `MERGE` por
    chave de negócio.
-3. **Transform** — `from_json` do `body` com `StructType`, renomeação para o padrão
-   do projeto e derivação de `CD_PERI`/datas/auditoria.
+3. **Transform** — projeção/renomeação dos campos já estruturados para o padrão do
+   projeto e derivação de `CD_PERI`/datas/auditoria (sem `from_json` — a Bronze já parseou).
 4. **Checkpoint** — controla o offset/versão processado (progresso do stream);
    reexecuções de micro-batch são absorvidas pelo MERGE idempotente. Reprocessar do
    zero é resetar o checkpoint (ver runbook [streaming-checkpoint-reset](runbooks/streaming-checkpoint-reset.md)).
@@ -105,24 +105,26 @@ Severidade `critical` falha o job; `warn` apenas registra. O histórico fica em
 
 ## Data Contract e Quarentena (DLQ)
 
-Antes do gate de linha, cada micro-batch passa por um **data contract**: o evento é
-parseado contra o schema esperado e um conjunto de **campos obrigatórios**. Um evento
-com **JSON malformado** ou **campo obrigatório ausente/incompatível** não é descartado
-em silêncio — ele é isolado na **quarentena** (`__quarantine`) com o payload cru e o
-motivo (`malformed_json` ou `missing_or_invalid: <campos>`). Só o que respeita o
-contrato segue para o `transform` e a Silver.
+O **parse estrutural** contra o contrato versionado acontece na Bronze
+([`transforms.contracts`](../Databricks/lib/transforms/contracts.py)). Na Silver, antes
+do gate de linha, cada micro-batch reforça o contrato validando os **campos
+obrigatórios** sobre as colunas já estruturadas (sem refazer `from_json`). Um evento com
+campo obrigatório ausente/incompatível — inclusive vindo de payload malformado, cujo
+parse na Bronze produziu nulos — não é descartado em silêncio: é isolado na **quarentena**
+(`__quarantine`) com o **payload original** e o motivo (`missing_or_invalid: <campos>`).
 
 ```python
 SilverStream(spark).run(
     ...,
-    contract_schema=SCHEMA,               # schema esperado do evento
     contract_required=["id_chamada", ...],# campos que não podem faltar
     quarantine_table="prd.s_dm_callcenter.__quarantine",
 )
 ```
 
-Assim, dado inválido **não some** e também **não contamina** a camada confiável; a
-quarentena fica disponível para triagem e reprocessamento (ver [Roadmap](roadmap.md)).
+A escrita da quarentena é **idempotente por `event_id`** (`merge_quarantine`): como o
+`foreachBatch` é at-least-once, um retry do mesmo micro-batch não gera duplicidade na
+DLQ. Assim, dado inválido **não some** e também **não contamina** a camada confiável;
+a quarentena fica disponível para triagem e reprocessamento (ver [Roadmap](roadmap.md)).
 
 ## Observabilidade de dataset
 

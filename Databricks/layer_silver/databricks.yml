@@ -1,10 +1,6 @@
 bundle:
   name: silver-callcenter
 
-variables:
-  TIMEZONE:      { default: America/Sao_Paulo }
-  SCHEDULE_CRON: { default: "0 0 5 * * ?" }
-
 sync:
   include:
     - notebooks/**

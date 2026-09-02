@@ -18,7 +18,7 @@ workspace:
   # Host resolvido pelo profile do Databricks CLI (~/.databrickscfg), fora do versionamento.
   profile: prd
 
-# A lib compartilhada vira wheel e é anexada aos jobs que a importam (apply_pii_masks,
+# A lib compartilhada vira wheel e é anexada aos jobs que a importam (setup_pii_functions,
 # benchmark), tornando `security`/`transforms` importáveis sem depender de Repos.
 artifacts:
   dm_lib:
@@ -50,10 +50,10 @@ resources:
             notebook_path: ./create_databases.ipynb
           timeout_seconds: 0
 
-    # Cria e aplica as column masks de PII nas dimensões. Rodar após as dimensões
-    # existirem na Bronze (job bronze-dim).
-    apply-pii-masks:
-      name: "apply-pii-masks"
+    # Cria as funções de mask de PII no Unity Catalog. Rodar antes das dimensões (que
+    # aplicam as máscaras às próprias colunas).
+    setup-pii-functions:
+      name: "setup-pii-functions"
       job_clusters:
         - job_cluster_key: cluster-essential
           new_cluster:
@@ -62,10 +62,10 @@ resources:
             node_type_id: Standard_D4ds_v6
             num_workers: 1
       tasks:
-        - task_key: apply_pii_masks
+        - task_key: setup_pii_functions
           job_cluster_key: cluster-essential
           notebook_task:
-            notebook_path: ./apply_pii_masks.ipynb
+            notebook_path: ./setup_pii_functions.ipynb
             base_parameters:
               catalog:          ${var.CATALOG}
               bronze_schema:    ${var.BRONZE_SCHEMA}

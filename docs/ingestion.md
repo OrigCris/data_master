@@ -36,11 +36,16 @@ consome cada Event Hub com **`Trigger.AvailableNow`**:
    `OAUTHBEARER`): a SPN consumidora — com o papel *Azure Event Hubs Data Receiver* —
    obtém o token via client-credentials, sem SAS keys. As credenciais da SPN vêm do
    **Key Vault** por **Secret Scope** (AKV).
-2. Garante a tabela Delta **append-only** com schema cru + `ingestion_ts`/`ingestion_date`
-   e **liquid clustering** por `ingestion_date` (consumida pela Silver como stream Delta).
-3. `writeStream ... trigger(availableNow=True)` grava em append, com **checkpoint** por
+2. **Parseia** o evento contra o **contrato versionado** da tabela
+   (`transforms.contracts`) e persiste já **estruturado**, preservando o **payload
+   original** (`raw_payload`) para auditoria. Payload malformado não é descartado — os
+   campos parseados ficam nulos, auditáveis pelo `raw_payload`. **Sem regras de negócio**
+   (isso é da Silver).
+3. Garante a tabela Delta **append-only** (schema estruturado + metadados +
+   `schema_version` + `ingestion_date`) com **liquid clustering** por `ingestion_date`.
+4. `writeStream ... trigger(availableNow=True)` grava em append, com **checkpoint** por
    `eventhub/table` (reprocesso seguro).
-4. Imprime telemetria do último batch (linhas, duração).
+5. Reporta as **linhas gravadas** via commit do Delta (fonte de verdade no `AvailableNow`).
 
 As **dimensões** (`bronze_dim_clientes`, `bronze_dim_assistentes`) são geradas com
 Faker e gravadas como tabelas managed (overwrite + `OPTIMIZE`).

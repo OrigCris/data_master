@@ -78,8 +78,7 @@ Complementos: [ADRs](docs/adrs) · [Runbooks](docs/runbooks) · [Relatório do c
 │   └── lib/         # transforms · quality · security (compartilhado e TESTADO)
 ├── docs/            # documentação (+ adrs, runbooks)
 ├── function_app/    # produtor de eventos (Azure Functions)
-├── infrastructure/  # Bicep modular (SPN consumidora via `dm setup-spn`)
-├── monitoring/      # dashboard + alertas (Azure Monitor)
+├── infrastructure/  # Bicep modular (inclui observabilidade: Monitor + alertas + workbook)
 └── tests/           # pytest (unit) — geradores, transforms, PII, CLI
 ```
 
@@ -95,7 +94,7 @@ dm provision -g rsgcjtecprd001          # Bicep: recursos + RBAC + app settings
 dm setup-spn -g rsgcjtecprd001          # SPN consumidora + segredos (o que o Bicep não faz)
 
 # 2) Deploy dos jobs e execução do pipeline
-dm deploy all                            # bronze → silver → gold → orchestration
+dm deploy all                            # essential → bronze → silver → gold → orchestration
 dm run dm-pipeline -l orchestration
 ```
 

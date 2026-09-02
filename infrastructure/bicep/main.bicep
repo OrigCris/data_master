@@ -31,6 +31,9 @@ param tags object = {
   managedBy: 'bicep'
 }
 
+@description('E-mail de destino dos alertas (Action Group) — configurável por parâmetro')
+param alertEmail string
+
 // ----------------------------- Storage (ADLS Gen2) ---------------------------
 module storage 'modules/storage.bicep' = {
   name: 'storage'
@@ -67,12 +70,16 @@ module keyvault 'modules/keyvault.bicep' = {
   }
 }
 
-// ------------------------- Observabilidade (Azure Monitor) -------------------
-module monitoring 'modules/monitoring.bicep' = {
+// ------------------------- Observabilidade — núcleo (Azure Monitor) ----------
+// Log Analytics + App Insights + Action Group. Criado cedo: a Function App consome a
+// connection string do App Insights. Alertas e workbook são módulos à parte, deployados
+// depois que Event Hubs/Function/Databricks existem (precisam dos ids deles).
+module monitoring 'modules/monitoring/core.bicep' = {
   name: 'monitoring'
   params: {
     workspaceName: 'log${namePrefix}'
     actionGroupName: 'ag${namePrefix}'
+    alertEmail: alertEmail
     location: location
     tags: tags
   }
@@ -120,15 +127,30 @@ module roles 'modules/roles.bicep' = {
 }
 
 // ------------------------------ Alertas (Azure Monitor) ----------------------
-// Regras de alerta provisionadas junto da solução (ingestão parada, exceções da
-// Function). O arquivo também é deployável isoladamente (mesmos parâmetros).
-module alerts '../../monitoring/alerts/alert-rules.bicep' = {
+// Regras por severidade (crítico/operacional/warning). Thresholds nos defaults do
+// módulo (parametrizáveis). Deployadas aqui pois dependem dos ids de Event Hubs e
+// Application Insights.
+module alerts 'modules/monitoring/alert-rules.bicep' = {
   name: 'alerts'
   params: {
     eventHubNamespaceId: eventhub.outputs.namespaceId
     appInsightsId: monitoring.outputs.appInsightsId
     actionGroupId: monitoring.outputs.actionGroupId
+  }
+}
+
+// ------------------------------ Workbook (Azure Monitor) ---------------------
+// Workbook operacional da jornada do dado. Recebe os ids reais dos recursos por
+// parâmetro (o template usa placeholders) — sem id de ambiente hardcoded.
+module workbook 'modules/monitoring/workbook.bicep' = {
+  name: 'workbook'
+  params: {
     location: location
+    tags: tags
+    logAnalyticsId: monitoring.outputs.workspaceId
+    appInsightsId: monitoring.outputs.appInsightsId
+    eventHubNamespaceId: eventhub.outputs.namespaceId
+    databricksWorkspaceUrl: databricks.outputs.workspaceUrl
   }
 }
 
@@ -138,7 +160,7 @@ output keyVaultUri string = keyvault.outputs.vaultUri
 output functionApp string = functionApp.outputs.name
 output databricksWorkspaceUrl string = databricks.outputs.workspaceUrl
 
-// IDs para o deploy das regras de alerta (monitoring/alerts/alert-rules.bicep)
+// IDs úteis para redeployar os módulos de observabilidade isoladamente, se preciso.
 output eventHubNamespaceId string = eventhub.outputs.namespaceId
 output appInsightsId string = monitoring.outputs.appInsightsId
 output actionGroupId string = monitoring.outputs.actionGroupId

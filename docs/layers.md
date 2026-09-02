@@ -5,25 +5,29 @@ do Unity Catalog, com **MANAGED LOCATION** por camada no ADLS Gen2.
 
 | Camada | Schema | Conteúdo | Formato | Estratégia |
 |---|---|---|---|---|
-| **Bronze** | `b_dm_callcenter` | Dado cru (landing) + dimensões | Delta | append / overwrite |
+| **Bronze** | `b_dm_callcenter` | Evento estruturado + payload original (landing) + dimensões | Delta | append / overwrite |
 | **Silver** | `s_dm_callcenter` | Dado limpo e normalizado | Delta | stream Delta → MERGE (incremental) |
 | **Gold** | `g_dm_callcenter` | Visões analíticas D-1 | Delta | overwrite + `replaceWhere` |
 
 ## Bronze — landing imutável
 
 - **Streaming**: Event Hubs → Delta via `readStream` com **`Trigger.AvailableNow`**. O
-  schema cru preserva metadados do Event Hubs (`offset`, `enqueuedTime`, etc.) e
-  acrescenta `ingestion_ts`/`ingestion_date`.
-- **Dimensões**: geradas sinteticamente (Faker) e gravadas como tabelas managed.
+  evento é **parseado contra o contrato versionado** (`transforms.contracts`) e persistido
+  já **estruturado**, preservando o **payload original** (`raw_payload`) e os metadados do
+  Event Hubs (`offset`, `enqueuedTime`, etc.) + `schema_version`/`ingestion_date`. Sem
+  regras de negócio; payload malformado não é descartado (parsed nulo, auditável).
+- **Dimensões**: geradas sinteticamente (Faker) e gravadas como tabelas managed; cada
+  dimensão aplica suas próprias column masks de PII.
 - **Append-only**: como só cresce por append, é consumida pela Silver como **fonte de
   streaming Delta direto** (ver [ADR-0002](adrs/0002-incremental-streaming.md)).
 - **Liquid clustering** por `ingestion_date`.
 
 ## Silver — incremental e idempotente
 
-A Silver consome a Bronze (append-only) como **stream Delta + checkpoint**
-(`Trigger.AvailableNow` + `foreachBatch` MERGE) e aplica **MERGE** por chave de
-negócio. Detalhes em [Processamento](processing.md). Benefícios:
+A Silver consome a Bronze (append-only, já estruturada) como **stream Delta + checkpoint**
+(`Trigger.AvailableNow` + `foreachBatch` MERGE), reforça o contrato de obrigatórios
+(quarentena idempotente) e aplica **MERGE** por chave de negócio — sem refazer `from_json`.
+Detalhes em [Processamento](processing.md). Benefícios:
 
 - **Progresso**: o checkpoint controla o offset/versão consumido por fonte.
 - **Semântica**: com `foreachBatch` a escrita é **at-least-once** — um micro-batch

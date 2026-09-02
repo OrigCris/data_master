@@ -9,7 +9,7 @@ Comandos:
     dm setup-catalog  Provisiona/reconcilia o Unity Catalog (secret scope, storage
                       credential, external location e catalog).
     dm deploy LAYER   Publica os Databricks Asset Bundles
-                      (bronze/silver/gold/orchestration/all).
+                      (essential/bronze/silver/gold/orchestration/all).
     dm run JOB        Dispara um job de um bundle.
     dm validate       Valida todos os bundles (bundle validate).
     dm info           Mostra a configuração resolvida.
@@ -348,11 +348,11 @@ def setup_catalog(
 
 @app.command()
 def deploy(
-    layer: str = typer.Argument("all", help="layer_bronze | layer_silver | layer_gold | orchestration | all"),
+    layer: str = typer.Argument("all", help="essential | layer_bronze | layer_silver | layer_gold | orchestration | all"),
     target: str = typer.Option("prd", "--target", "-t"),
     dry_run: bool = typer.Option(False),
 ):
-    """Publica os Databricks Asset Bundles (ordem: bronze→silver→gold→orchestration)."""
+    """Publica os Databricks Asset Bundles (ordem: essential→bronze→silver→gold→orchestration)."""
     layers = resolve_layers(layer)
     for rel_dir, cmd in build_pipeline_plan(layers, target):
         code = _run(cmd, cwd=REPO_ROOT / rel_dir, dry_run=dry_run)
@@ -376,7 +376,7 @@ def run(
 
 @app.command()
 def validate(dry_run: bool = typer.Option(False)):
-    """Valida todos os bundles — bronze/silver/gold/orchestration (CI-friendly)."""
+    """Valida todos os bundles — essential/bronze/silver/gold/orchestration (CI-friendly)."""
     for layer in resolve_layers("all"):
         code = _run(bundle_validate_cmd(), cwd=REPO_ROOT / layer_dir(layer), dry_run=dry_run)
         if code != 0:
@@ -391,7 +391,7 @@ def info():
     typer.echo(f"bicep     : {BICEP_TEMPLATE}")
     typer.echo(f"params    : {BICEP_PARAMS}")
     typer.echo("setup-spn : SPN consumidora + segredos (dm setup-spn)")
-    typer.echo("bundles   : layer_bronze, layer_silver, layer_gold, orchestration")
+    typer.echo("bundles   : essential, layer_bronze, layer_silver, layer_gold, orchestration")
 
 
 if __name__ == "__main__":  # pragma: no cover

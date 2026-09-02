@@ -20,7 +20,7 @@ dm --help
 | `dm setup-catalog -g <rg>` | Provisiona/reconcilia o Unity Catalog: secret scope AKV, storage credential, external location e catalog `prd`. Reconciliador. |
 | `dm deploy [all\|essential\|layer_bronze\|layer_silver\|layer_gold\|orchestration]` | Publica os Databricks Asset Bundles (ordem do `all`: essential → camadas → orquestração). |
 | `dm run <job> -l <bundle>` | Dispara um job de um bundle (ex.: `dm run setup-databases -l essential`, `dm run bronze-streaming -l layer_bronze`). |
-| `dm validate` | Valida todos os bundles — bronze/silver/gold/orchestration (`databricks bundle validate`). |
+| `dm validate` | Valida todos os bundles — essential/bronze/silver/gold/orchestration (`databricks bundle validate`). |
 | `dm info` | Mostra a configuração resolvida. |
 
 Use `--dry-run` nos comandos de Bicep/bundles (`provision`/`deploy`/`run`/`validate`)

@@ -44,15 +44,17 @@ configuração ou no Key Vault. Detalhes em [Ingestão](ingestion.md).
 
 ## 2. Bronze (landing)
 
-Um job Databricks (**`Trigger.AvailableNow`**) consome cada Event Hub e grava na Bronze em
-**Delta**. As dimensões são geradas em paralelo. A Bronze é **imutável / append-only**:
-nenhuma transformação de negócio acontece aqui.
+Um job Databricks (**`Trigger.AvailableNow`**) consome cada Event Hub, **parseia o evento
+contra o contrato versionado** e grava na Bronze em **Delta** já estruturado, preservando
+o payload original. As dimensões são geradas em paralelo. A Bronze é **imutável /
+append-only**: nenhuma **regra de negócio** acontece aqui (só estruturação).
 
 ## 3. Silver (Bronze → Silver)
 
-Job diário que consome a Bronze (append-only) como **stream Delta + checkpoint**
-(`AvailableNow`), faz o parse do JSON cru, normaliza nomes e tipos, deriva colunas de
-data e aplica **MERGE idempotente** via `foreachBatch`. Ver [Processamento](processing.md).
+Job diário que consome a Bronze (append-only, já estruturada) como **stream Delta +
+checkpoint** (`AvailableNow`), normaliza nomes e tipos, deriva colunas de data e aplica
+**MERGE idempotente** via `foreachBatch` — sem refazer `from_json` (o parse é da Bronze).
+Ver [Processamento](processing.md).
 
 ## 4. Gold (Silver → Gold)
 

@@ -2,8 +2,6 @@ bundle:
   name: gold-callcenter
 
 variables:
-  TIMEZONE:      { default: America/Sao_Paulo }
-  SCHEDULE_CRON: { default: "0 0 6 * * ?" }
   CATALOG:       { default: prd }
   BRONZE_SCHEMA: { default: b_dm_callcenter }
   SILVER_SCHEMA: { default: s_dm_callcenter }

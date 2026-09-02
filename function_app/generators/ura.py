@@ -4,6 +4,7 @@ import random
 import uuid
 from datetime import datetime, timedelta
 
+from config.settings import settings
 from faker import Faker
 
 fake = Faker("pt_BR")
@@ -26,7 +27,7 @@ def gerar_eventos_ura(min_chamadas: int = 8, max_chamadas: int = 30) -> list[dic
         eventos.append(
             {
                 "id_chamada": str(uuid.uuid4()),
-                "id_cliente": random.randint(1, 1000),
+                "id_cliente": random.randint(1, settings.qtd_clientes),
                 "data_hora_inicio": inicio.isoformat(),
                 "data_hora_fim": fim.isoformat(),
                 "autenticado": random.choices([True, False], weights=[85, 15])[0],

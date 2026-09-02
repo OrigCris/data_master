@@ -37,8 +37,7 @@ quantidade/número · `IN_` indicador · `VL_`/`PC_` valor/percentual · `DS_` d
 │   └── lib/              # transforms, quality, security (compartilhado/testado)
 ├── docs/                 # esta documentação (+ adrs, runbooks)
 ├── function_app/         # produtor de eventos (Azure Functions)
-├── infrastructure/       # Bicep modular (SPN consumidora via `dm setup-spn`)
-├── monitoring/           # dashboard + alertas
+├── infrastructure/       # Bicep modular (inclui observabilidade: Monitor + alertas + workbook)
 └── tests/                # pytest (unit)
 ```
 
@@ -46,8 +45,8 @@ quantidade/número · `IN_` indicador · `VL_`/`PC_` valor/percentual · `DS_` d
 - **Progresso da Silver**: controlado pelo **checkpoint** do streaming por fonte, em
   `/Volumes/.../checkpoints/silver/<tabela>`.
 - `s_dm_callcenter.__dq_results` — histórico de Data Quality (regras de linha).
-- `s_dm_callcenter.__quarantine` — DLQ: eventos que violam o data contract (payload
-  cru + motivo), em vez de descartados.
+- `s_dm_callcenter.__quarantine` — DLQ: eventos com obrigatório ausente/inválido
+  (payload original + motivo), em vez de descartados; idempotente por `event_id`.
 - `s_dm_callcenter.__dataset_metrics` — histórico de métricas de dataset (volume,
   freshness) que alimenta a observabilidade.
 

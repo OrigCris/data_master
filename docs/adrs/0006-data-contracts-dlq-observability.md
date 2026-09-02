@@ -1,21 +1,24 @@
 # ADR-0006 — Data contracts, quarentena (DLQ) e observabilidade de dados
 
 - **Status**: Aceito
-- **Contexto**: a Silver parseia o JSON da Bronze contra um schema explícito. Sem uma
-  estratégia definida, um evento incompatível (JSON malformado, campo obrigatório
-  ausente ou com tipo errado) some do processamento silenciosamente, e uma queda/pico
-  anômalo de volume passa despercebido pelas regras de linha (`not_null`, `between`).
+- **Contexto**: a Bronze parseia o evento contra um contrato versionado e a Silver
+  consome os campos já estruturados. Sem uma estratégia definida, um evento incompatível
+  (campo obrigatório ausente ou com tipo errado, inclusive vindo de JSON malformado) some
+  do processamento silenciosamente, e uma queda/pico anômalo de volume passa despercebido
+  pelas regras de linha (`not_null`, `between`).
 
 ## Decisão
-1. **Data contract + quarentena (DLQ)**: cada micro-batch valida os eventos contra o
-   schema e uma lista de **campos obrigatórios**. Eventos inválidos são roteados para
-   `__quarantine` (payload cru + motivo), não descartados. Só os válidos seguem para a
-   Silver.
+1. **Contrato + quarentena (DLQ)**: o contrato versionado (`transforms.contracts`) é
+   aplicado na Bronze (parse estrutural, preservando o payload original) e reforçado na
+   Silver, onde cada micro-batch valida os **campos obrigatórios**. Eventos inválidos são
+   roteados para `__quarantine` (payload original + motivo), não descartados — a escrita é
+   **idempotente por `event_id`** (`merge_quarantine`), então um retry do micro-batch
+   at-least-once não duplica. Só os válidos seguem para a Silver.
 2. **Observabilidade de dataset**: a cada execução, registra-se **volume** e
    **freshness** em `__dataset_metrics` e compara-se o volume com a **média móvel** das
    execuções anteriores (anomalia fora de `[0.7, 1.3] × média`).
 
-Ambos vivem na lib compartilhada (`transforms.validate_contract`,
+Ambos vivem na lib compartilhada (`transforms.validate_contract`/`merge_quarantine`,
 `quality.run_observability`), com a lógica de decisão em funções puras testadas no CI.
 
 ## Alternativas
@@ -28,7 +31,7 @@ Ambos vivem na lib compartilhada (`transforms.validate_contract`,
 
 ## Consequências
 - (+) Dado inválido é isolado e auditável (triagem/reprocessamento), sem contaminar a
-  camada confiável.
+  camada confiável; a DLQ é idempotente por `event_id` (retries não duplicam).
 - (+) Data Quality evolui para **Data Reliability**: sinais de volume e freshness, não
   só validação de linha.
 - (−) Uma tabela de quarentena e uma de métricas a operar/observar; a comparação de

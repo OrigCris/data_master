@@ -30,7 +30,7 @@ from typing import Any
 try:  # pragma: no cover - runtime Spark
     from pyspark.sql import DataFrame, SparkSession
     from pyspark.sql import functions as F
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError):  # pragma: no cover
     DataFrame = object  # type: ignore
     SparkSession = object  # type: ignore
     F = None  # type: ignore
