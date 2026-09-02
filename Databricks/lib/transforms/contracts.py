@@ -8,7 +8,6 @@ sem Schema Registry.
 """
 from __future__ import annotations
 
-from collections.abc import Sequence
 from dataclasses import dataclass
 
 from pyspark.sql import types as T
@@ -17,7 +16,7 @@ from pyspark.sql import types as T
 @dataclass(frozen=True)
 class Contract:
     schema: T.StructType
-    required: Sequence[str]
+    required: tuple[str, ...]
     version: str = "1.0"
 
 
@@ -34,7 +33,7 @@ _CONTRACTS: dict[str, Contract] = {
             T.StructField("codigo_opcao", T.StringType()),
             T.StructField("derivado_atendimento", T.BooleanType()),
         ]),
-        required=["id_chamada", "id_cliente", "data_hora_inicio"],
+        required=("id_chamada", "id_cliente", "data_hora_inicio"),
     ),
     "calls_once": Contract(
         schema=T.StructType([
@@ -46,7 +45,7 @@ _CONTRACTS: dict[str, Contract] = {
             T.StructField("data_hora_fim", T.TimestampType()),
             T.StructField("area_atendimento", T.StringType()),
         ]),
-        required=["id_chamada", "id_atendimento", "id_assistente", "data_hora_inicio"],
+        required=("id_chamada", "id_atendimento", "id_assistente", "data_hora_inicio"),
     ),
     "surveys_once": Contract(
         schema=T.StructType([
@@ -55,7 +54,7 @@ _CONTRACTS: dict[str, Contract] = {
             T.StructField("data_envio", T.DateType()),
             T.StructField("nota", T.IntegerType()),
         ]),
-        required=["id_chamada", "id_pesquisa", "nota"],
+        required=("id_chamada", "id_pesquisa", "nota"),
     ),
 }
 

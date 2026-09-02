@@ -32,8 +32,9 @@ targets:
 
 resources:
   jobs:
-    # Cria os schemas (b_/s_/g_dm_callcenter) e os Volumes de checkpoint. Rodar UMA vez,
-    # após `dm setup-catalog` e antes dos jobs das camadas.
+    # Cria os schemas (b_/s_/g_dm_callcenter) e os Volumes de checkpoint. Executado no
+    # bootstrap do ambiente (após `dm setup-catalog`, antes dos jobs das camadas);
+    # reexecutável de forma idempotente (CREATE ... IF NOT EXISTS).
     setup-databases:
       name: "setup-databases"
       job_clusters:

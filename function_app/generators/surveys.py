@@ -17,9 +17,9 @@ def gerar_fato_pesquisa_satisfacao(eventos_ura: Iterable[dict]) -> list[dict]:
                 {
                     "id_chamada": e["id_chamada"],
                     "id_pesquisa": str(uuid.uuid4()),
-                    # data (não timestamp): a Silver faz parse como DateType.
-                    # Enviar um timestamp ISO completo resultaria em DT_ENVI nulo
-                    # e a pesquisa sumiria do cálculo de NPS no Gold.
+                    # O contrato da Bronze interpreta este campo como DateType: um
+                    # timestamp ISO completo viraria DT_ENVI nulo e a pesquisa sumiria
+                    # do cálculo de NPS no Gold.
                     "data_envio": date.today().isoformat(),
                     # Escala NPS clássica: 0–10.
                     "nota": random.randint(0, 10),

@@ -63,6 +63,9 @@ def send_events(eventhub_name: str, credential, items: Sequence[object]) -> int:
 
         return total_sent
 
+    except EventSendError:
+        # já é a exceção de domínio (ex.: evento maior que o batch) — não re-embrulha.
+        raise
     except EventHubError as exc:
         raise EventSendError(f"Erro do Event Hubs: {exc}") from exc
     except Exception as exc:

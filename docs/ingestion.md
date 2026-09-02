@@ -25,7 +25,7 @@ function_app/
 
 > **Coerência dos dados**: `calls` e `surveys` só existem para chamadas com
 > `derivado_atendimento = true`, e `data_envio` da pesquisa é uma **data** (não
-> timestamp) — alinhado ao tipo `DateType` esperado pela Silver.
+> timestamp) — alinhado ao tipo `DateType` do contrato da Bronze.
 
 ## Landing na Bronze (Databricks)
 

@@ -34,6 +34,14 @@ param tags object = {
 @description('E-mail de destino dos alertas (Action Group) — configurável por parâmetro')
 param alertEmail string
 
+// Nomes dos Event Hubs (URA/Calls/Surveys) — usados pelo namespace e pelo alerta de
+// "sem ingestão" por hub (dimensão EntityName), evitando hardcode em dois lugares.
+var eventHubNames = [
+  'evh_cj_tec_ura'
+  'evh_cj_tec_calls'
+  'evh_cj_tec_surveys'
+]
+
 // ----------------------------- Storage (ADLS Gen2) ---------------------------
 module storage 'modules/storage.bicep' = {
   name: 'storage'
@@ -52,11 +60,7 @@ module eventhub 'modules/eventhub.bicep' = {
     namespaceName: 'evhns${namePrefix}'
     location: location
     tags: tags
-    hubs: [
-      'evh_cj_tec_ura'
-      'evh_cj_tec_calls'
-      'evh_cj_tec_surveys'
-    ]
+    hubs: eventHubNames
   }
 }
 
@@ -136,6 +140,7 @@ module alerts 'modules/monitoring/alert-rules.bicep' = {
     eventHubNamespaceId: eventhub.outputs.namespaceId
     appInsightsId: monitoring.outputs.appInsightsId
     actionGroupId: monitoring.outputs.actionGroupId
+    eventHubNames: eventHubNames
   }
 }
 

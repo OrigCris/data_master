@@ -70,7 +70,7 @@ COMMENT 'Resultados das checagens de Data Quality por execução.';
 -- descartados, e sim isolados aqui com o payload original e o motivo, para triagem/
 -- reprocessamento. Escrita idempotente por event_id (MERGE WHEN NOT MATCHED).
 CREATE TABLE IF NOT EXISTS prd.s_dm_callcenter.__quarantine (
-  event_id       STRING,   -- sha256 do payload original (idempotência/triagem)
+  event_id       STRING,   -- sha256 da identidade do evento (source|partition|offset)
   payload        STRING,   -- payload original recebido na Bronze
   error_reason   STRING,   -- missing_or_invalid: <campos>
   schema_version STRING,   -- versão do contrato aplicado

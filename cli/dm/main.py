@@ -343,7 +343,8 @@ def setup_catalog(
         dbx(["catalogs", "create", "--json", json.dumps({"name": catalog, "storage_root": catalog_storage})])
         typer.secho(f"[+] catalog '{catalog}' criado com managed storage em '{catalog_storage}'", fg=typer.colors.GREEN)
 
-    typer.secho("✓ Unity Catalog pronto. Em seguida rode o notebook essential/create_databases.", fg=typer.colors.GREEN)
+    typer.secho("✓ Unity Catalog pronto.", fg=typer.colors.GREEN)
+    typer.secho("  Próximo passo: dm run setup-databases -l essential", fg=typer.colors.BRIGHT_BLACK)
 
 
 @app.command()

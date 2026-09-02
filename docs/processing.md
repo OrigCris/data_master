@@ -121,10 +121,12 @@ SilverStream(spark).run(
 )
 ```
 
-A escrita da quarentena é **idempotente por `event_id`** (`merge_quarantine`): como o
-`foreachBatch` é at-least-once, um retry do mesmo micro-batch não gera duplicidade na
-DLQ. Assim, dado inválido **não some** e também **não contamina** a camada confiável;
-a quarentena fica disponível para triagem e reprocessamento (ver [Roadmap](roadmap.md)).
+A escrita da quarentena é **idempotente por `event_id`** (`merge_quarantine`). O
+`event_id` é a **identidade do evento no Event Hub** (`source|partition|offset`), não o
+hash do payload: um retry do mesmo offset não duplica, mas dois eventos distintos com o
+mesmo payload inválido (offsets diferentes) são preservados. Assim, dado inválido **não
+some** e também **não contamina** a camada confiável; a quarentena fica disponível para
+triagem e reprocessamento (ver [Roadmap](roadmap.md)).
 
 ## Observabilidade de dataset
 

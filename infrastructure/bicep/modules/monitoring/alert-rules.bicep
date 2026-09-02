@@ -13,6 +13,8 @@ param eventHubNamespaceId string
 param appInsightsId string
 @description('Resource ID do Action Group de destino')
 param actionGroupId string
+@description('Nomes dos Event Hubs — o alerta de "sem ingestão" avalia cada um (dimensão EntityName)')
+param eventHubNames array
 
 @description('Exceções da Function acima disto disparam Crítico')
 param thresholdExceptions int = 0
@@ -90,7 +92,9 @@ resource ehServerErrors 'Microsoft.Insights/metricAlerts@2018-03-01' = {
 }
 
 // ----------------------------- Operacional ----------------------------------- //
-// Nenhuma mensagem recebida na janela em que se espera tráfego (produtor a cada 2 min).
+// Sem ingestão POR HUB: a dimensão EntityName faz o alerta avaliar cada Event Hub
+// (URA/Calls/Surveys) separadamente e disparar por hub — se só a URA para, o alerta
+// dispara, mesmo com Calls/Surveys ainda recebendo (um alerta namespace-wide não pegaria).
 resource ehNoIngestion 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'oper-evh-sem-ingestao'
   location: 'global'
@@ -111,6 +115,13 @@ resource ehNoIngestion 'Microsoft.Insights/metricAlerts@2018-03-01' = {
           threshold: 0
           timeAggregation: 'Total'
           criterionType: 'StaticThresholdCriterion'
+          dimensions: [
+            {
+              name: 'EntityName'
+              operator: 'Include'
+              values: eventHubNames
+            }
+          ]
         }
       ]
     }

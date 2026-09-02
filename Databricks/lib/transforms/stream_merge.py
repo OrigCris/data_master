@@ -72,8 +72,10 @@ def merge_quarantine(spark: SparkSession, quarantine_table: str, quarantine_df: 
     """Grava a DLQ de forma idempotente por `event_id`.
 
     O `foreachBatch` é at-least-once: um retry do mesmo micro-batch reapresenta o mesmo
-    evento inválido. Como o `event_id` é determinístico (hash do payload), o MERGE
-    `WHEN NOT MATCHED` insere só a primeira ocorrência — sem duplicidade lógica na DLQ.
+    evento inválido. Como o `event_id` é a identidade do evento no Event Hub
+    (`source|partition|offset`), o MERGE `WHEN NOT MATCHED` insere só a primeira
+    ocorrência — sem duplicidade lógica na DLQ, e sem colapsar eventos distintos que por
+    acaso tenham o mesmo payload.
     """
     ensure_table(spark, quarantine_table, quarantine_df)
     view = "_dlq_" + quarantine_table.replace(".", "_")
