@@ -62,7 +62,7 @@ Três camadas distintas, todas em tabelas Delta:
 
 | Camada | O que garante | Tabela | Como sinaliza |
 |---|---|---|---|
-| **Data Contract** | estrutura mínima + campos obrigatórios | `__quarantine` | evento inválido isolado (idempotente por `event_id`) |
+| **Data Contract** | todas as colunas do schema versionado | `__quarantine` | evento inválido isolado (idempotente por `event_id`) |
 | **Data Quality** | regras de qualidade + quality gate | `__dq_results` | falha crítica **interrompe o job** (`raise_if_critical_failed`) |
 | **Data Observability** | volume / freshness / comportamento do dataset | `__dataset_metrics` | anomalia registrada (`warn`) e comparada à média móvel |
 

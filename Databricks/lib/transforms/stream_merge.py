@@ -9,16 +9,54 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from quality import run_expectations
 
 from .parse import validate_contract
 
 try:  # pragma: no cover - depende do runtime Spark
-    from pyspark.sql import DataFrame, SparkSession
+    from pyspark.sql import DataFrame, SparkSession, Window
+    from pyspark.sql import functions as F
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
     DataFrame = object  # type: ignore
     SparkSession = object  # type: ignore
+    Window = None  # type: ignore
+    F = None  # type: ignore
+
+if TYPE_CHECKING:  # pragma: no cover - só para tipagem (contracts exige pyspark)
+    from .contracts import Contract
+
+# Chaves da recomputação de `tabe_calls`: a chamada (`ID_CHAM`) é o grupo recalculado
+# por inteiro; a linha da Silver é o atendimento (`ID_CHAM` + `ID_ATEN`).
+CALLS_RECOMPUTE_KEY = "ID_CHAM"
+CALLS_ROW_KEYS = ["ID_CHAM", "ID_ATEN"]
+# Recorte temporal da leitura do histórico: coluna de data da Silver (é `cluster_by`, o
+# filtro faz *data skipping*) e a folga aplicada à data mais antiga do batch. Um dia
+# cobre a chamada que vira a meia-noite e o evento que chega atrasado dentro do dia.
+CALLS_DATE_COL = "DT_INIC"
+CALLS_LOOKBACK_DAYS = 1
+
+
+def add_transfer_indicators(calls_df: DataFrame) -> DataFrame:
+    """Deriva os indicadores de transferência olhando a chamada **inteira**.
+
+    A janela por `ID_CHAM` (ordenada por `DH_INIC`) precisa enxergar todos os
+    atendimentos da chamada: `IN_TRAF` = houve próximo atendimento; `IN_TRAF_INDV` = a
+    transferência foi para a mesma área (indevida). Espera o conjunto completo da
+    chamada — em streaming, use `SilverStream(...).run(recompute_calls=True)`, que une o
+    batch ao histórico antes de aplicar a janela.
+    """
+    w = Window.partitionBy(CALLS_RECOMPUTE_KEY).orderBy(F.asc("DH_INIC"))
+    lead_asst = F.lead("ID_ASST", 1).over(w)
+    lead_area = F.lead("DS_AREA_ATEN", 1).over(w)
+    return calls_df.withColumn(
+        "IN_TRAF", F.when(lead_asst.isNotNull(), F.lit(1)).otherwise(F.lit(0))
+    ).withColumn(
+        "IN_TRAF_INDV",
+        F.when((F.col("IN_TRAF") == 1) & (F.col("DS_AREA_ATEN") == lead_area), F.lit(1)).otherwise(F.lit(0)),
+    )
 
 
 def build_merge_on(keys: Sequence[str], target_alias: str = "S", source_alias: str = "C") -> str:
@@ -44,8 +82,8 @@ def ensure_table(spark: SparkSession, fqn: str, template_df: DataFrame, cluster_
     """Cria a tabela vazia com o schema de `template_df`, se ainda não existir."""
     assert_fqn(fqn)
     if not spark.catalog.tableExists(fqn):
-        empty = spark.createDataFrame([], template_df.schema)
-        empty.write.format("delta").mode("overwrite").saveAsTable(fqn)
+        empty_df = spark.createDataFrame([], template_df.schema)
+        empty_df.write.format("delta").mode("overwrite").saveAsTable(fqn)
         if cluster_by:
             cols = ", ".join(cluster_by)
             spark.sql(f"ALTER TABLE {fqn} CLUSTER BY ({cols})")
@@ -60,11 +98,11 @@ def merge_upsert(
 ) -> None:
     """Aplica MERGE (upsert) idempotente de `transformed_df` na tabela alvo."""
     ensure_table(spark, target_table_fqn, transformed_df, cluster_by=cluster_by)
-    view = "_stg_" + target_table_fqn.replace(".", "_")
-    transformed_df.createOrReplaceTempView(view)
+    source_view = "_stg_" + target_table_fqn.replace(".", "_")
+    transformed_df.createOrReplaceTempView(source_view)
     # Identificadores internos e validados (assert_fqn; chaves e view construídos em
     # código) — sem input de usuário, logo sem vetor de injeção.
-    merge_sql = f"MERGE INTO {target_table_fqn} AS S USING {view} AS C ON {build_merge_on(keys)} WHEN MATCHED THEN UPDATE SET * WHEN NOT MATCHED THEN INSERT *"  # nosec B608
+    merge_sql = f"MERGE INTO {target_table_fqn} AS S USING {source_view} AS C ON {build_merge_on(keys)} WHEN MATCHED THEN UPDATE SET * WHEN NOT MATCHED THEN INSERT *"  # nosec B608
     spark.sql(merge_sql)
 
 
@@ -78,9 +116,9 @@ def merge_quarantine(spark: SparkSession, quarantine_table: str, quarantine_df: 
     acaso tenham o mesmo payload.
     """
     ensure_table(spark, quarantine_table, quarantine_df)
-    view = "_dlq_" + quarantine_table.replace(".", "_")
-    quarantine_df.createOrReplaceTempView(view)
-    merge_sql = f"MERGE INTO {quarantine_table} AS T USING {view} AS S ON T.event_id = S.event_id WHEN NOT MATCHED THEN INSERT *"  # nosec B608
+    quarantine_view = "_dlq_" + quarantine_table.replace(".", "_")
+    quarantine_df.createOrReplaceTempView(quarantine_view)
+    merge_sql = f"MERGE INTO {quarantine_table} AS T USING {quarantine_view} AS S ON T.event_id = S.event_id WHEN NOT MATCHED THEN INSERT *"  # nosec B608
     spark.sql(merge_sql)
 
 
@@ -104,37 +142,55 @@ class SilverStream:
             .table(source_table_fqn)
         )
 
-    def _recompute_with_history(
+    def _recompute_calls_with_history(
         self,
         session: SparkSession,
         transformed_df: DataFrame,
         target_table_fqn: str,
-        keys: Sequence[str],
-        recompute: Callable[[DataFrame], DataFrame],
-        recompute_keys: Sequence[str],
     ) -> DataFrame:
-        """Reprocessa cada grupo (`recompute_keys`) por inteiro, unindo o batch ao
-        histórico já na Silver para as chaves tocadas.
+        """Reprocessa cada chamada (`ID_CHAM`) por inteiro, unindo o batch ao histórico
+        já na Silver, e recalcula os indicadores de transferência.
 
-        Traz do alvo apenas os registros das mesmas chaves (leitura limitada), descarta
-        as colunas derivadas (serão recalculadas), sobrepõe pelas linhas novas e chama
-        `recompute` sobre o conjunto completo. Como o alvo é a fonte da verdade, um
-        evento atrasado é reconciliado sem *watermark* e sem perda. Usa `session` (a do
-        micro-batch) para que o join ocorra na mesma sessão do batch.
+        A leitura do alvo é limitada por **dois filtros**: o **temporal**
+        (`DT_INIC >= menor data do batch - CALLS_LOOKBACK_DAYS`, que é *data skipping*
+        sobre o `cluster_by`) e o das **chamadas tocadas** pelo batch — em vez de varrer
+        o histórico inteiro. Sobre esse recorte, descarta as colunas derivadas (serão
+        recalculadas), sobrepõe pelas linhas novas (`ID_CHAM` + `ID_ATEN`) e aplica a
+        janela sobre a chamada completa.
+
+        Como o alvo é a fonte da verdade, um atendimento atrasado é reconciliado sem
+        *watermark* e sem perda — desde que dentro da janela de lookback; um atendimento
+        cujo par esteja fora dela não reabre a chamada. Usa `session` (a do micro-batch)
+        para que o join ocorra na mesma sessão do batch.
         """
-        recompute_keys = list(recompute_keys)
-        keys = list(keys)
         if not session.catalog.tableExists(target_table_fqn):
-            return recompute(transformed_df)
+            return add_transfer_indicators(transformed_df)
 
-        batch_keys = transformed_df.select(*recompute_keys).distinct()
-        existing = session.table(target_table_fqn).join(batch_keys, recompute_keys, "left_semi")
-        derived = [c for c in existing.columns if c not in transformed_df.columns]
-        existing_base = existing.drop(*derived) if derived else existing
-        combined = existing_base.join(transformed_df, keys, "left_anti").unionByName(
+        affected_calls = transformed_df.select(CALLS_RECOMPUTE_KEY).distinct()
+
+        # Recorte temporal: da data mais antiga do batch (menos o lookback) em diante.
+        # O `first()` roda uma agregação sobre o micro-batch — barato perto do ganho de
+        # não varrer o histórico inteiro do alvo a cada batch. Sem data no batch (coluna
+        # toda nula), resta o recorte por chamada.
+        batch_min_date = transformed_df.agg(F.min(CALLS_DATE_COL).alias("min_date")).first()["min_date"]
+        if batch_min_date is None:
+            history_window = F.lit(True)
+        else:
+            history_start = batch_min_date - timedelta(days=CALLS_LOOKBACK_DAYS)
+            history_window = F.col(CALLS_DATE_COL) >= F.lit(history_start)
+
+        existing_calls = (
+            session.table(target_table_fqn)
+            .filter(history_window)
+            .join(affected_calls, [CALLS_RECOMPUTE_KEY], "left_semi")
+        )
+
+        derived_cols = [c for c in existing_calls.columns if c not in transformed_df.columns]
+        historical_calls = existing_calls.drop(*derived_cols) if derived_cols else existing_calls
+        combined_calls = historical_calls.join(transformed_df, CALLS_ROW_KEYS, "left_anti").unionByName(
             transformed_df, allowMissingColumns=True
         )
-        return recompute(combined)
+        return add_transfer_indicators(combined_calls)
 
     def run(
         self,
@@ -146,20 +202,20 @@ class SilverStream:
         cluster_by: Sequence[str] | None = None,
         expectations: list | None = None,
         dq_results_table: str | None = None,
-        contract_required: Sequence[str] | None = None,
+        contract: Contract | None = None,
         quarantine_table: str | None = None,
-        schema_version: str = "1.0",
-        recompute: Callable[[DataFrame], DataFrame] | None = None,
-        recompute_keys: Sequence[str] | None = None,
+        recompute_calls: bool = False,
     ):
         """Roda o stream (AvailableNow) e bloqueia até terminar.
 
-        Por micro-batch: (1) **contrato** de campos obrigatórios — inválidos vão à
-        `quarantine_table` (idempotente por `event_id`), só os válidos seguem; (2)
-        **transform** (renomeação/derivação, sem `from_json` — a Bronze já estruturou);
-        (3) **recompute** por chave, se informado (junta ao histórico e reprocessa o
-        grupo inteiro — corrige derivações entre batches); (4) **gate de DQ**, se
-        informado (falha crítica interrompe); (5) **MERGE** idempotente por chave.
+        Por micro-batch: (1) **contrato** da tabela (todas as colunas do schema) —
+        inválidos vão à `quarantine_table` (idempotente por `event_id`), só os válidos
+        seguem; (2) **transform** (renomeação/derivação, sem `from_json` — a Bronze já
+        estruturou);
+        (3) **recomputação da chamada**, se `recompute_calls` (junta o batch ao
+        histórico e reprocessa a chamada inteira — corrige derivações entre batches);
+        (4) **gate de DQ**, se informado (falha crítica interrompe); (5) **MERGE**
+        idempotente por chave.
         """
 
         def _batch(micro_df: DataFrame, _batch_id: int) -> None:
@@ -170,28 +226,25 @@ class SilverStream:
             # entre sessões distintas.
             session = micro_df.sparkSession
             valid_events_df = micro_df
-            if contract_required:
-                valid_events_df, quarantined = validate_contract(
-                    valid_events_df,
-                    contract_required,
-                    source=source_table_fqn,
-                    schema_version=schema_version,
+            if contract is not None:
+                valid_events_df, quarantined_df = validate_contract(
+                    valid_events_df, contract, source=source_table_fqn
                 )
                 if quarantine_table:
-                    merge_quarantine(session, quarantine_table, quarantined)
+                    merge_quarantine(session, quarantine_table, quarantined_df)
                 if valid_events_df.isEmpty():
                     return
             transformed_df = transform(valid_events_df)
-            if recompute is not None and recompute_keys:
-                transformed_df = self._recompute_with_history(
-                    session, transformed_df, target_table_fqn, keys, recompute, recompute_keys
+            if recompute_calls:
+                transformed_df = self._recompute_calls_with_history(
+                    session, transformed_df, target_table_fqn
                 )
             if expectations:
-                report = run_expectations(transformed_df, expectations, target_table_fqn)
-                print(report.summary())
+                dq_report = run_expectations(transformed_df, expectations, target_table_fqn)
+                print(dq_report.summary())
                 if dq_results_table:
-                    report.to_table(session, dq_results_table)
-                report.raise_if_critical_failed()
+                    dq_report.to_table(session, dq_results_table)
+                dq_report.raise_if_critical_failed()
             merge_upsert(session, target_table_fqn, transformed_df, keys, cluster_by=cluster_by)
 
         query = (

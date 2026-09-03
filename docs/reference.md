@@ -38,14 +38,14 @@ quantidade/número · `IN_` indicador · `VL_`/`PC_` valor/percentual · `DS_` d
 ├── docs/                 # esta documentação (+ adrs, runbooks)
 ├── function_app/         # produtor de eventos (Azure Functions)
 ├── infrastructure/       # Bicep modular (inclui observabilidade: Monitor + alertas + workbook)
-└── tests/                # pytest (unit)
+└── tests/                # pytest (unit + integração com Spark)
 ```
 
 ## Tabelas auxiliares e progresso
 - **Progresso da Silver**: controlado pelo **checkpoint** do streaming por fonte, em
   `/Volumes/.../checkpoints/silver/<tabela>`.
 - `s_dm_callcenter.__dq_results` — histórico de Data Quality (regras de linha).
-- `s_dm_callcenter.__quarantine` — DLQ: eventos com obrigatório ausente/inválido
+- `s_dm_callcenter.__quarantine` — DLQ: eventos com coluna do contrato ausente/inválida
   (payload original + motivo), em vez de descartados; idempotente por `event_id`.
 - `s_dm_callcenter.__dataset_metrics` — histórico de métricas de dataset (volume,
   freshness) que alimenta a observabilidade.

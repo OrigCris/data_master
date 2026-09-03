@@ -3,14 +3,15 @@
 - **Status**: Aceito
 - **Contexto**: a Bronze parseia o evento contra um contrato versionado e a Silver
   consome os campos já estruturados. Sem uma estratégia definida, um evento incompatível
-  (campo obrigatório ausente ou com tipo errado, inclusive vindo de JSON malformado) some
+  (coluna do contrato ausente ou com tipo errado, inclusive vindo de JSON malformado) some
   do processamento silenciosamente, e uma queda/pico anômalo de volume passa despercebido
   pelas regras de linha (`not_null`, `between`).
 
 ## Decisão
 1. **Contrato + quarentena (DLQ)**: o contrato versionado (`transforms.contracts`) é
    aplicado na Bronze (parse estrutural, preservando o payload original) e reforçado na
-   Silver, onde cada micro-batch valida os **campos obrigatórios**. Eventos inválidos são
+   Silver, onde cada micro-batch valida **todas as colunas do schema** — que é a fonte
+   única da verdade do contrato, sem lista de obrigatórios à parte. Eventos inválidos são
    roteados para `__quarantine` (payload original + motivo), não descartados — a escrita é
    **idempotente por `event_id`** (`merge_quarantine`), então um retry do micro-batch
    at-least-once não duplica. Só os válidos seguem para a Silver.

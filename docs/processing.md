@@ -40,9 +40,12 @@ stream.run(
    reexecuções de micro-batch são absorvidas pelo MERGE idempotente. Reprocessar do
    zero é resetar o checkpoint (ver runbook [streaming-checkpoint-reset](runbooks/streaming-checkpoint-reset.md)).
 
-> O padrão de streaming/MERGE é centralizado em `transforms.SilverStream` e exercitado por
-> testes em [`tests/unit/test_transforms.py`](../tests/unit/test_transforms.py), de
-> modo que a regra de idempotência roda no CI sem cluster Spark.
+> O padrão de streaming/MERGE é centralizado em `transforms.SilverStream`. A regra de
+> idempotência é testada como função pura em
+> [`tests/unit/test_transforms.py`](../tests/unit/test_transforms.py) (CI sem cluster) e
+> ponta a ponta em
+> [`tests/integration/test_silver_stream_merge.py`](../tests/integration/test_silver_stream_merge.py)
+> (job de CI com Spark + Delta).
 
 ## Transformações por tabela
 
@@ -52,33 +55,44 @@ stream.run(
 | `tabe_calls` | `ID_CHAM`, `ID_ATEN` | `IN_TRAF`, `IN_TRAF_INDV` (recomputados sobre a chamada inteira — ver abaixo) |
 | `tabe_pesq_ura` | `ID_CHAM` | `VL_NOTA`, `DT_ENVI` |
 
-### Recomputação por chave (eventos entre micro-batches)
+### Recomputação da chamada (eventos entre micro-batches)
 
 Os indicadores de transferência de `tabe_calls` (`IN_TRAF`/`IN_TRAF_INDV`) dependem de
 **todos os atendimentos de uma chamada** — uma janela `lead` por `ID_CHAM`. Num stream,
 não se pode assumir que os atendimentos correlatos cheguem no mesmo micro-batch.
 
-Por isso o `SilverStream` suporta uma etapa de **recomputação por chave**: para cada
+Por isso o `SilverStream` tem a etapa de **recomputação da chamada**: para cada
 `ID_CHAM` presente no batch, ele junta os atendimentos novos ao **histórico já gravado
-na Silver** e recalcula os indicadores sobre a chamada inteira, antes do MERGE.
+na Silver** e recalcula os indicadores sobre a chamada inteira, antes do MERGE. O escopo
+é fixo — grupo `ID_CHAM`, linha `ID_CHAM` + `ID_ATEN` — e a derivação é a de
+`transforms.add_transfer_indicators`.
 
 ```python
 SilverStream(spark).run(
     ...,
-    recompute=recompute,          # aplica a janela sobre o conjunto completo da chave
-    recompute_keys=["ID_CHAM"],   # escopo recarregado do alvo (leitura limitada às chaves tocadas)
+    recompute_calls=True,   # junta o batch ao histórico da chamada e recalcula IN_TRAF/IN_TRAF_INDV
 )
 ```
 
+A leitura do alvo é **duplamente recortada**, em vez de varrer o histórico inteiro:
+
+1. **Temporal** — `DT_INIC >= (menor DT_INIC do batch − 1 dia)`. Como `DT_INIC` está no
+   `cluster_by` de `tabe_calls`, o filtro vira *data skipping* no Delta. O dia de folga
+   cobre a chamada que atravessa a meia-noite e o atendimento que chega atrasado dentro
+   do dia.
+2. **Chamadas tocadas** — `left_semi` pelos `ID_CHAM` distintos do batch.
+
 Como a Silver é a fonte da verdade, um atendimento que chega atrasado reconcilia a
 chamada corretamente — **sem `watermark` e sem perder dado** (ver
-[Trade-offs](trade-offs.md)).
+[Trade-offs](trade-offs.md)). O lookback é o limite explícito dessa reconciliação: um
+atendimento cujo par esteja fora da janela não reabre a chamada — o preço de não reler
+todo o histórico a cada micro-batch.
 
 ## Data Quality (gate)
 
 Cada notebook Silver passa um conjunto de **expectativas** para o `SilverStream`. A
-cada micro-batch, antes do MERGE, o gate valida o *staged*, registra o resultado em
-`__dq_results` e **interrompe** o batch em caso de falha crítica:
+cada micro-batch, antes do MERGE, o gate valida o `transformed_df`, registra o
+resultado em `__dq_results` e **interrompe** o batch em caso de falha crítica:
 
 ```python
 from quality import Expectation
@@ -106,17 +120,20 @@ Severidade `critical` falha o job; `warn` apenas registra. O histórico fica em
 ## Data Contract e Quarentena (DLQ)
 
 O **parse estrutural** contra o contrato versionado acontece na Bronze
-([`transforms.contracts`](../Databricks/lib/transforms/contracts.py)). Na Silver, antes
-do gate de linha, cada micro-batch reforça o contrato validando os **campos
-obrigatórios** sobre as colunas já estruturadas (sem refazer `from_json`). Um evento com
-campo obrigatório ausente/incompatível — inclusive vindo de payload malformado, cujo
-parse na Bronze produziu nulos — não é descartado em silêncio: é isolado na **quarentena**
+([`transforms.contracts`](../Databricks/lib/transforms/contracts.py)). O **schema do
+contrato é a fonte única da verdade**: toda coluna declarada é obrigatória. Na Silver,
+antes do gate de linha, cada micro-batch reforça o contrato validando todas essas
+colunas já estruturadas (sem refazer `from_json`). Um evento com coluna do contrato
+ausente/incompatível — inclusive vindo de payload malformado, cujo parse na Bronze
+produziu nulos — não é descartado em silêncio: é isolado na **quarentena**
 (`__quarantine`) com o **payload original** e o motivo (`missing_or_invalid: <campos>`).
 
 ```python
+CONTRACT = contract_for("surveys_once")   # schema + versão da tabela Bronze
+
 SilverStream(spark).run(
     ...,
-    contract_required=["id_chamada", ...],# campos que não podem faltar
+    contract=CONTRACT,                    # valida todas as colunas do schema
     quarantine_table="prd.s_dm_callcenter.__quarantine",
 )
 ```
