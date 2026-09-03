@@ -7,6 +7,7 @@ from .parse import (
 )
 from .stream_merge import (
     SilverStream,
+    add_transfer_indicators,
     assert_fqn,
     build_merge_on,
     ensure_table,
@@ -24,5 +25,6 @@ __all__ = [
     "rename_columns",
     "add_load_audit",
     "add_period_and_dates",
+    "add_transfer_indicators",
     "validate_contract",
 ]

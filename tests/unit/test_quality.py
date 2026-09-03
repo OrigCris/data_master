@@ -16,8 +16,8 @@ def test_not_null_metadata():
 
 
 def test_between_metadata():
-    e = Expectation.between("VL_NOTA", 1, 10)
-    assert e.name == "between[VL_NOTA,1,10]"
+    e = Expectation.between("VL_NOTA", 0, 10)
+    assert e.name == "between[VL_NOTA,0,10]"
     assert e.severity == "critical"
 
 

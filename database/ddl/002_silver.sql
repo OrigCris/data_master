@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS prd.s_dm_callcenter.tabe_pesq_ura (
   ID_CHAM        STRING,
   ID_PESQ        STRING,
   DT_ENVI        DATE,
-  VL_NOTA        INT,      -- nota 1..10
+  VL_NOTA        INT,      -- nota 0..10 (escala NPS clássica)
   CD_PERI        INT,
   DH_REFE_CRGA   TIMESTAMP
 ) USING DELTA CLUSTER BY (ID_PESQ);
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS prd.s_dm_callcenter.__dq_results (
 ) USING DELTA
 COMMENT 'Resultados das checagens de Data Quality por execução.';
 
--- Dead-letter queue (DLQ): eventos com campo obrigatório ausente/inválido não são
+-- Dead-letter queue (DLQ): eventos com coluna do contrato ausente/inválida não são
 -- descartados, e sim isolados aqui com o payload original e o motivo, para triagem/
 -- reprocessamento. Escrita idempotente por event_id (MERGE WHEN NOT MATCHED).
 CREATE TABLE IF NOT EXISTS prd.s_dm_callcenter.__quarantine (
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS prd.s_dm_callcenter.__quarantine (
   ingestion_ts   TIMESTAMP,
   source         STRING    -- tabela/fonte de origem do evento
 ) USING DELTA
-COMMENT 'Eventos em quarentena por violação do contrato (campos obrigatórios).';
+COMMENT 'Eventos em quarentena por violação do contrato (colunas do schema).';
 
 -- Histórico de métricas de dataset (volume, freshness) para observabilidade:
 -- alimenta a comparação de volume contra a média móvel das execuções anteriores.

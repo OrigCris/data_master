@@ -21,6 +21,19 @@ Esta página registra as decisões mais relevantes, suas alternativas e os
   **at-least-once**; a não-duplicidade não é assumida pelo checkpoint e sim garantida
   pelo **MERGE idempotente por chave de negócio** (o sink absorve retries).
 
+### Recomputação da chamada com lookback de 1 dia
+- **Decisão**: os indicadores de transferência de `tabe_calls` (`IN_TRAF`/`IN_TRAF_INDV`)
+  são recalculados sobre a chamada inteira a cada micro-batch, unindo o batch ao
+  histórico da Silver. A leitura do alvo é recortada por **data** (`DT_INIC >= menor
+  data do batch − 1 dia`, com *data skipping* pelo `cluster_by`) e pelas **chamadas
+  tocadas** — ver [Processamento](processing.md).
+- **Por quê**: a janela `lead` por `ID_CHAM` precisa de todos os atendimentos da chamada,
+  que não caem necessariamente no mesmo batch; reler o histórico inteiro a cada batch
+  custaria caro e cresceria sem limite.
+- **Trade-off**: a reconciliação passa a ter um limite explícito — um atendimento cujo
+  par esteja fora da janela não reabre a chamada. O dia de folga cobre a chamada que
+  atravessa a meia-noite e o atraso dentro do dia.
+
 ### Orquestração por dependência (e não por horário)
 - **Decisão**: um job orquestrador (`dm-pipeline`) encadeia dims → silver → gold com
   `depends_on` via `run_job_task`; só o orquestrador tem schedule. A ingestão de

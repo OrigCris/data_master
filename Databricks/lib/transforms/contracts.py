@@ -1,10 +1,5 @@
-"""Contratos de dados versionados por tabela Bronze.
-
-O parsing estrutural do evento ocorre na Bronze contra estes contratos (schema +
-campos obrigatórios + versão); a Silver consome os campos já estruturados, sem refazer
-`from_json`. O contrato é resolvido pelo `table_name` da Bronze — o notebook Bronze é
-genérico e atende URA/CALLS/PESQUISA pela tabela de destino. Vive no código (versionado),
-sem Schema Registry.
+"""
+    Contratos de dados versionados por tabela Bronze.
 """
 from __future__ import annotations
 
@@ -15,8 +10,14 @@ from pyspark.sql import types as T
 
 @dataclass(frozen=True)
 class Contract:
+    """Schema versionado de uma tabela Bronze.
+
+    O schema é a fonte única da verdade: **toda** coluna declarada é obrigatória. Um
+    evento cujo parse deixe qualquer uma delas nula viola o contrato e vai para a
+    quarentena (ver `validate_contract`).
+    """
+
     schema: T.StructType
-    required: tuple[str, ...]
     version: str = "1.0"
 
 
@@ -33,7 +34,6 @@ _CONTRACTS: dict[str, Contract] = {
             T.StructField("codigo_opcao", T.StringType()),
             T.StructField("derivado_atendimento", T.BooleanType()),
         ]),
-        required=("id_chamada", "id_cliente", "data_hora_inicio"),
     ),
     "calls_once": Contract(
         schema=T.StructType([
@@ -45,7 +45,6 @@ _CONTRACTS: dict[str, Contract] = {
             T.StructField("data_hora_fim", T.TimestampType()),
             T.StructField("area_atendimento", T.StringType()),
         ]),
-        required=("id_chamada", "id_atendimento", "id_assistente", "data_hora_inicio"),
     ),
     "surveys_once": Contract(
         schema=T.StructType([
@@ -54,13 +53,12 @@ _CONTRACTS: dict[str, Contract] = {
             T.StructField("data_envio", T.DateType()),
             T.StructField("nota", T.IntegerType()),
         ]),
-        required=("id_chamada", "id_pesquisa", "nota"),
     ),
 }
 
 
 def contract_for(table_name: str) -> Contract:
-    """Contrato (schema + obrigatórios + versão) da tabela Bronze `table_name`."""
+    """Contrato (schema + versão) da tabela Bronze `table_name`."""
     try:
         return _CONTRACTS[table_name]
     except KeyError:

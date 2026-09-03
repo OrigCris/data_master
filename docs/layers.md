@@ -25,7 +25,7 @@ do Unity Catalog, com **MANAGED LOCATION** por camada no ADLS Gen2.
 ## Silver — incremental e idempotente
 
 A Silver consome a Bronze (append-only, já estruturada) como **stream Delta + checkpoint**
-(`Trigger.AvailableNow` + `foreachBatch` MERGE), reforça o contrato de obrigatórios
+(`Trigger.AvailableNow` + `foreachBatch` MERGE), reforça o contrato da tabela
 (quarentena idempotente) e aplica **MERGE** por chave de negócio — sem refazer `from_json`.
 Detalhes em [Processamento](processing.md). Benefícios:
 

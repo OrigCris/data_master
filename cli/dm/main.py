@@ -410,22 +410,29 @@ def create_cluster(
         typer.secho("  Para preencher os bundles depois: dm create-cluster (com --set-in-bundles)", fg=typer.colors.BRIGHT_BLACK)
 
 
-def _inject_cluster_id(cluster_id: str, placeholder: str = "<ID_CLUSTER>") -> None:
-    """Substitui o placeholder `<ID_CLUSTER>` pelo id nos databricks.yml dos bundles
-    (branch de teste). Cross-platform (sem grep/sed). No-op idempotente: se nenhum
-    bundle tem mais o placeholder, avisa que já estão preenchidos."""
+# Casa a linha `existing_cluster_id: <valor>` em qualquer bundle, seja o placeholder
+# `<ID_CLUSTER>` ou um id concreto de um ambiente anterior.
+_CLUSTER_ID_RE = re.compile(r"(existing_cluster_id:[ \t]*)(\S+)")
+
+
+def _inject_cluster_id(cluster_id: str) -> None:
+    """Aponta todo `existing_cluster_id` dos databricks.yml dos bundles (branch de teste)
+    para `cluster_id`. Cross-platform (sem grep/sed) e idempotente: reescreve o VALOR
+    atual — placeholder `<ID_CLUSTER>` ou id de um ambiente recriado — então rodar após
+    um rebuild atualiza os bundles com o id novo; rodar com o mesmo id é no-op."""
     bundles_root = REPO_ROOT / "Databricks"
     touched = 0
     for yml in bundles_root.glob("*/databricks.yml"):
         text = yml.read_text(encoding="utf-8")
-        if placeholder in text:
-            yml.write_text(text.replace(placeholder, cluster_id), encoding="utf-8")
-            typer.secho(f"  [~] {yml.relative_to(REPO_ROOT)}: {placeholder} → {cluster_id}", fg=typer.colors.GREEN)
+        new_text = _CLUSTER_ID_RE.sub(rf"\g<1>{cluster_id}", text)
+        if new_text != text:
+            yml.write_text(new_text, encoding="utf-8")
+            typer.secho(f"  [~] {yml.relative_to(REPO_ROOT)} → {cluster_id}", fg=typer.colors.GREEN)
             touched += 1
     if touched:
         typer.secho(f"✓ {touched} bundle(s) atualizados com o cluster_id.", fg=typer.colors.GREEN)
     else:
-        typer.secho(f"  [=] nenhum bundle com '{placeholder}' (já preenchidos).", fg=typer.colors.BRIGHT_BLACK)
+        typer.secho(f"  [=] bundles já apontam para {cluster_id} (nada a fazer).", fg=typer.colors.BRIGHT_BLACK)
 
 
 @app.command()

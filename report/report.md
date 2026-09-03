@@ -101,7 +101,9 @@ Trade-offs e limitações conhecidas estão registrados com transparência em
 - **Indicadores de transferência (`IN_TRAF`)** são recomputados sobre a **chamada
   inteira**: a cada batch, os atendimentos novos são unidos ao histórico da Silver e a
   janela é recalculada — corretos mesmo com atendimentos chegando em batches diferentes
-  (sem depender de co-ocorrência no micro-batch).
+  (sem depender de co-ocorrência no micro-batch). A leitura do histórico é limitada às
+  chamadas tocadas e a um **lookback de 1 dia**, que é o limite explícito da
+  reconciliação (ver [trade-offs](../docs/trade-offs.md)).
 
 ## 9. Roadmap
 

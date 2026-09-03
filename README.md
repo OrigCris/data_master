@@ -79,7 +79,7 @@ Complementos: [ADRs](docs/adrs) · [Runbooks](docs/runbooks) · [Relatório do c
 ├── docs/            # documentação (+ adrs, runbooks)
 ├── function_app/    # produtor de eventos (Azure Functions)
 ├── infrastructure/  # Bicep modular (inclui observabilidade: Monitor + alertas + workbook)
-└── tests/           # pytest (unit) — geradores, transforms, PII, CLI
+└── tests/           # pytest — unit (geradores, transforms, PII, CLI) + integração (Spark)
 ```
 
 ## Quickstart

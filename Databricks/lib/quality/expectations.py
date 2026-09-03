@@ -13,7 +13,7 @@ Exemplo:
     checks = [
         Expectation.not_null("ID_CHAM"),
         Expectation.unique("ID_CHAM"),
-        Expectation.between("VL_NOTA", 1, 10),
+        Expectation.between("QT_OPCA_NAVG", 1, 10),
         Expectation.accepted_values("IN_AUTN", [True, False]),
     ]
     report = run_expectations(df, checks, "prd.s_dm_callcenter.tabe_ura_anlt")
